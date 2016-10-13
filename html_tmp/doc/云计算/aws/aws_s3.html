@@ -1,0 +1,48 @@
+<h1 id="使用-aws-s3">使用 AWS S3</h1>
+<p>S3 是 Simple Storage Service 的缩写，是 AWS 提供的云存储服务，价格公道、服务稳定，因此被广泛应用在静态文件存储、内容备份、大数据分析领域。</p>
+<h2 id="基本概念">基本概念</h2>
+<p>在使用 S3 前首先需要了解一些基本概念：</p>
+<ul>
+<li>对象：即文件。</li>
+<li>Bucket：官方翻译为存储桶，是在网络存储服务中广泛使用的一个概念，通常用于区分文件所在区域，可以对比操作系统不同盘符来理解。</li>
+<li>AWS CLI：AWS 提供的控制台工具，aws-cli 是其在 PyPI 上注册的名字，shell 中的命令为 <code>aws</code>。</li>
+<li><a href="./aws_IAM.html">AWS IAM</a>：即 Identity and Access Management，是 AWS 的身份认证服务，用于对用户身份及资源进行授权管理，需要配置号已授权的 AWS 认证信息才可以使用其服务。</li>
+<li>S3 资源：S3 资源以 <code>s3://bucket-name/</code> 开始。</li>
+</ul>
+<h2 id="基本操作">基本操作</h2>
+<h3 id="创建以及管理-bucket">创建以及管理 Bucket</h3>
+<p>就像你首先需要有硬盘以及挂载盘符才能在本地操作文件一样，正式使用 S3 提供服务前你同样需要准备好 Bucket：</p>
+<pre><code>aws s3 mb s3://bucket-name</code></pre>
+<p>Bucket 名称必须唯一，并且应符合 DNS 标准：可以包含小写字母、数字、连字符（-）和点号（.）， 只能以字母或数字开头和结尾，连字符或点号后不能跟点号。</p>
+<p>想要列出以创建的 Bucket 可以使用 ls 命令：</p>
+<pre><code>$ aws s3 ls
+       CreationTime Bucket
+       ------------ ------
+2015-11-11 11:11:11 my-bucket
+2015-11-11 11:11:11 my-bucket1</code></pre>
+<p>删除空 Bucket 可以使用 <code>aws s3 rb s3://bucket-name</code>，非空 Bucket 需要加上 <code>--force</code> 命令，这一点对于管理文件对象也是一样。</p>
+<p><code>mb</code>、<code>rb</code> 命令分别是 <code>MakeBucket</code> 和 <code>RemoveBucket</code> 的缩写。</p>
+<h3 id="操作文件">操作文件</h3>
+<p>S3 的服务基于文件对象，提供了类似 Linux 环境下的文件访问操作：</p>
+<pre><code>aws s3 ls s3://bucket-name[/folder]/
+aws s3 cp s3://bucket-name/file s3://bucket-name[/folder]/
+aws s3 mv s3://bucket-name/file s3://bucket-name[/folder]/
+aws s3 rm s3://bucket-name/file
+aws s3 rm s3://bucket-name[/folder]/ --recursive</code></pre>
+<p>操作文件的方式基本上和 Linux 环境类似，<code>--recursive</code> 用于递归调用，类似 Linux 命令的 <code>-r</code> 参数。</p>
+<h3 id="同步本地文件目录">同步本地文件、目录</h3>
+<p>AWS CLI 还提供了一个本地文件同步命令 <code>sync</code>：</p>
+<pre><code>aws s3 sync local_dir s3://my-bucket/MyFolder</code></pre>
+<p><code>sync</code> 会递归地将本地文件复制到 S3 Bucket 中，如存在重名文件则覆盖处理。 如果需要像同步盘一样删除已不存在的文件可以加上 <code>--delete</code> 命令。</p>
+<p><code>sync</code> 还可以通过 <code>--exclude</code> 和 <code>--include</code> 来指定不同步的目录，以及不同步的目录中的例外。</p>
+<h3 id="权限控制">权限控制</h3>
+<p>pass</p>
+<h2 id="实际应用">实际应用</h2>
+<h3 id="每天凌晨备份-postgres-数据库">每天凌晨备份 Postgres 数据库</h3>
+<pre class="sh"><code>pg_dump -Fc --no-owner  bxzz_exercise &gt; /tmp/tmp.pgdump &amp;&amp; aws s3 cp tmp.pgdump s3://filebackup/pg/$(date +%Y/%m/%d).pgdump</code></pre>
+<p>crontab 设置：</p>
+<pre><code>0 2 * * * pg_dump -Fc --no-owner  bxzz_exercise &gt; /tmp/tmp.pgdump &amp;&amp; aws s3 cp tmp.pgdump s3://filebackup/pg/$(date +\%Y/\%m/\%d).pgdump</code></pre>
+<h3 id="将-s3-当作同步盘">将 S3 当作同步盘</h3>
+<p>检测到文件变动时触发：</p>
+<pre><code>aws s3 sync . s3://my-bucket/MyFolder --exclude &#39;*.txt&#39; --include &#39;MyFile*.txt&#39; --exclude &#39;MyFile?.txt&#39;</code></pre>
+<p>参考：<a href="http://docs.aws.amazon.com/zh_cn/cli/latest/userguide/using-s3-commands.html">AWS S3 官方中文文档</a></p>
