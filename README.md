@@ -1,15 +1,11 @@
 ## 目录
 
-* [op_practice_book](#op_practice_book)
+* [运维实践指南](SUMMARY.md)
 	* [需要安装](#需要安装)
 	* [使用方式](#使用方式)
 	* [参加步骤](#参加步骤)
 	* [小额捐款](#小额捐款)
 
-# op_practice_book
-《运维实践指南》
-
-[运维实践指南](SUMMARY.md)
 
 ## 需要安装
 + git
