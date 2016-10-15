@@ -6,7 +6,7 @@
     * [Linux工具](doc/Linux/tools.md)
     * [Linux安全](doc/Linux/safety.md)
 * web篇
-    * nginx
+    * [nginx](doc/web/nginx.md)
     * tornado
     * django
 * 监控篇
