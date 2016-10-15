@@ -5,6 +5,7 @@
     * [Linux基础](doc/Linux/base.md)
     * [Linux工具](doc/Linux/tools.md)
     * [Linux安全](doc/Linux/safety.md)
+    * [脚本编程(shell&python)](doc/Linux/scripts.md)
 * web篇
     * [nginx](doc/web/nginx.md)
     * tornado
