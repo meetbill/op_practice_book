@@ -8,7 +8,7 @@
 * web篇
     * [nginx](doc/web/nginx.md)
     * tornado
-    * django
+    * [django](doc/web/django.md)
 * 监控篇
     * zabbix
     * sparrow
