@@ -5,21 +5,24 @@
     * [Linux基础](doc/Linux/base.md)
     * [Linux工具](doc/Linux/tools.md)
     * [Linux安全](doc/Linux/safety.md)
-    * [脚本编程(shell&python)](doc/Linux/scripts.md)
+    * [脚本编程(shell)](doc/Linux/shell.md)
+    * [脚本编程(python)](doc/Linux/python.md)
+    * [常见服务架设](service.md)
 * web篇
     * [nginx](doc/web/nginx.md)
     * tornado
     * [django](doc/web/django.md)
 * 监控篇
-    * zabbix
+    * [zabbix](doc/monitor/zabbix.md)
     * sparrow
     * Starfish
 * 存储篇
     * DAS/SAN/NAS
     * [ceph](doc/store/ceph.md)
     * [moosefs](doc/store/moosefs.md)
-* 云计算篇
-    * [aws](doc/云计算/aws.md)
+* 云计算及虚拟化篇
+    * [aws](doc/cloud/aws.md)
     * openstack
+    * [docker](doc/cloud/docker.md)
 * 集群应用篇
     * 高可用的LVS负载均衡集群
