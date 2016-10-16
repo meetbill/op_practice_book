@@ -5,6 +5,7 @@
     * [Linux基础](doc/Linux/base.md)
     * [Linux工具](doc/Linux/tools.md)
     * [Linux安全](doc/Linux/safety.md)
+    * [Linux优化](doc/Linux/optimize.md)
     * [脚本编程(shell)](doc/Linux/shell.md)
     * [脚本编程(python)](doc/Linux/python.md)
     * [常见服务架设](service.md)
