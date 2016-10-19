@@ -1,9 +1,10 @@
 ## 架设简单文件服务器
 
 将 /data/public/ 目录下的文件通过 nginx 提供给外部访问
-
+```
 #mkdir /data/public/
-
+#chmod 777 /data/public/
+```
 ```
 worker_processes 1;
 error_log logs/error.log info;
