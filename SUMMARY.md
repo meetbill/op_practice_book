@@ -9,6 +9,8 @@
     * [脚本编程(shell)](doc/Linux/shell.md)
     * [脚本编程(python)](doc/Linux/python.md)
     * [常见服务架设](service.md)
+* 数据库篇
+    * [mysql](doc/db/mysql.md)
 * web篇
     * [nginx](doc/web/nginx.md)
     * tornado
