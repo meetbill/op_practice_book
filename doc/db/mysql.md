@@ -1,17 +1,49 @@
 # Mysql
 
-* [安装完 MySQL 后必须调整的 10 项配置](#安装完-mysql-后必须调整的-10-项配置)
-	* [写在开始前](#写在开始前)
-	* [基本配置](#基本配置)
-	* [InnoDB配置](#innodb配置)
-	* [其他设置](#其他设置)
-	* [总结](#总结)
-* [清理 MySQL binlog](#清理-mysql-binlog)
-	* [概要](#概要)
-	* [相关基本参数](#相关基本参数)
-	* [清理方法](#清理方法)
-		* [手动清理](#手动清理)
-		* [自动清理](#自动清理)
+
+# 数据操作
+## MySQL 引擎
+
+一种存储数据的技术。
+
+### 并发控制
+当多个连接对记录进行修改时保证数据的一致性和完整性。  
+可以理解为同步与互斥，原理和操作系统的那部分知识一致。
+
+### 事务处理
+这也是数据库区别于文件系统的一点。保证数据的完整性。
+
+### 外键
+保证数据的一致性。
+
+### 索引
+对数据表中一列或多列值进行排序的一种结构。是进行快速定位的方法。
+
+### 对比
+* MyISAM:适用于事务处理不多时;
+* InnoDB:适用于事务处理比较多，且需要外键支持时;(锁颗粒为行锁,相对效率低)
+* Memory：将所有数据保存在RAM中，在需要快速查找引用和其他类似数据的环境下，可提供极快的访问。
+
+修改存储引擎,使用`SHOW CREATE TABLE table_name;`查看存储引擎类型。
+* 在配置文件中`-default-storage-engine = engine_name`
+* 创建数据表时`CREATE TABLE tbl_name() ENGINE = engine_name;`
+
+| 特点 | MyISAM | BDB | Memory | InnoDB | Archive |
+|------|:------:|:---:|:------:|:------:|:-------:|
+| 存储限制 | 没有 | 没有 |  有  | 64TB | 没有 |
+| 事务安全 |  -   | 支持 |  -   | 支持 |  -   |	 
+| 锁机制   | 表锁 | 页锁 | 表锁 | 行锁 | 行锁 |
+| B树索引  | 支持 | 支持 | 支持 | 支持 |  -   |
+| 哈希索引 |  -   |  -   | 支持 | 支持 |  -   |
+| 全文索引 | 支持 |  -   |  -   |  -   |  -   |
+| 集群索引 |  -   |  -   |  -   | 支持 |  -   |
+| 数据缓存 |  -   |  -   | 支持 | 支持 |  -   |
+| 索引缓存 | 支持 |  -   | 支持 | 支持 |  -   |	 
+| 数据可压缩 |支持|  -   |  -   |  -   | 支持 |
+| 空间使用 |  低  |  低  | N/A  |  高  |非常低|
+| 内存使用 |  低  |  低  | 中等 |  高  |  低  |
+| 批量插入的速度|高| 高  |  高  |  低  |非常高|
+| 支持外键 |  -   |  -   |  -   | 支持 |  -   |
 
 # 安装完 MySQL 后必须调整的 10 项配置
 
@@ -470,3 +502,62 @@ mysql> show variables like "%expire%";
 mysql> 
 ~~~
 
+# 数据库管理
+
+## 用户管理
+
+### 创建用户
+
+  CREATE USER 'username'@'host' IDENTIFIED BY 'password';
+  
+用户创建之后只能看到`information_schema`数据库，使用`show grants;`看到自己的权限为`GRANT USAGE ON *.* TO 'user'@'localhost'`;
+
+### 为用户授权
+使用***GRANT命令***为用户授予数据库操作的权力,比如增删改查等.
+
+### 修改用户密码
+SET PASSWORD(推荐),MySQL5.7.6及以后：
+
+    SET PASSWORD [FOR user] = password_option
+    password_option: {
+        PASSWORD('auth_string') # 弃用
+      | 'auth_string'
+    }
+    # 修改自己的密码
+    SET PASSWORD = '123456';
+    # 修改一用户的密码
+    SET PASSWORD FOR 'user'@'34.23.44.32' = '123456';
+    
+ALTER(推荐)
+
+    ALTER USER 'user'@'localhost' IDENTIFIED BY 'auth_string';
+    
+忘记root密码
+
+    # 正确关闭MySQL服务
+    $ mysqld stop 
+    # 开启不验证登录
+    $ mysqld_safe --skip-grant-tables &
+    # 用上述其他方法修改密码
+    # 退出重启MySQL
+    
+    # 方法二:
+    1. 在/etc/mysql/my.cnf 或者 /etc/my.cnf 中[mysqld]加入 `skip-grant-tales` 可以免除密码登陆.
+    2. `service mysqld start`启动 mysql 后,直接在终端输入`mysql`可以免密码直接登陆.
+    3. > flush privileges;
+    4. set password for root@localhost = 'new-pass';
+    
+    在 MySQL 5.7 之后,Windows 使用解压缩安装 MySQL,需要依次执行如下方便初始化:
+    mysqld --initialize-insecure # 删除其他所有用户,无密码初始化 MySQL root 用户,如果没有 insecure,则会创建随机密码
+    mysqld -install # 安装服务
+    之后再不输入密码登录 root 用户,再设置密码.
+    
+    
+mysqladmin(不安全),在终端输入:
+
+    $ mysqladmin -u username -p password '123456'
+    
+UPDATE user 表
+
+    UPDATE user SET password=password('123456') WHERE user='name' AND host='12.44.33.22';
+    FLUSH privileges;
