@@ -40,6 +40,19 @@
 		* [文件的几种状态](#文件的几种状态)
 		* [快照和差异](#快照和差异)
 		* [Git数据结构](#git数据结构)
+* [curl](#curl)
+	* [curl 基础](#curl-基础)
+		* [直接获取（GET）一个url](#直接获取get一个url)
+		* [post，put等](#postput等)
+		* [form表单提交](#form表单提交)
+	* [curl 深入](#curl-深入)
+		* [显示头信息](#显示头信息)
+		* [详细显示通信过程](#详细显示通信过程)
+		* [设置头信息](#设置头信息)
+		* [Referer字段](#referer字段)
+		* [包含cookie](#包含cookie)
+		* [自动跳转](#自动跳转)
+		* [http认证](#http认证)
 
 # vim
 ## 快捷键
@@ -457,3 +470,326 @@ Git的核心数是很简单的，就是一个链表(或者一棵树更准确一�
 **理解git fetch 和 git pull的差异**
 
 上面我们说过 `git pull` 等价于 `git fetch` 和 `git merge` 两条命令。当我们 `clone` 一个 repo 到本地时，就有了本地分支和远端分支的概念(假定我们只有一个主分支)，本地分支是 `master`，远端分支是 `origin/master`。通过上面我们对 Git 数据结构的理解，`master` 和 `origin/master` 可以想成是指向最新 commit 结点的两个指针。刚 `clone` 下来的 repo，`master` 和 `origin/master` 指针指向同一个结点，我们在本地提交一次，`origin` 结点就更新一次，此时 `master` 和 `orgin/master` 就不再相同了。很有可能别人已经 commit 改 repo 很多次了，并且进行了提交。那么我们的本地的 `origin/master` 就不再是远程服务器上的最新的位置了。 `git fetch` 干的就是从服务器上同步服务器上最新的 `origin/master` 和一些服务器上新的记录/文件到本地。而 `git merge` 就是合并操作了(解决文件冲突)。`git push` 是把本地的 `origin/master` 和 `master` 指向相同的位置，并且推送到远程的服务器。
+
+
+
+
+# curl 
+## curl 基础
+在介绍前，我需要先做两点说明：
+
+1. 下面的例子中会使用 [httpbin.org](http://httpbin.org/) ，httpbin提供客户端测试http请求的服务，非常好用，具体可以查看他的网站。
+2. 大部分没有使用缩写形式的参数，例如我使用 `--request` 而不是 `-X` ，这是为了好记忆。
+
+下面开始简单介绍几个命令：
+
+### 直接获取（GET）一个url
+
+直接以个GET方式请求一个url，输出返回内容：
+
+``` sh
+curl httpbin.org
+```
+
+返回
+``` html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='content-type' value='text/html;charset=utf8'>
+  <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
+  <title>httpbin(1): HTTP Client Testing Service</title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+......
+```
+
+<!--more-->
+
+### post，put等
+
+使用 `--request` 指定请求类型， `--data` 指定数据，例如：
+
+``` sh
+curl httpbin.org/post --request POST --data "name=keenwon&website=http://keenwon.com"
+```
+
+返回：
+
+``` html
+{
+  "args": {},
+  "data": "",
+  "files": {},
+  "form": {
+    "name": "tomshine",
+    "website": "http://tomshine.xyz"
+  },
+  "headers": {
+    "Accept": "*/*",
+    "Content-Length": "41",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.43.0"
+  },
+  "json": null,
+  "origin": "121.35.209.62",
+  "url": "http://httpbin.org/post"
+}
+```
+
+这个返回值是httpbin输出的，可以清晰的看出我们发送了什么数据，非常实用。
+
+### form表单提交
+
+form表单提交使用 `--form`，使用 `@` 指定本地文件，例如我们提交一个表单，有字段name和文件f：
+
+``` sh
+curl httpbin.org/post --form "name=tomshine" --form "f=@/Users/tomshine/test.txt"
+```
+
+返回：
+
+``` json
+{
+  "args": {},
+  "data": "",
+  "files": {
+    "f": "Hello Curl!\n"
+  },
+  "form": {
+    "name": "tomshine"
+  },
+  "headers": {
+    "Accept": "*/*",
+    "Content-Length": "296",
+    "Content-Type": "multipart/form-data; boundary=------------------------3bd3dc24dca6daf2",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.43.0"
+  },
+  "json": null,
+  "origin": "112.95.153.98",
+  "url": "http://httpbin.org/post"
+}
+```
+
+## curl 深入
+### 显示头信息
+
+使用 `--include` 在输出中包含头信息，使用 `--head` 只返回头信息，例如：
+
+``` sh
+curl httpbin.org/post --include --request POST --data "name=tomshine"
+```
+
+返回：
+
+``` html
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 18 Sep 2016 01:23:28 GMT
+Content-Type: application/json
+Content-Length: 363
+Connection: keep-alive
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+
+{
+  "args": {},
+  "data": "",
+  "files": {},
+  "form": {
+    "name": "tomshine"
+  },
+  "headers": {
+    "Accept": "*/*",
+    "Content-Length": "13",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.43.0"
+  },
+  "json": null,
+  "origin": "121.35.209.62",
+  "url": "http://httpbin.org/post"
+}
+```
+
+再例如，只显示头信息的话：
+
+``` sh
+curl httpbin.org --head
+```
+
+返回：
+
+``` html
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 18 Sep 2016 01:24:29 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 12150
+Connection: keep-alive
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+```
+
+### 详细显示通信过程
+
+使用 `--verbose` 显示通信过程，例如：
+
+``` sh
+curl httpbin.org/post --verbose --request POST --data "name=tomshine"
+```
+
+返回：
+
+``` html
+*   Trying 54.175.219.8...
+* Connected to httpbin.org (54.175.219.8) port 80 (#0)
+> POST /post HTTP/1.1
+> Host: httpbin.org
+> User-Agent: curl/7.43.0
+> Accept: */*
+> Content-Length: 13
+> Content-Type: application/x-www-form-urlencoded
+>
+* upload completely sent off: 13 out of 13 bytes
+< HTTP/1.1 200 OK
+< Server: nginx
+< Date: Sun, 18 Sep 2016 01:25:03 GMT
+< Content-Type: application/json
+< Content-Length: 363
+< Connection: keep-alive
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Credentials: true
+<
+{
+  "args": {},
+  "data": "",
+  "files": {},
+  "form": {
+    "name": "tomshine"
+  },
+  "headers": {
+    "Accept": "*/*",
+    "Content-Length": "13",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.43.0"
+  },
+  "json": null,
+  "origin": "121.35.209.62",
+  "url": "http://httpbin.org/post"
+}
+* Connection #0 to host httpbin.org left intact
+```
+
+### 设置头信息
+
+使用 `--header` 设置头信息，`httpbin.org/headers` 会显示请求的头信息，我们测试下：
+
+``` sh
+curl httpbin.org/headers --header "a:1"
+```
+
+返回：
+
+``` html
+{
+  "headers": {
+    "A": "1",
+    "Accept": "*/*",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.43.0"
+  }
+}
+```
+
+同样的，可以使用 `--header` 设置 `User-Agent` 等。
+
+### Referer字段
+
+设置 `Referer` 字段很简单，使用 `--referer` ，例如：
+
+``` sh
+curl httpbin.org/headers --referer http://tomshine.xyz
+```
+
+返回：
+
+``` html
+{
+  "headers": {
+    "Accept": "*/*",
+    "Host": "httpbin.org",
+    "Referer": "http://tomshine.xyz",
+    "User-Agent": "curl/7.43.0"
+  }
+}
+```
+
+### 包含cookie
+
+使用 `--cookie` 来设置请求的cookie，例如：
+
+``` sh
+curl httpbin.org/headers --cookie "name=tomshine;website=http://tomshine.xyz"
+```
+
+返回：
+
+``` html
+{
+  "headers": {
+    "Accept": "*/*",
+    "Cookie": "name=tomshine;website=http://tomshine.xyz",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.43.0"
+  }
+}
+```
+
+### 自动跳转
+
+使用 `--location` 参数会跟随链接的跳转，例如：
+
+``` sh
+curl httpbin.org/redirect/1 --location
+```
+
+httpbin.org/redirect/1会302跳转，所以返回：
+
+``` html
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Host": "httpbin.org",
+    "User-Agent": "curl/7.43.0"
+  },
+  "origin": "121.35.209.62",
+  "url": "http://httpbin.org/get"
+}
+```
+
+### http认证
+
+当页面需要认证时，可以使用 `--user` ，例如：
+
+``` sh
+curl httpbin.org/basic-auth/tomshine/123456 --user tomshine:123456
+```
+
+返回：
+
+``` html
+{
+  "authenticated": true,
+  "user": "tomshine"
+}
+```
+
