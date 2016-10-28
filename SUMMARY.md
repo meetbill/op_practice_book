@@ -21,6 +21,7 @@
     * Starfish
 * 存储篇
     * DAS/SAN/NAS
+    * [RAID](doc/store/RAID.md)
     * [ceph](doc/store/ceph.md)
     * [moosefs](doc/store/moosefs.md)
 * 云计算及虚拟化篇
