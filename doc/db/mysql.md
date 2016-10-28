@@ -25,6 +25,10 @@
 		* [创建用户](#创建用户)
 		* [为用户授权](#为用户授权)
 		* [修改用户密码](#修改用户密码)
+* [常见问题](#常见问题)
+	* [MySQL 忘记密码](#mysql-忘记密码)
+		* [现象](#现象)
+		* [解决方法](#解决方法)
 
 # 数据操作
 ## MySQL 引擎
@@ -602,3 +606,33 @@ UPDATE user 表
 
     UPDATE user SET password=password('123456') WHERE user='name' AND host='12.44.33.22';
     FLUSH privileges;
+
+
+# 常见问题
+
+## MySQL 忘记密码
+
+### 现象
+```
+#mysql -u root -p
+#就会出现：ERROR 1045 (28000): Access denied for user ''@'localhost' (using password: NO)
+```
+### 解决方法
+```
+l 关闭mysql
+# service mysqld stop
+
+2.屏蔽权限
+# mysqld_safe --skip-grant-table
+屏幕出现：
+161028 22:30:08 mysqld_safe Logging to '/var/log/mysqld.log'.
+161028 22:30:08 mysqld_safe Starting mysqld daemon with databases from /var/lib/mysql'
+
+3.新开起一个终端输入
+#mysql -u root 
+mysql> UPDATE user SET Password=PASSWORD('newpassword') where USER='root';
+mysql> FLUSH PRIVILEGES;//记得要这句话，否则如果关闭先前的终端，又会出现原来的错误
+mysql> \q
+#/etc/init.d/mysqld restart
+```
+
