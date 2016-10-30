@@ -20,7 +20,7 @@
     * sparrow
     * Starfish
 * 存储篇
-    * DAS/SAN/NAS
+    * [DAS/SAN/NAS](doc/store/store.md)
     * [RAID](doc/store/RAID.md)
     * [ceph](doc/store/ceph.md)
     * [moosefs](doc/store/moosefs.md)
