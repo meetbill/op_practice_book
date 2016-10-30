@@ -1,11 +1,13 @@
 # 目录
 
+
 * [AWS CLI](#aws-cli)
 	* [安装](#安装)
 	* [配置](#配置)
 		* [配置多用户](#配置多用户)
 		* [环境变量](#环境变量)
 	* [命令行参数](#命令行参数)
+	* [使用](#使用)
 * [saws工具](#saws工具)
 	* [s3](#s3)
 		* [上传文件](#上传文件)
@@ -46,7 +48,10 @@ AWS 的配置文件分 config 和 credentials，默认存储在 ~/.aws 目录中
 [default]
 aws_access_key_id=XXXXXXXXXXXXXXXXXXXX
 aws_secret_access_key=XXXXXXXXXXXXXXXXXXXX
-[user1]
+[dev]
+aws_access_key_id=XXXXXXXXXXXXXXXXXXXX
+aws_secret_access_key=XXXXXXXXXXXXXXXXXXXX
+[s3]
 aws_access_key_id=XXXXXXXXXXXXXXXXXXXX
 aws_secret_access_key=XXXXXXXXXXXXXXXXXXXX
 ```
@@ -90,6 +95,13 @@ AWS CLI 支持以下变量：
 
 参考：[AWS 官方文档](http://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html)
 
+## 使用
+
+```
+aws ec2 describe-instances --profile dev
+aws ec2 describe-instances --profile default
+aws s3api put-object --body /root/start.sh --bucket bucket-name --key "start.sh"  --profile s3
+```
 
 # saws工具
 
@@ -116,7 +128,7 @@ saws>aws s3api put-object --body /root/start.sh --bucket bucket-name --key "star
 输入saws后输入
 
 ```
-saws>aws s3api get-object --bucket "saas-kuaipan" --key "start.sh" /root/start.sh2"
+saws>aws s3api get-object --bucket bucket-name --key "start.sh" /root/start.sh2"
 {
     "AcceptRanges": "bytes",
     "ContentType": "binary/octet-stream",
