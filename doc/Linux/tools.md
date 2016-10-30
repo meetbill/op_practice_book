@@ -1,5 +1,7 @@
 # Linux 工具篇
 
+[返回主目录](../../SUMMARY.md)
+
 * [vim](#vim)
 	* [快捷键](#快捷键)
 		* [Movement](#movement)

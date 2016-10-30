@@ -1,5 +1,7 @@
 # zabbix
 
+[返回主目录](../../SUMMARY.md)
+
 ## 快速安装
 ### server端
 ```

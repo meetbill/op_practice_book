@@ -1,4 +1,6 @@
-Nginx 
+# Nginx 
+
+[返回主目录](../../SUMMARY.md)
 
 * [安装运行](./nginx/install.md)
 * [基础配置](./nginx/conf.md)
