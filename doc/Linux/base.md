@@ -705,3 +705,11 @@ ARC=false
 ```
 #/sbin/hwclock --systohc
 ```
+
+***定时同步时间设置***
+
+凌晨 5 点定时同步时间
+
+```
+echo "0 5 * * *  /usr/sbin/ntpdate cn.ntp.org.cn" >> /var/spool/cron/root
+```
