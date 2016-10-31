@@ -473,8 +473,20 @@ Git的核心数是很简单的，就是一个链表(或者一棵树更准确一�
 
 上面我们说过 `git pull` 等价于 `git fetch` 和 `git merge` 两条命令。当我们 `clone` 一个 repo 到本地时，就有了本地分支和远端分支的概念(假定我们只有一个主分支)，本地分支是 `master`，远端分支是 `origin/master`。通过上面我们对 Git 数据结构的理解，`master` 和 `origin/master` 可以想成是指向最新 commit 结点的两个指针。刚 `clone` 下来的 repo，`master` 和 `origin/master` 指针指向同一个结点，我们在本地提交一次，`origin` 结点就更新一次，此时 `master` 和 `orgin/master` 就不再相同了。很有可能别人已经 commit 改 repo 很多次了，并且进行了提交。那么我们的本地的 `origin/master` 就不再是远程服务器上的最新的位置了。 `git fetch` 干的就是从服务器上同步服务器上最新的 `origin/master` 和一些服务器上新的记录/文件到本地。而 `git merge` 就是合并操作了(解决文件冲突)。`git push` 是把本地的 `origin/master` 和 `master` 指向相同的位置，并且推送到远程的服务器。
 
+## 其他操作
 
+### 解决GitHub commit次数过多.git文件过大
 
+完全重建版本库
+
+```
+# rm -rf .git
+# git init
+# git add .
+# git cm "first commit"
+# git remote add origin <your_github_repo_url>
+# git push -f -u origin master
+```
 
 # curl 
 ## curl 基础

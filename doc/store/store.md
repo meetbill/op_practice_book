@@ -1,5 +1,18 @@
 # DAS/SAN/NAS
 
+目前常见的三种存储结构
+
+> * DAS：直连存储
+> * SAN：存储区域网
+> * NAS：网络附属存储
+
+
+* [DAS](#das)
+* [SAN](#san)
+* [NAS](#nas)
+	* [常见问题](#常见问题)
+		* [nfs客户端无法chown](#nfs客户端无法chown)
+		* [Linux上mount 挂载windows共享文件权限问题](#linux上mount-挂载windows共享文件权限问题)
 * [查看磁盘信息](#查看磁盘信息)
 	* [lsscsi](#lsscsi)
 	* [smartctl](#smartctl)
@@ -9,6 +22,44 @@
 	* [MegaCli](#megacli)
 	* [LSIUtil](#lsiutil)
 	* [lsblk](#lsblk)
+
+# DAS
+
+DAS：直连式存储依赖服务器主机操作系统进行数据的IO读写和存储维护管理，数据备份和恢复要求占用服务器主机资源(包括CPU、系统IO等)
+
+# SAN
+
+IPSAN与FCSAN
+
+# NAS
+
+NAS，网络附加存储，中心词“存储”，是的，它是一个存储设备。
+
+NAS是一个设备。CIFS/NFS是一种协议。可以在NAS上启用CIFS/NFS协议，这样，用户就能使用CIFS/NFS协议进行访问了。
+
+## 常见问题
+
+### nfs客户端无法chown
+
+nfs常规配置后，客户端可以创建，删除，chmod；但无法修改属主和属组；
+
+解决方法：
+
+挂载时，加上vers=3即可，例：
+```
+mount -t nfs -o vers=3 server:/share /mnt
+```
+### Linux上mount 挂载windows共享文件权限问题
+
+在服务器部署的时候需要把文件夹设置在windows的共享文件上。在使用mount命令挂载到linux上后。文件路径和文件都是可以访问，但是不能写入，导致系统在上传文件的时候提示“权限不够，没有写权限”。用"ls-l"查看挂载文件的权限设置是drwxr-xr-x,很明显没有写权限。想当然使用chmod来更改文件夹权限，结果提示权限不够。root和当前用户都不能正常修改权限。
+
+可以添加两个参数即可达到我们所要的效果：
+
+```
+mount -t cifs -o username="***",password="***",gid="***",uid="****" //WindowsHost/sharefolder  /home/xxx/shared  
+```
+gid和uid，可以使用id username来获得
+
 
 # 查看磁盘信息
 
