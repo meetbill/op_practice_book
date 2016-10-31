@@ -712,4 +712,7 @@ ARC=false
 
 ```
 echo "0 5 * * *  /usr/sbin/ntpdate cn.ntp.org.cn" >> /var/spool/cron/root
+或者
+echo "0 5 * * *  /usr/sbin/ntpdate 133.100.11.8" >> /var/spool/cron/root
+
 ```
