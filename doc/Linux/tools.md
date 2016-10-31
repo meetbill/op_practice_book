@@ -2,6 +2,7 @@
 
 [返回主目录](../../SUMMARY.md)
 
+
 * [vim](#vim)
 	* [快捷键](#快捷键)
 		* [Movement](#movement)
@@ -42,6 +43,8 @@
 		* [文件的几种状态](#文件的几种状态)
 		* [快照和差异](#快照和差异)
 		* [Git数据结构](#git数据结构)
+	* [其他操作](#其他操作)
+		* [解决GitHub commit次数过多.git文件过大](#解决github-commit次数过多git文件过大)
 * [curl](#curl)
 	* [curl 基础](#curl-基础)
 		* [直接获取（GET）一个url](#直接获取get一个url)
@@ -55,6 +58,13 @@
 		* [包含cookie](#包含cookie)
 		* [自动跳转](#自动跳转)
 		* [http认证](#http认证)
+* [screen](#screen)
+	* [新建一个Screen Session](#新建一个screen-session)
+	* [将当前Screen Session放到后台](#将当前screen-session放到后台)
+	* [唤起一个Screen Session](#唤起一个screen-session)
+	* [分享一个Screen Session](#分享一个screen-session)
+	* [终止一个Screen Session](#终止一个screen-session)
+	* [查看一个screen里的输出](#查看一个screen里的输出)
 
 # vim
 ## 快捷键
@@ -319,8 +329,6 @@ awk -F/ '{printf "%s-%s-%s\n",$1,$2,$3}'  date
 2014-03-28
 2014-03-29
 ```
-
-
 
 ### 统计
 
@@ -807,3 +815,54 @@ curl httpbin.org/basic-auth/tomshine/123456 --user tomshine:123456
 }
 ```
 
+
+# screen
+
+现在很多时候我们的开发环境都已经部署到云端了，直接通过SSH来登录到云端服务器进行开发测试以及运行各种命令，一旦网络中断，通过SSH运行的命令也会退出，这个发让人发疯的。
+
+好在有screen命令，它可以解决这些问题。我使用screen命令已经有三年多的时间了，感觉还不错。
+
+## 新建一个Screen Session
+
+```
+$ screen -S screen_session_name
+```
+
+## 将当前Screen Session放到后台
+
+```
+$ CTRL + A + D
+```
+
+## 唤起一个Screen Session
+
+```
+$ screen -r screen_session_name
+```
+
+## 分享一个Screen Session
+
+```
+$ screen -x screen_session_name
+```
+
+通常你想和别人分享你在终端里的操作时可以用此命令。
+
+## 终止一个Screen Session
+
+```
+$ exit
+$ CTRL + D
+```
+
+## 查看一个screen里的输出
+
+当你进入一个screen时你只能看到一屏内容，如果想看之前的内容可以如下：
+
+```
+$ Ctrl + a ESC
+```
+
+以上意思是进入Copy mode，拷贝模式，然后你就可以像操作VIM一样查看screen session里的内容了。
+
+可以 Page Up 也可以 Page Down。

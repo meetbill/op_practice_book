@@ -1,6 +1,6 @@
 # Summary 
 
-* 前言(doc/README.md)
+* [前言](doc/README.md)
 * Linux篇
     * [Linux基础](doc/Linux/base.md)
     * [Linux工具](doc/Linux/tools.md)
@@ -29,6 +29,6 @@
     * openstack
     * [docker](doc/cloud/docker.md)
 * 集群应用篇
-    * 高可用的LVS负载均衡集群
+    * [高可用的LVS负载均衡集群](doc/HA/keepalived.md)
 * 其他篇
     * [windows下服务](doc/other/windows.md)
