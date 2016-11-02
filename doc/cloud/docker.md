@@ -2,8 +2,6 @@
 
 [返回主目录](../../SUMMARY.md)
 
-
-* [Docker 基础](#docker-基础)
 * [centos7安装docker](#centos7安装docker)
 	* [一 准备](#一-准备)
 		* [1. centos7 x86-64](#1-centos7-x86-64)
@@ -20,22 +18,10 @@
 		* [1. 列出安装的docker](#1-列出安装的docker)
 		* [2. 删除安装包](#2-删除安装包)
 		* [3. 删除数据文件](#3-删除数据文件)
+* [Docker 使用](#docker-使用)
+	* [Docker 三大核心概念](#docker-三大核心概念)
+	* [Docker 镜像使用](#docker-镜像使用)
 
-# Docker 基础
-* Docker 三大核心概念
-    - 镜像 Image
-    - 容器 Container
-    - 仓库 Repository
-
-* 命令
-    - `docker inspect` IMAGE-ID
-        + 返回JSON 格式信息
-    - 导入导出镜像
-        + `docker save -o` image.tar image
-        + `docker load <` image.tar
-    - 导入导出容器
-        + `docker export` abc > new_container
-        + `docker import`
 
 # centos7安装docker 
 ## 一 准备
@@ -120,3 +106,23 @@ sudo yum -y remove docker-engine.x86_64
 ```
 rm -rf /var/lib/docker
 ```
+
+# Docker 使用
+## Docker 三大核心概念
+- 镜像 Image  
+镜像就是一个只读的模板。比如，一个镜像可以包含一个完整的Centos系统，并且安装了zabbix
+镜像可以用来创建Docker容器。
+其他人制作好镜像，我们可以拿过来轻松的使用。这就是吸引我的特性。
+- 容器 Container
+Docker用容器来运行应用。容器是从镜像创建出来的实例（好有面向对象的感觉，类和对象），它可以被启动、开始、停止和删除。
+- 仓库 Repository
+个好理解了，就是放镜像的文件的场所。比如最大的公开仓库是Docker Hub。
+
+## Docker 镜像使用
+
+当运行容器时，使用的镜像如果在本地中不存在，docker 就会自动从 docker 镜像仓库中下载，默认是从 Docker Hub 公共镜像源下载。
+下面我们来学习：
+
+> * 管理和使用本地 Docker 主机镜像
+> * 拖取公共镜像源中的镜像
+> * 创建镜像
