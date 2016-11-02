@@ -1,7 +1,5 @@
 ## linux基础
 
-[返回主目录](../../SUMMARY.md)
-
 * [Bash基础特性](#bash基础特性)
 	* [命令历史](#命令历史)
 	* [命令补全](#命令补全)
@@ -32,6 +30,7 @@
 		* [查看系统在线用户](#查看系统在线用户)
 		* [查看当前自己占用终端](#查看当前自己占用终端)
 		* [用pkill 命令剔除对方](#用pkill-命令剔除对方)
+	* [使用脚本创建用户，同时用户有 sudo 权限](#使用脚本创建用户同时用户有-sudo-权限)
 * [其他设置](#其他设置)
 	* [时区及时间](#时区及时间)
 		* [UTC 和 GMT](#utc-和-gmt)
@@ -659,6 +658,23 @@ root     pts/4        2016-10-30 19:55 (192.168.31.124)
 如果最后查看还是没有干掉，建议加上-9 强制杀死。
 [root@Linux ~]# pkill -9 -t pts/2
 
+## 使用脚本创建用户，同时用户有 sudo 权限
+
+```
+cat >./create_user.sh <<-'EOF'
+#!/bin/bash
+arg="ceshi"
+if id ${arg}
+then 
+    echo "the username is exsit!"
+else
+    useradd $arg 
+    echo "ceshi_password" | passwd --stdin $arg
+    echo "${arg} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${arg}
+fi
+EOF
+```
+以上脚本会创建用户 `ceshi` 同时用户的密码为 `ceshi_password` ，并且此用户有 sudo 权限
 
 # 其他设置
 
