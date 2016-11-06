@@ -27,6 +27,7 @@
 * 云计算及虚拟化篇
     * [aws](doc/cloud/aws.md)
     * [阿里云](doc/cloud/aliyun.md)
+    * [KVM](doc/cloud/kvm.md)
     * openstack
     * [docker](doc/cloud/docker.md)
 * 集群应用篇
