@@ -22,6 +22,7 @@
 * 存储篇
     * [DAS/SAN/NAS](doc/store/store.md)
     * [RAID](doc/store/RAID.md)
+    * [gfs](doc/store/gfs.md)
     * [ceph](doc/store/ceph.md)
     * [moosefs](doc/store/moosefs.md)
 * 云计算及虚拟化篇
