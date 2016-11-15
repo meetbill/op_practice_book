@@ -1,7 +1,5 @@
 # 常见服务架设
 
-[返回主目录](../../SUMMARY.md)
-
 * [NTP](#ntp)
 	* [简介](#简介)
 	* [NTP Server 安装配置](#ntp-server-安装配置)

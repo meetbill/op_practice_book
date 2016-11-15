@@ -1,15 +1,17 @@
 # zabbix
 
-[返回主目录](../../SUMMARY.md)
+* [快速安装](#快速安装)
+	* [server端](#server端)
+	* [agent端](#agent端)
 
-## 快速安装
-### server端
+# 快速安装
+## server端
 ```
 #git clone https://github.com/BillWang139967/zabbix_install.git
 #cd zabbix_install/zabbix3.0.4/server
 #sh zabbix_server.sh
 ```
-### agent端
+## agent端
 ```
 #curl -o zabbix_agent.sh "https://raw.githubusercontent.com/BillWang139967/zabbix_install/master/zabbix3.0.4/agent/zabbix_agent.sh"
 #sh zabbix_agent.sh
