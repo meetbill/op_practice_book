@@ -1,7 +1,5 @@
 # Docker
 
-[返回主目录](../../SUMMARY.md)
-
 * [centos7安装docker](#centos7安装docker)
 	* [一 准备](#一-准备)
 		* [1. centos7 x86-64](#1-centos7-x86-64)
