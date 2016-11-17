@@ -9,6 +9,7 @@
     * [脚本编程(shell)](doc/Linux/shell.md)
     * [脚本编程(python)](doc/Linux/python.md)
     * [常见服务架设](doc/Linux/service.md)
+    * [常用运维工具](doc/Linux/op.md)
 * 数据库篇
     * [mysql](doc/db/mysql.md)
 * web篇
