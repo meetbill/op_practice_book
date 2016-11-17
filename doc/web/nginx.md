@@ -1,33 +1,37 @@
 # Nginx 
-
 * [安装](#安装)
-* [Nginx 配置文件详解](#nginx-配置文件详解)
+* [Nginx 配置文件实例](#nginx-配置文件实例)
 * [Nginx服务器基础配置指令](#nginx服务器基础配置指令)
 	* [nginx.conf文件的结构](#nginxconf文件的结构)
-	* [配置运行Nginx服务器用户（组）](#配置运行nginx服务器用户组)
-	* [配置允许生成的worker process数](#配置允许生成的worker-process数)
-	* [配置Nginx进程PID存放路径](#配置nginx进程pid存放路径)
-	* [配置错误日志的存放路径](#配置错误日志的存放路径)
-	* [配置文件的引入](#配置文件的引入)
-	* [设置网络连接的序列化](#设置网络连接的序列化)
-	* [设置是否允许同时接收多个网络连接](#设置是否允许同时接收多个网络连接)
-	* [事件驱动模型的选择](#事件驱动模型的选择)
-	* [配置最大连接数](#配置最大连接数)
-	* [定义MIME-Type](#定义mime-type)
-	* [自定义服务日志](#自定义服务日志)
-	* [配置允许sendfile方式传输文件](#配置允许sendfile方式传输文件)
-	* [配置连接超时时间](#配置连接超时时间)
-	* [单连接请求数上限](#单连接请求数上限)
-	* [配置网络监听](#配置网络监听)
-	* [**基于名称的虚拟主机配置**](#基于名称的虚拟主机配置)
-	* [**基于IP的虚拟主机配置**](#基于ip的虚拟主机配置)
-	* [**配置location块**(重中之重)](#配置location块重中之重)
-	* [配置请求的根目录](#配置请求的根目录)
-	* [更改location的URI](#更改location的uri)
-	* [设置网站的默认首页](#设置网站的默认首页)
-	* [设置网站的错误页面](#设置网站的错误页面)
-	* [基于IP配置Nginx的访问权限](#基于ip配置nginx的访问权限)
-	* [基于密码配置Nginx的访问权限](#基于密码配置nginx的访问权限)
+	* [Global(Nginx运行相关)](#globalnginx运行相关)
+		* [配置运行Nginx服务器用户（组）](#配置运行nginx服务器用户组)
+		* [配置允许生成的worker process数](#配置允许生成的worker-process数)
+		* [配置Nginx进程PID存放路径](#配置nginx进程pid存放路径)
+		* [配置错误日志的存放路径](#配置错误日志的存放路径)
+		* [配置文件的引入](#配置文件的引入)
+	* [events(与用户的网络连接相关)](#events与用户的网络连接相关)
+		* [设置网络连接的序列化](#设置网络连接的序列化)
+		* [设置是否允许同时接收多个网络连接](#设置是否允许同时接收多个网络连接)
+		* [事件驱动模型的选择](#事件驱动模型的选择)
+		* [配置最大连接数](#配置最大连接数)
+	* [http](#http)
+		* [http Global 代理-缓存-日志-第三方模块配置](#http-global-代理-缓存-日志-第三方模块配置)
+			* [定义MIME-Type](#定义mime-type)
+			* [自定义服务日志](#自定义服务日志)
+			* [配置允许sendfile方式传输文件](#配置允许sendfile方式传输文件)
+			* [配置连接超时时间](#配置连接超时时间)
+			* [单连接请求数上限](#单连接请求数上限)
+		* [server](#server)
+			* [配置网络监听](#配置网络监听)
+			* [**基于名称的虚拟主机配置**](#基于名称的虚拟主机配置)
+			* [**基于IP的虚拟主机配置**](#基于ip的虚拟主机配置)
+			* [**配置location块**(重中之重)](#配置location块重中之重)
+			* [配置请求的根目录](#配置请求的根目录)
+			* [更改location的URI](#更改location的uri)
+			* [设置网站的默认首页](#设置网站的默认首页)
+			* [设置网站的错误页面](#设置网站的错误页面)
+			* [基于IP配置Nginx的访问权限](#基于ip配置nginx的访问权限)
+			* [基于密码配置Nginx的访问权限](#基于密码配置nginx的访问权限)
 * [Nginx服务器基础配置实例](#nginx服务器基础配置实例)
 	* [测试myServer1的访问](#测试myserver1的访问)
 	* [测试myServer2的访问](#测试myserver2的访问)
@@ -56,7 +60,7 @@
 # ./configure --prefix=/opt/X_nginx/nginx
 #make && sudo make install
 ```
-# Nginx 配置文件详解
+# Nginx 配置文件实例
 
 ```
 #定义Nginx运行的用户和用户组
@@ -64,6 +68,9 @@ user www www;
 
 #nginx进程数，建议设置为等于CPU总核心数。
 worker_processes 8;
+
+#Nginx默认没有开启利用多核CPU,通过增加worker_cpu_affinity配置参数来充分利用多核CPU 以下是8核的配置参数
+worker_cpu_affinity 00000001 00000010 00000100 00001000 00010000 00100000 01000000 10000000;
 
 #全局错误日志定义类型，[ debug | info | notice | warn | error | crit ]
 error_log /var/log/nginx/error.log info;
@@ -78,9 +85,15 @@ worker_rlimit_nofile 65535;
 events
 {
     #参考事件模型，use [ kqueue | rtsig | epoll | /dev/poll | select | poll ]; epoll模型是Linux 2.6以上版本内核中的高性能网络I/O模型，如果跑在FreeBSD上面，就用kqueue模型。
+    #epoll是多路复用IO(I/O Multiplexing)中的一种方式,但是仅用于linux2.6以上内核,可以大大提高nginx的性能
     use epoll;
-    #单个进程最大连接数（最大连接数=连接数*进程数）
+    
+    ############################################################################
+    #单个后台worker process进程的最大并发链接数
+    #事件模块指令,定义nginx每个进程最大连接数,默认1024。最大客户连接数由worker_processes和worker_connections决定
+    #即 max_client=worker_processes*worker_connections,在作为反向代理时：max_client=worker_processes*worker_connections / 4
     worker_connections 65535;
+    ############################################################################
 }
 
 #设定http服务器
@@ -88,6 +101,7 @@ http {
     include mime.types; #文件扩展名与文件类型映射表
     default_type application/octet-stream; #默认文件类型
     #charset utf-8; #默认编码
+
     server_names_hash_bucket_size 128; #服务器名字的hash表大小
     client_header_buffer_size 32k; #上传文件大小限制
     large_client_header_buffers 4 64k; #设定请求缓
@@ -96,7 +110,14 @@ http {
     autoindex on; #开启目录列表访问，合适下载服务器，默认关闭。
     tcp_nopush on; #防止网络阻塞
     tcp_nodelay on; #防止网络阻塞
-    keepalive_timeout 120; #长连接超时时间，单位是秒
+
+    ##连接客户端超时时间各种参数设置##
+    keepalive_timeout  120;          #单位是秒，客户端连接时时间,超时之后服务器端自动关闭该连接 如果nginx守护进程在这个等待的时间里，一直没有收到浏览发过来http请求，则关闭这个http连接
+    client_header_timeout 10;        #客户端请求头的超时时间
+    client_body_timeout 10;          #客户端请求主体超时时间
+    reset_timedout_connection on;    #告诉nginx关闭不响应的客户端连接。这将会释放那个客户端所占有的内存空间
+    send_timeout 10;                 #客户端响应超时时间, 在两次客户端读取操作之间。如果在这段时间内，客户端没有读取任何数据，nginx就会关闭连接
+    ################################
 
     #FastCGI相关参数是为了改善网站的性能：减少资源占用，提高访问速度。下面参数看字面意思都能理解。
     fastcgi_connect_timeout 300;
@@ -107,15 +128,27 @@ http {
     fastcgi_busy_buffers_size 128k;
     fastcgi_temp_file_write_size 128k;
 
+    ###作为代理缓存服务器设置#######
+    ###先写到temp再移动到cache
+    #proxy_temp_path  /var/tmp/nginx/proxy_temp;    ##定义缓存存储目录,之前必须要先手动创建此目录 此目录可以创建在系统缓存目录中
+    #proxy_cache_path /var/tmp/nginx/proxy_cache levels=1:2 keys_zone=cache_one:512m inactive=10m max_size=64m;
+    ###以上proxy_temp和proxy_cache需要在同一个分区中
+    ###levels=1:2 表示缓存级别,表示缓存目录的第一级目录是1个字符，第二级目录是2个字符 keys_zone=cache_one:128m 缓存空间起名为cache_one 大小为512m
+    ###max_size=64m 表示单个文件超过128m就不缓存了  inactive=10m 表示缓存的数据，10分钟内没有被访问过就删除 
+    #########end####################
+
+    #####对传输文件压缩###########
     #gzip模块设置
     gzip on; #开启gzip压缩输出
     gzip_min_length 1k; #最小压缩文件大小
     gzip_buffers 4 16k; #压缩缓冲区
     gzip_http_version 1.0; #压缩版本（默认1.1，前端如果是squid2.5请使用1.0）
-    gzip_comp_level 2; #压缩等级
+    gzip_comp_level 2; #压缩等级,gzip压缩比,1为最小,处理最快；9为压缩比最大,处理最慢,传输速度最快,也最消耗CPU；
     gzip_types text/plain application/x-javascript text/css application/xml;
     #压缩类型，默认就已经包含text/html，所以下面就不用再写了，写上去也不会有问题，但是会有一个warn。
     gzip_vary on;
+    ##############################  
+
     #limit_zone crawler $binary_remote_addr 10m; #开启限制IP连接数的时候需要使用
 
     upstream blog.ha97.com {
@@ -166,15 +199,20 @@ http {
             proxy_set_header Host $host;
             client_max_body_size 10m; #允许客户端请求的最大单文件字节数
             client_body_buffer_size 128k; #缓冲区代理缓冲用户端请求的最大字节数，
+            
+            ##代理设置 以下设置是nginx和后端服务器之间通讯的设置##
             proxy_connect_timeout 90; #nginx跟后端服务器连接超时时间(代理连接超时)
             proxy_send_timeout 90; #后端服务器数据回传时间(代理发送超时)
             proxy_read_timeout 90; #连接成功后，后端服务器响应时间(代理接收超时)
-            proxy_buffer_size 4k; #设置代理服务器（nginx）保存用户头信息的缓冲区大小
-            proxy_buffers 4 32k; #proxy_buffers缓冲区，网页平均在32k以下的设置
+            proxy_buffering on;    #该指令开启从后端被代理服务器的响应内容缓冲 此参数开启后proxy_buffers和proxy_busy_buffers_size参数才会起作用
+            proxy_buffer_size 4k;  #设置代理服务器（nginx）保存用户头信息的缓冲区大小
+            proxy_buffers 4 32k;   #proxy_buffers缓冲区，网页平均在32k以下的设置
             proxy_busy_buffers_size 64k; #高负荷下缓冲大小（proxy_buffers*2）
-            proxy_temp_file_write_size 64k; #设定缓存文件夹大小，大于这个值，将从upstream服务器传
-            proxy_temp_path /dev/shm/proxy_temp; #类似于http核心模块中的client_body_temp_path指令，指定一个目录来缓冲比较大的被代理请求。 
-             
+            proxy_max_temp_file_size 2048m; #临时文件的总大小，默认1024m
+            proxy_temp_file_write_size 512k; #设定缓存文件夹大小，大于这个值，将从upstream服务器传
+            proxy_headers_hash_max_size 51200;
+            proxy_headers_hash_bucket_size 6400;
+            #######################################################
         }
 
         #设定查看Nginx状态的地址
@@ -219,11 +257,13 @@ http {
 
 > 所有的所有的所有的指令，都要以`;`结尾
 
-## 配置运行Nginx服务器用户（组）
+## Global(Nginx运行相关)
+
+### 配置运行Nginx服务器用户（组）
 
 user nobody nobody;
 
-## 配置允许生成的worker process数
+### 配置允许生成的worker process数
 
 worker_processes auto;
 worker_processes 4;
@@ -240,54 +280,60 @@ processor       : 3
 4
 ```
 
-## 配置Nginx进程PID存放路径
+### 配置Nginx进程PID存放路径
 
 pid logs/nginx.pid;
 
 > 这里面保存的就是一个数字，nginx master 进程的进程号
 
-## 配置错误日志的存放路径
+### 配置错误日志的存放路径
 
 error_log logs/error.log;
 error_log logs/error.log error;
 
-## 配置文件的引入
+### 配置文件的引入
 
 include mime.types;
 include fastcgi_params;
 include ../../conf/*.conf;
 
-## 设置网络连接的序列化
+## events(与用户的网络连接相关)
+
+### 设置网络连接的序列化
 
 accept_mutex on;
 
 > 对多个nginx进程接收连接进行序列化，防止多个进程对连接的争抢（惊群）
 
-## 设置是否允许同时接收多个网络连接
+### 设置是否允许同时接收多个网络连接
 
 multi_accept off;
 
-## 事件驱动模型的选择
+### 事件驱动模型的选择
 
 use select|poll|kqueue|epoll|rtsig|/dev/poll|eventport
 
 > 这个重点，后面再看
 
-## 配置最大连接数
+### 配置最大连接数
 
 worker_connections 512;
 
-## 定义MIME-Type
+## http
+
+### http Global 代理-缓存-日志-第三方模块配置
+
+#### 定义MIME-Type
 
 include mime.types;
 default_type application/octet-stream;
 
-## 自定义服务日志
+#### 自定义服务日志
 
 access_log logs/access.log main;
 access_log off;
 
-## 配置允许sendfile方式传输文件
+#### 配置允许sendfile方式传输文件
 
 sendfile off;
 
@@ -301,20 +347,22 @@ Refer:
 + [Linux kenel sendfile 如何提升性能](http://www.vpsee.com/2009/07/linux-sendfile-improve-performance/)
 + [nginx sendifle tcp_nopush tcp_nodelay参数解释](http://blog.csdn.net/zmj_88888888/article/details/9169227)
 
-## 配置连接超时时间
+#### 配置连接超时时间
 
 > 与用户建立连接后，Nginx可以保持这些连接一段时间, 默认 75s
 > 下面的65s可以被Mozilla/Konqueror识别，是发给用户端的头部信息`Keep-Alive`值
 
 keepalive_timeout 75s 65s;
 
-## 单连接请求数上限
+#### 单连接请求数上限
 
 > 和用户端建立连接后，用户通过此连接发送请求;这条指令用于设置请求的上限数
 
 keepalive_requests 100;
 
-## 配置网络监听
+### server
+
+#### 配置网络监听
 
 listen *:80 | *:8000; # 监听所有的80和8000端口
 
@@ -323,7 +371,7 @@ listen 192.168.1.10;
 listen 8000; # 等同于 listen *:8000;
 listen 192.168.1.10 default_server backlog=511; # 该ip的连接请求默认由此虚拟主机处理;最多允许1024个网络连接同时处于挂起状态
 
-## **基于名称的虚拟主机配置**
+#### **基于名称的虚拟主机配置**
 
 server_name myserver.com www.myserver.com;
 
@@ -347,7 +395,7 @@ server_name ~^www\.(.+)\.com$; # 当请求通过www.myserver.com请求时， mys
 4. 正则表达式匹配server_name
 5. 先到先得
 
-## **基于IP的虚拟主机配置**
+#### **基于IP的虚拟主机配置**
 
 > 基于IP的虚拟主机，需要将网卡设置为同时能够监听多个IP地址
 
@@ -382,7 +430,7 @@ http {
 }
 ```
 
-## **配置location块**(重中之重)
+#### **配置location块**(重中之重)
 
 > location 块的配置，应该是最常用的了
 
@@ -406,13 +454,13 @@ location [ = | ~ | ~* | ^~ ] uri {...}
 
 > `^~` 也是支持浏览器编码过的URI的匹配的哦， 如 `/html/%20/data` 可以成功匹配 `/html/ /data`
 
-## 配置请求的根目录
+#### 配置请求的根目录
 
 Web服务器收到请求后，首先要在服务端指定的目录中寻找请求资源
 
 root /var/www;
 
-## 更改location的URI
+#### 更改location的URI
 
 除了使用root指明处理请求的根目录，还可以使用alias 改变location收到的URI的请求路径
 
@@ -422,7 +470,7 @@ location ~ ^/data/(.+\.(htm|html))$ {
 }
 ```
 
-## 设置网站的默认首页
+#### 设置网站的默认首页
 
 index 指令主要有2个作用：
 
@@ -434,7 +482,7 @@ location ~ ^/data/(.+)/web/$ {
     index index.$1.html index.htm;
 }
 ```
-## 设置网站的错误页面
+#### 设置网站的错误页面
 
 error_page 404 /404.html;
 error_page 403 /forbidden.html;
@@ -446,7 +494,7 @@ location /404.html {
 }
 ```
 
-## 基于IP配置Nginx的访问权限
+#### 基于IP配置Nginx的访问权限
 
 ```
 location / {
@@ -459,7 +507,7 @@ location / {
 > 从192.168.1.0的用户时可以访问的，因为解析到allow那一行之后就停止解析了
 
 
-## 基于密码配置Nginx的访问权限
+#### 基于密码配置Nginx的访问权限
 
 auth_basic "please login";
 auth_basic_user_file /etc/nginx/conf/pass_file;
