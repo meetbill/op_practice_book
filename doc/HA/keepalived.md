@@ -6,25 +6,28 @@
 	* [安装](#安装)
 	* [使用](#使用)
 * [keepalived配置相关](#keepalived配置相关)
-	* [keepalived是什么](#keepalived是什么)
-	* [keepalived工作原理](#keepalived工作原理)
 	* [keepalived的配置文件](#keepalived的配置文件)
 		* [global_defs区域](#global_defs区域)
 		* [static_ipaddress和static_routes区域](#static_ipaddress和static_routes区域)
 	* [vrrp_script区域](#vrrp_script区域)
 		* [vrrp_instance和vrrp_sync_group区域](#vrrp_instance和vrrp_sync_group区域)
 		* [virtual_server_group和virtual_server区域](#virtual_server_group和virtual_server区域)
+* [keepalived工作原理](#keepalived工作原理)
+	* [VRRP 工作流程](#vrrp-工作流程)
+	* [MASTER 和 BACKUP 节点的优先级如何调整?](#master-和-backup-节点的优先级如何调整)
+	* [ARP查询处理](#arp查询处理)
+	* [虚拟IP地址和MAC地址](#虚拟ip地址和mac地址)
+* [keepalived场景应用](#keepalived场景应用)
 	* [keepalived主从切换](#keepalived主从切换)
 	* [keepalived仅做HA时的配置](#keepalived仅做ha时的配置)
 	* [LVS+Keepalived配置](#lvskeepalived配置)
-	* [安装keepalived](#安装keepalived)
 	* [说明](#说明)
 
 # Keepalived 介绍及安装
 
 ## 介绍
 
-Keepalived 是一个基于VRRP协议来实现的WEB服务高可用方案，可以利用其来避免单点故障。一个WEB服务至少会有2台服务器运行Keepalived，一台为主服务器（MASTER），一台为备份服务器（BACKUP），但是对外表现为一个虚拟IP，主服务器会发送特定的消息给备份服务器，当备份服务器收不到这个消息的时候，即主服务器宕机的时候，备份服务器就会接管虚拟IP，继续提供服务，从而保证了高可用性。
+Keepalived 是一个基于VRRP协议来实现的WEB服务高可用方案，其功能类似于[heartbeat],可以利用其来避免单点故障。一个WEB服务至少会有2台服务器运行Keepalived，一台为主服务器（MASTER），一台为备份服务器（BACKUP），但是对外表现为一个虚拟IP，主服务器会发送特定的消息给备份服务器，当备份服务器收不到这个消息的时候，即主服务器宕机的时候，备份服务器就会接管虚拟IP，继续提供服务，从而保证了高可用性。
 
 	 	+---------VIP(192.168.0.3)----------+
 		|                                   |
@@ -72,16 +75,6 @@ VRRP路由器是指运行VRRP的路由器，是物理实体，虚拟路由器是
 
 # keepalived配置相关
 
-## keepalived是什么
-keepalived是集群管理中保证集群高可用的一个服务软件，其功能类似于[heartbeat][heartbeat]，用来防止单点故障。
-
-## keepalived工作原理
-keepalived是以VRRP协议为实现基础的，VRRP全称Virtual Router Redundancy Protocol，即[虚拟路由冗余协议][vrrp]。
-
-虚拟路由冗余协议，可以认为是实现路由器高可用的协议，即将N台提供相同功能的路由器组成一个路由器组，这个组里面有一个master和多个backup，master上面有一个对外提供服务的vip（该路由器所在局域网内其他机器的默认路由为该vip），master会发组播，当backup收不到vrrp包时就认为master宕掉了，这时就需要根据[VRRP的优先级][vrrp_priority]来[选举一个backup当master][select_master]。这样的话就可以保证路由器的高可用了。
-
-keepalived主要有三个模块，分别是core、check和vrrp。core模块为keepalived的核心，负责主进程的启动、维护以及全局配置文件的加载和解析。check负责健康检查，包括常见的各种检查方式。vrrp模块是来实现VRRP协议的。
-
 ## keepalived的配置文件
 
 keepalived只有一个配置文件keepalived.conf，里面主要包括以下几个配置区域，分别是global\_defs、static\_ipaddress、static\_routes、vrrp_script、vrrp\_instance和virtual\_server。
@@ -116,33 +109,6 @@ global_defs {
 * enable_traps 开启SNMP陷阱（[Simple Network Management Protocol][snmp]）。
 
 * router_id 标识本节点的字条串，通常为hostname，但不一定非得是hostname。故障发生时，邮件通知会用到。
-
-### static_ipaddress和static_routes区域
-
-static_ipaddress和static_routes区域配置的是是本节点的IP和路由信息。如果你的机器上已经配置了IP和路由，那么这两个区域可以不用配置。其实，一般情况下你的机器都会有IP地址和路由信息的，因此没必要再在这两个区域配置。
-
-```
-static_ipaddress {
-    10.210.214.163/24 brd 10.210.214.255 dev eth0
-    ...
-}
-
-static_routes {
-    10.0.0.0/8 via 10.210.214.1 dev eth0
-    ...
-}
-```
-
-以上分别表示启动/关闭keepalived时在本机执行的如下命令：
-
-```
-# /sbin/ip addr add 10.210.214.163/24 brd 10.210.214.255 dev eth0
-# /sbin/ip route add 10.0.0.0/8 via 10.210.214.1 dev eth0
-# /sbin/ip addr del 10.210.214.163/24 brd 10.210.214.255 dev eth0
-# /sbin/ip route del 10.0.0.0/8 via 10.210.214.1 dev eth0
-```
-
-注意： 请忽略这两个区域，因为我坚信你的机器肯定已经配置了IP和路由。
 
 ## vrrp_script区域
 
@@ -351,6 +317,110 @@ virtual_server IP Port {
 
 其他选项暂时不作说明。
 
+
+# keepalived工作原理
+
+keepalived是以VRRP协议为实现基础的，VRRP全称Virtual Router Redundancy Protocol，即***虚拟路由冗余协议***。
+
+虚拟路由冗余协议，可以认为是实现路由器高可用的协议，即将N台提供相同功能的路由器组成一个路由器组，这个组里面有一个master和多个backup，master上面有一个对外提供服务的vip（该路由器所在局域网内其他机器的默认路由为该vip），master会发组播，当backup收不到vrrp包时就认为master宕掉了，这时就需要根据VRRP的优先级***vrrp_priority***来选举一个backup当master***select_master***。这样的话就可以保证路由器的高可用了。
+
+keepalived主要有三个模块，分别是core、check和vrrp。core模块为keepalived的核心，负责主进程的启动、维护以及全局配置文件的加载和解析。check负责健康检查，包括常见的各种检查方式。vrrp模块是来实现VRRP协议的。
+```
+                           +-------------+
+						   |   uplink    |
+						   +-------------+
+							     |
+							     +
+		                     keep|alived   
+                    		 192.168.0.3   
+                        	+-------------+
+                        	| virtualIP   |
+                        	+-------------+
+   	        	 192.168.0.1主   |  192.168.0.2
+	        	+--------------+ | +--------------+
+	        	|LVS+Keepalived|---|LVS+Keepalived|
+	        	+--------------+   +--------------+
+			  +------------------+------------------+
+			  | 				 |                  |
+		+-------------+    +-------------+    +-------------+
+		|   web01     |    |   web02     |    |   web03     |
+		+-------------+    +-------------+    +-------------+
+```
+
+## VRRP 工作流程
+
+(1).初始化
+
+路由器启动时, 如果路由器的优先级是255(最高优先级, 路由器拥有路由器地址), 要发送 VRRP 通告信息, 并发送广播 ARP 信息通告路由器 IP 地址
+对应的 MAC 地址为路由虚拟 MAC, 设置通告信息定时器准备定时发送 VRRP 通告信息, 转为 MASTER 状态; 否则进入 BACKUP 状态, 设置定时器检查
+定时检查是否收到 MASTER 的通告信息.
+
+(2).Master
+
+    设置定时通告定时器;
+
+    用 VRRP 虚拟 MAC 地址响应路由器 IP 地址的 ARP 请求;
+
+    转发目的MAC是VRRP虚拟MAC的数据包;
+
+    如果是虚拟路由器IP的拥有者, 将接受目的地址是虚拟路由器IP的数据包, 否则丢弃;
+
+    当收到shutdown的事件时删除定时通告定时器, 发送优先权级为0的通告包, 转初始化状态;
+
+    如果定时通告定时器超时时, 发送VRRP通告信息;
+
+    收到VRRP通告信息时, 如果优先权为0, 发送 VRRP 通告信息; 否则判断数据的优先级是否高于本机, 或相等而且实际 IP 地址大于本地实际 IP, 设置定时通告定时器, 复位主机超时定时器, 转 BACKUP 状态; 否则的话, 丢弃该通告包;
+
+(3).Backup
+
+    设置主机超时定时器;
+
+    不能响应针对虚拟路由器IP的ARP请求信息;
+
+    丢弃所有目的MAC地址是虚拟路由器MAC地址的数据包;
+
+    不接受目的是虚拟路由器IP的所有数据包;
+
+    当收到shutdown的事件时删除主机超时定时器, 转初始化状态;
+
+    主机超时定时器超时的时候, 发送VRRP通告信息, 广播ARP地址信息, 转MASTER状态;
+
+    收到VRRP通告信息时, 如果优先权为0, 表示进入MASTER选举; 否则判断数据的优先级是否高于本机, 如果高的话承认MASTER有效, 复位主机超时定时器; 否则的话, 丢弃该通告包;
+
+
+## MASTER 和 BACKUP 节点的优先级如何调整?
+
+首先, 每个节点有一个初始优先级, 由配置文件中的 priority 配置项指定, MASTER 节点的 priority 应比 BAKCUP 高.
+运行过程中 keepalived 根据 vrrp_script 的 weight 设定, 增加或减小节点优先级. 规则如下:
+
+1. 当 weight > 0 时, vrrp_script script 脚本执行返回0(成功)时优先级为 priority + weight, 否则为 priority.
+当 BACKUP 发现自己的优先级大于MASTER通告的优先级时, 进行主从切换.
+
+2. 当 weight < 0 时, vrrp_script script 脚本执行返回非0(失败)时优先级为 priority + weight, 否则为 priority.
+当 BACKUP 发现自己的优先级大于 MASTER 通告的优先级时, 进行主从切换.
+
+3. 当两个节点的优先级相同时, 以节点发送 VRRP 通告的 IP 作为比较对象, IP 较大者为 MASTER.
+
+以上文中的配置为例:
+
+    HOST1: 192.168.0.1, priority=91, MASTER(default)
+    HOST2: 192.168.0.2, priority=90, BACKUP
+    VIP: 192.168.0.3 weight = 2
+
+抓包命令: tcpdump -nn vrrp
+
+## ARP查询处理
+
+当内部主机通过 ARP 查询虚拟路由器 IP 地址对应的 MAC 地址时, MASTER 路由器回复的 MAC 地址为虚拟的 VRRP 的 MAC 地址, 而不是实际网卡的
+MAC 地址, 这样在路由器切换时让内网机器觉察不到; 而在路由器重新启动时, 不能主动发送本机网卡的实际 MAC 地址. 如果虚拟路由器开启的 ARP
+代理 (proxy_arp)功能, 代理的 ARP 回应也回应VRRP虚拟 MAC 地址;
+
+## 虚拟IP地址和MAC地址
+
+VRRP组(备份组)中的虚拟路由器对外表现为唯一的虚拟MAC地址, 地址格式为00-00-5E-00-01-[VRID], VRID 为 VRRP 组的编号, 范围是0~255.
+
+# keepalived场景应用
+
 ## keepalived主从切换
 
 主从切换比较让人蛋疼，需要将backup配置文件的priority选项的值调整的比master高50个点，然后reload配置文件就可以切换了。当时你也可以将master的keepalived停止，这样也可以进行主从切换。
@@ -359,54 +429,8 @@ virtual_server IP Port {
 
 请看该文档同级目录下的配置文件示例。
 
-说明：  
-10.210.214.113 为keepalived的备机，其配置文件为113.keepalived.conf  
-10.210.214.163 为keepalived的主机，其配置文件为163.keepalived.conf  
-10.210.214.253 为Virtual IP，即提供服务的内网IP地址，在网卡eth0上面  
-192.168.1.11 为模拟的提供服务的公网IP地址，在网卡eth1上面
-
 用tcpdump命令来捕获的结果如下：
 
 ```
-17:20:07.919419 IP 10.210.214.163 > 224.0.0.18: VRRPv2, Advertisement, vrid 1, prio 200, authtype simple, intvl 1s, length 20
+17:20:07.919419 IP 192.168.1.1 > 224.0.0.18: VRRPv2, Advertisement, vrid 1, prio 200, authtype simple, intvl 1s, length 20
 ```
-
-## LVS+Keepalived配置
-
-注Keepalived与LVS结合使用时一般还会用到一个工具ipvsadm，用来查看相关VS相关状态，关于ipvsadm的用法可以参考man手册。
-
-10.67.15.95为keepalived master，VIP为10.67.15.94，配置文件为95-lvs-keepalived.conf  
-10.67.15.96为keepalived master，VIP为10.67.15.94，配置文件为96-lvs-keepalived.conf  
-10.67.15.195为real server  
-
-注意：
-
-当使用LVS+DR+Keepalived配置时，需要在real server上添加一条iptables规则（其中dport根据情况添加或缺省）：
-
-```
-# iptables -t nat -A PREROUTING -p tcp -d 10.67.15.94 --dport 80 -j REDIRECT
-```
-
-当使用LVS+NAT+Keepalived配置时，需要将real server的默认路由配置成Director的VIP`10.67.15.94`，必须确保client的请求是通过`10.67.15.94`到达real server的。
-
-## 安装keepalived
-从keepalived官网[下载][keepalived]合适的版本，解压并执行如下命令完成安装。
-
-```
-# cd keepalived-xxx
-# ./configure --bindir=/usr/bin --sbindir=/usr/sbin --sysconfdir=/etc --mandir=/usr/share
-# make && make install
-```
-
-你也可以打成[RPM][rpm]包，然后安装。
-
-## 说明
-
-我们用到的HA场景如下： 两台主机host113和host163，内网IP在eth1网卡上，分别是10.210.214.113和10.210.214.163，VIP为公网IP在eth0上，IP地址是202.102.152.253，网关为202.102.152.1。当VIP在host113上提供服务时，host113上的默认路由为202.102.152.1，提供服务的端口为202.102.152.253:443。host113发生故障需要将VIP及服务切回到host163上的时候，需要以下几步，第一将VIP接管过来，第二添加默认路由202.102.152.1，第三启动在端口202.102.152.253:443上的服务。
-
-如此一来，keepalived需要另外的脚本来完成添加默认路由和启动服务工作，这点和heartbeat中的resources是相同的。目前我进行了测试，发现keepalived速度要比heartbeat快，也就是说效率比heartbeat高。并且，最重要的一点，keepalived支持多个backup。
-
-不要问我为何有以上需求。要为两个不同的域名提供https服务，由于SSL证书问题，必须有两个公网IP地址分别绑定443端口。
-
-当然，通过[SNI][sni]也可以实现一个公网IP绑定443端口来为多个域名提供https服务，但是这需要浏览器支持（M$的IE浏览器不支持）。（[nginx][nginx]/[apache][apache]）
-
