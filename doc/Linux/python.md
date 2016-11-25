@@ -7,6 +7,8 @@
 	* [注释](#注释)
 	* [docstring](#docstring)
 	* [命名规范](#命名规范)
+* [Python交互式解释器](#python交互式解释器)
+	* [Python交互式解释器自动补全](#python交互式解释器自动补全)
 
 # python代码格式规范
 
@@ -283,12 +285,15 @@ Optional plotz says to frobnicate the bizbaz first.
 ```
 
 ## 命名规范
+
 * 应避免使用小写字母l(L)，大写字母O(o)或I(i)单独作为一个变量的名称，以区分数字1和0
 * 包和模块使用全小写命名，尽量不要使用下划线
 * 类名使用CamelCase命名风格，内部类可用一个下划线开头
 * 函数使用下划线分隔的小写命名
 * 当参数名称和Python保留字冲突，可在最后添加一个下划线，而不是使用缩写或自造的词
 * 常量使用以下划线分隔的大写命名
+* '_'单下划线开头：弱“内部使用”标识，如：”from M import *”，将不导入所有以下划线开头的对象，包括包、模块、成员 ,单下划线结尾_：只是为了避免与python关键字的命名冲突 
+* '__'双下划线开头：模块内的成员，表示私有成员，外部无法直接调用 
 
 ```python
 MAX_OVERFLOW = 100
@@ -299,3 +304,28 @@ Class FooBar:
         print(print_)
     
 ```
+
+# Python交互式解释器
+
+## Python交互式解释器自动补全
+
+在使用Python解释器的时候由于有太多的内置函数，如果没有自动补全功能会给我们带来很大程度的不便。
+通过在编辑一个文件有以下内容文件名~/.pythonstartup.py
+
+```
+import readline, rlcompleter
+readline.parse_and_bind("tab: complete")
+```
+
+这样我们再~/.bashrc文件中添加
+export PYTHONSTARTUP=~/.pythonstartup.py
+就可以让以后我们打开python交互式解释器的时候可以自动加载上面的语句。
+方便以后的交互式操作。
+
+操作方法
+```
+#curl -o pythonstartup.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/python/pythonstartup.sh
+#sh pythonstartup.sh
+#. .bashrc
+```
+
