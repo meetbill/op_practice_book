@@ -326,6 +326,6 @@ export PYTHONSTARTUP=~/.pythonstartup.py
 ```
 #curl -o pythonstartup.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/python/pythonstartup.sh
 #sh pythonstartup.sh
-#. .bashrc
+#. ~/.bashrc
 ```
 
