@@ -459,6 +459,18 @@ Linux 下的工具们通常使用 base64 编码的文本格式，相关常用后
 * 其他
     * .keystore java密钥库(包括证书和私钥)
 
+***制作证书***
+```
+1.生成服务器端的私钥(key文件)
+$ openssl genrsa  -out server.key 1024
+2.生成服务器端证书签名请求文件(csr文件);
+$ openssl req -new -key server.key -out server.csr
+3.生成证书文件(crt文件)
+$ openssl x509 -req -days 1000 -in server.csr -signkey server.key -out server.crt
+```
+以上生成 server.crt  server.key 文件即是用于 HTTPS 配置的证书和 key
+
+如果想查看证书里面的内容，可以通过 $openssl x509 -in server.crt -text -noout 查看
 
 #### **基于IP的虚拟主机配置**
 
