@@ -460,6 +460,7 @@ Linux 下的工具们通常使用 base64 编码的文本格式，相关常用后
     * .keystore java密钥库(包括证书和私钥)
 
 ***制作证书***
+
 ```
 1.生成服务器端的私钥(key文件)
 $ openssl genrsa  -out server.key 1024
