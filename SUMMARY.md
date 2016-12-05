@@ -34,6 +34,7 @@
     * [docker](doc/cloud/docker.md)
 * 集群应用篇
     * [负载均衡](doc/HA/lb.md)
+    * [LVS](doc/HA/lvs.md)
     * [高可用的LVS负载均衡集群](doc/HA/keepalived.md)
 * 其他篇
     * [windows下服务](doc/other/windows.md)
