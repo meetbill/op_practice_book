@@ -1,5 +1,5 @@
 # 常见服务架设
-
+ 
 * [NTP](#ntp)
 	* [简介](#简介)
 	* [NTP Server 安装配置](#ntp-server-安装配置)
@@ -23,8 +23,11 @@
 		* [常用命令](#常用命令)
 		* [ssh 端口非默认 22 同步](#ssh-端口非默认-22-同步)
 	* [inotify+rsync实现实时文件同步](#inotifyrsync实现实时文件同步)
-		* [需求背景](#需求背景)
-		* [脚本内容](#脚本内容)
+		* [存储数据异地灾备](#存储数据异地灾备)
+			* [需求背景](#需求背景)
+			* [架构](#架构)
+			* [脚本内容](#脚本内容)
+			* [原理](#原理)
 
 # NTP
 ## 简介
@@ -340,23 +343,63 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
 ```
 ## inotify+rsync实现实时文件同步
 
-### 需求背景
+### 存储数据异地灾备
+
+#### 需求背景
 
 服务器文件需要实时同步，即使是轮询，也存在同步延迟，inotify的出现让真正的实时成为了现实  
 我们可以用inotify去监控文件系统的事件变化，一旦有我们期望的事件发生，就使用rsync进行冗余同步
 
-### 脚本内容
-``` bash
-#!/bin/bash
+#### 架构
 
-src='/tmp/src1/'
-dest='/tmp/dest1'
 
-inotifywait -mrq -e modify,attrib,moved_to,moved_from,move,move_self,create,delete,delete_self --timefmt='%d/%m/%y %H:%M' --format='%T %w%f %e' $src | while read chgeFile
-do
-  rsync -avPz --delete $src $dest &>>./rsync.log
-done
+| 用途        | IP           |
+| ------------- |:-------------:|
+| 服务端A| 192.168.199.101 |
+| 服务器B(备份服务器) | 192.168.199.102|
+
 ```
+   +--------+          +-------------------+
+   |服务器A |--------->|服务器B(备份服务器)|
+   +--------+          +-------------------+
+
+  inotify+rsync             rsync
+
+```
+
+#### 脚本内容
+
+所有配置只需要在服务器A上配置即可
+
+(1) 配置服务器A使用秘钥登录服务器B
+
+(2) 在服务器A上编写脚本，主要配置服务器B的机器IP，登录用户，以及服务器器A的存储目录和存储数据异地灾备目录
+
+将此文件保存到/opt/inotify_rsync.sh
+
+``` bash
+    #!/bin/bash
+    host=192.168.199.102
+    user=root
+    # 服务器存储目录
+    src='/tmp/src1/'
+    # 存储数据异地灾备目录
+    dest='/tmp/dest1'
+
+    inotifywait -mrq -e modify,attrib,moved_to,moved_from,move,move_self,create,delete,delete_self --timefmt='%d/%m/%y %H:%M' --format='%T %w%f %e' $src | while read chgeFile
+    do
+        rsync -avPz --delete $src $user@$host:$dest &>>./rsync.log
+    done
+```
+(3) 启动异地灾备程序
+
+```
+    #nohup /bin/bash /opt/inotify_rsync.sh &  //后台不挂断地运行命令
+    #echo "nohup /bin/bash /opt/inotify_rsync.sh &" >> /etc/rc.local //设置linux服务器启动自动启动nohup
+```
+
+#### 原理
+
 1. 使用inotifywait监控文件系统时间变化
 2. while通过管道符接受内容，传给read命令
 3. read读取到内容，则执行rsync程序

@@ -332,7 +332,7 @@ def face(request):
 
 当在view.py中设置了终端显示时
 
-![Screenshot](../../../images/django/BLog.jpg)
+![Screenshot](./../../images/django/BLog.jpg)
 
 注:如果修改前django项目是运行的，那么当我们在程序中加入导入模块的程序时，需要重启下django应用，如果我们修改的程序不涉及导入模块部分，则不需要重启应用
 
