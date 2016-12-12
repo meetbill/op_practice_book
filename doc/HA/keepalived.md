@@ -2,26 +2,28 @@
 
 * [Keepalived 介绍及安装](#keepalived-介绍及安装)
 	* [介绍](#介绍)
+		* [LVS和keepalived的关系](#lvs和keepalived的关系)
 	* [VRRP](#vrrp)
 	* [安装](#安装)
 	* [使用](#使用)
 * [keepalived配置相关](#keepalived配置相关)
-	* [keepalived的配置文件](#keepalived的配置文件)
-		* [global_defs区域](#global_defs区域)
-		* [static_ipaddress和static_routes区域](#static_ipaddress和static_routes区域)
+	* [global_defs区域](#global_defs区域)
 	* [vrrp_script区域](#vrrp_script区域)
-		* [vrrp_instance和vrrp_sync_group区域](#vrrp_instance和vrrp_sync_group区域)
-		* [virtual_server_group和virtual_server区域](#virtual_server_group和virtual_server区域)
+	* [VRRPD配置](#vrrpd配置)
+		* [VRRP Sync Groups](#vrrp-sync-groups)
+		* [VRRP实例(instance)配置](#vrrp实例instance配置)
+	* [LVS 配置](#lvs-配置)
 * [keepalived工作原理](#keepalived工作原理)
 	* [VRRP 工作流程](#vrrp-工作流程)
 	* [MASTER 和 BACKUP 节点的优先级如何调整?](#master-和-backup-节点的优先级如何调整)
 	* [ARP查询处理](#arp查询处理)
 	* [虚拟IP地址和MAC地址](#虚拟ip地址和mac地址)
+	* [keepalived 健康检查方式](#keepalived-健康检查方式)
 * [keepalived场景应用](#keepalived场景应用)
 	* [keepalived主从切换](#keepalived主从切换)
 	* [keepalived仅做HA时的配置](#keepalived仅做ha时的配置)
-	* [LVS+Keepalived配置](#lvskeepalived配置)
-	* [说明](#说明)
+* [其他配置](#其他配置)
+	* [重定向keepalived 输出日志](#重定向keepalived-输出日志)
 
 # Keepalived 介绍及安装
 
@@ -35,6 +37,9 @@ Keepalived 是一个基于VRRP协议来实现的WEB服务高可用方案，其�
 	server(MASTER) <----keepalived----> server(BACKUP)
 	(192.168.0.1)                       (192.168.0.2)
 
+### LVS和keepalived的关系
+
+LVS可以不依赖keepalived而进行分发请求,但是想让负载调度器动态监控真实服务器心跳 需要写很复杂的代码。而keepalived正是一个通过简单配置就能满足请求分发、心跳检测、集群管理的好工具
 
 ## VRRP
 
@@ -75,11 +80,9 @@ VRRP路由器是指运行VRRP的路由器，是物理实体，虚拟路由器是
 
 # keepalived配置相关
 
-## keepalived的配置文件
+keepalived只有一个配置文件/etc/keepalived/keepalived.conf，里面主要包括以下几个配置区域，分别是global\_defs、static\_ipaddress、static\_routes、vrrp_script、vrrp\_instance和virtual\_server。
 
-keepalived只有一个配置文件keepalived.conf，里面主要包括以下几个配置区域，分别是global\_defs、static\_ipaddress、static\_routes、vrrp_script、vrrp\_instance和virtual\_server。
-
-### global_defs区域
+## global_defs区域
 
 主要是配置故障发生时的通知对象以及机器标识
 
@@ -124,13 +127,20 @@ vrrp_script chk_http_port {
 
 以上意思是如果`script`中的指令执行失败，那么相应的`vrrp_instance`的优先级会减少10个点。
 
-### vrrp_instance和vrrp_sync_group区域
+## VRRPD配置
 
-vrrp_instance用来定义对外提供服务的VIP区域及其相关属性。
+VRRPD 配置包括两部分
+
+> * VRRP同步组(synchroization group)
+> * VRRP实例(VRRP Instance)
+
+### VRRP Sync Groups
 
 vrrp_rsync_group用来定义vrrp_intance组，使得这个组内成员动作一致。举个例子来说明一下其功能：
 
 两个vrrp_instance同属于一个vrrp_rsync_group，那么其中一个vrrp_instance发生故障切换时，另一个vrrp_instance也会跟着切换（即使这个instance没有发生故障）。
+
+eg:机器有两个网段，一个内网一个外网，每个网段开启一个VRRP实例，假设VRRP配置为检查内网，那么当外网出现问题时，VRRPD认为自己仍然健康，那么不会发送Master和Backup的切换，从而导致了问题。Sync group 就是为了解决这个问题。可以将两个实例都放到一个Sync group，这样，group里面任何一个实例出现问题都会发生切换
 
 ```
 vrrp_sync_group VG_1 {
@@ -145,6 +155,18 @@ vrrp_sync_group VG_1 {
     notify /path/notify.sh
     smtp_alert
 }
+```
+* notify_master/backup/fault 分别表示切换为主/备/出错时所执行的脚本。
+
+* notify 表示任何一状态切换时都会调用该脚本，并且该脚本在以上三个脚本执行完成之后进行调用，keepalived会自动传递三个参数（$1 = "GROUP"|"INSTANCE"，$2 = name of group or instance，$3 = target state of transition(MASTER/BACKUP/FAULT)）。
+
+* smtp_alert 表示是否开启邮件通知（用全局区域的邮件设置来发通知）。
+
+### VRRP实例(instance)配置
+
+vrrp_instance用来定义对外提供服务的VIP区域及其相关属性。
+
+```
 
 vrrp_instance VI_1 {
     state MASTER
@@ -190,12 +212,6 @@ vrrp_instance VI_1 {
     smtp_alert
 }
 ```
-
-* notify_master/backup/fault 分别表示切换为主/备/出错时所执行的脚本。
-
-* notify 表示任何一状态切换时都会调用该脚本，并且该脚本在以上三个脚本执行完成之后进行调用，keepalived会自动传递三个参数（$1 = "GROUP"|"INSTANCE"，$2 = name of group or instance，$3 = target state of transition(MASTER/BACKUP/FAULT)）。
-
-* smtp_alert 表示是否开启邮件通知（用全局区域的邮件设置来发通知）。
 
 * state 可以是MASTER或BACKUP，不过当其他节点keepalived启动时会将priority比较大的节点选举为MASTER，因此该项其实没有实质用途。
 
@@ -246,7 +262,7 @@ VRRP_Instance(xxx) ignoring received advertisment...
 
 * preempt_delay master启动多久之后进行接管资源（VIP/Route信息等），并提是没有`nopreempt`选项。
 
-### virtual_server_group和virtual_server区域
+## LVS 配置
 
 virtual_server_group一般在超大型的LVS中用到，一般LVS用不过这东西，因此不多说。
 
@@ -419,6 +435,29 @@ MAC 地址, 这样在路由器切换时让内网机器觉察不到; 而在路由
 
 VRRP组(备份组)中的虚拟路由器对外表现为唯一的虚拟MAC地址, 地址格式为00-00-5E-00-01-[VRID], VRID 为 VRRP 组的编号, 范围是0~255.
 
+## keepalived 健康检查方式
+
+keepalived对后端realserver的健康检查方式主要有以下几种：
+
+***TCP_CHECK***
+
+工作在第4层，keepalived向后端服务器发起一个tcp连接请求，如果后端服务器没有响应或者超时，那么这个后端将从服务器中移除
+
+***HTTP_GET***
+
+工作在第5层,通过向指定的URL执行http请求，将得到的结果比对(经检验此种方法在多个实体服务器只能检测到第一个，故不可行)
+
+***SSL_GET***
+
+与HTTP_GET类似
+***MISC_CHECK***
+
+用脚本来检测，脚本如果带有参数，需要将脚本和参数放入到双引号内。脚本的返回值需要为：
+
+> * 0--------------检测成功
+> * 1--------------检测失败，将从服务器池中移除
+> * 2~255--------检测成功；如果有设置misc_dynamic，权重自动调整为退出码-2，如果退出码为200，权重自动调整为198=200-2
+
 # keepalived场景应用
 
 ## keepalived主从切换
@@ -433,4 +472,31 @@ VRRP组(备份组)中的虚拟路由器对外表现为唯一的虚拟MAC地址, 
 
 ```
 17:20:07.919419 IP 192.168.1.1 > 224.0.0.18: VRRPv2, Advertisement, vrid 1, prio 200, authtype simple, intvl 1s, length 20
+```
+# 其他配置
+
+## 重定向keepalived 输出日志
+
+(1)修改 /etc/sysconfig/keepalived
+
+把KEEPALIVED_OPTIONS="-D" 修改为KEEPALIVED_OPTIONS="-D -d -S 0"
+
+其中-S指定syslog的facility"
+
+同时创建 /var/log/keepalived目录
+
+```
+#mkdir /var/log/keepalived
+```
+
+(2)在 /etc/rsyslog.conf 中添加
+```
+# keepalived -S 0 
+local0.*                    /var/log/keepalived/keepalived.log
+```
+
+(3)重启 rsyslog 和 Keepalived 服务
+```
+#/etc/init.d/rsyslog restart
+#/etc/init.d/Keepalived restart
 ```
