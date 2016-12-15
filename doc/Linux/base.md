@@ -107,8 +107,15 @@ centos 6.x
 
 #### (1)启动引导设备的配置
     系统默认使用GRUB作为启动加载器，引导程序默认在MBR下：
-    install boot loader on /dev/sda ->change device ->master boot record -/dev/sda
+    ```
+    install boot loader on /dev/sda ->change device 
+    选择 master boot record -/dev/sda
+    [选择的是操作系统所在的那个设备，如/dev/sda]
 
+    Boot Loader operation system list 
+    列表中选择的是操作系统根目录/所在的分区，如CentOS /dev/sda4
+
+    ```
 #### (2)系统安装类型选择及自定义额外包组
     系统默认是desktop ，但是这里选择minimal。
     自定义安装包选择：customsize now 
