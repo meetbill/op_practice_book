@@ -165,8 +165,9 @@ MySQL 服务器上一共有六种日志：错误日志，查询日志，慢查�
 修改配置文件: ```/etc/my.cnf```
 
 ```ini
+[mysqld]
 slow_query_log = 1
-slow_query_log_file = /var/log/mysql_slow_queries.log
+slow_query_log_file = /tmp/mysql_slow_queries.log
 long_query_time = 10
 ```
 配置后重启 mysql
@@ -184,13 +185,13 @@ long_query_time = 10
 `mysql> SHOW VARIABLES LIKE 'slow%';`
 
 ```
-+---------------------------+--------------------------------+
-| Variable_name             | Value                          |
-+---------------------------+--------------------------------+
-| slow_launch_time          | 2                              |
-| slow_query_log            | ON                             |
-| slow_query_log_file       | /var/log/mysql_slow_queries.log|
-+---------------------------+--------------------------------+
++---------------------------+----------------------------+
+| Variable_name             | Value                      |
++---------------------------+----------------------------+
+| slow_launch_time          | 2                          |
+| slow_query_log            | ON                         |
+| slow_query_log_file       | /tmp/mysql_slow_queries.log|
++---------------------------+----------------------------+
 3 rows in set (0.01 sec)
 ```
 
@@ -199,11 +200,11 @@ long_query_time = 10
 `mysql> SHOW VARIABLES LIKE 'long%';`
 
 ```
-+----------------------------------------------------------+-----------+
-| Variable_name                                            | Value     |
-+----------------------------------------------------------+-----------+
-| long_query_time                                          | 10.000000 |
-+----------------------------------------------------------+-----------+
++---------------------------+-----------+
+| Variable_name             | Value     |
++---------------------------+-----------+
+| long_query_time           | 10.000000 |
++---------------------------+-----------+
 ```
 ### 测试 
 
@@ -213,20 +214,20 @@ long_query_time = 10
 
 查看日志
 
-tail -f /var/log/mysql_slow_queries.log
+tail -f /tmp/mysql_slow_queries.log
 
 ### 日志查询
 
 列出记录次数最多的10个sql语句
 
 ```
-mysqldumpslow -s c -t 10 /var/log/mysql_slow_queries.log
+mysqldumpslow -s c -t 10 /tmp/mysql_slow_queries.log
 ```
 
 得到返回记录最多的10个SQL。
 
 ```
-mysqldumpslow -s r -t 10 /var/log/mysql_slow_queries.log
+mysqldumpslow -s r -t 10 /tmp/mysql_slow_queries.log
 ```
 
 ## 清理 MySQL binlog
