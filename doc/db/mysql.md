@@ -1,6 +1,5 @@
 # Mysql
 
-
 * [数据操作](#数据操作)
 	* [MySQL 引擎](#mysql-引擎)
 	* [查看下是否支持 InnoDB](#查看下是否支持-innodb)
@@ -10,12 +9,18 @@
 	* [InnoDB配置](#innodb配置)
 	* [其他设置](#其他设置)
 	* [总结](#总结)
-* [清理 MySQL binlog](#清理-mysql-binlog)
-	* [概要](#概要)
-	* [相关基本参数](#相关基本参数)
-	* [清理方法](#清理方法)
-		* [手动清理](#手动清理)
-		* [自动清理](#自动清理)
+* [mysql 日志](#mysql-日志)
+	* [慢日志(5.1.73)](#慢日志5173)
+		* [配置](#配置)
+		* [查看变量](#查看变量)
+		* [测试](#测试)
+		* [日志查询](#日志查询)
+	* [清理 MySQL binlog](#清理-mysql-binlog)
+		* [概要](#概要)
+		* [相关基本参数](#相关基本参数)
+		* [清理方法](#清理方法)
+			* [手动清理](#手动清理)
+			* [自动清理](#自动清理)
 * [数据库管理](#数据库管理)
 	* [用户管理](#用户管理)
 		* [创建用户](#创建用户)
@@ -143,13 +148,95 @@ MySQL 5.6中，这个属性默认值是ON，因此大部分情况下你什么都
 
 当然还有其他的设置可以起作用，取决于你的负载或硬件：在慢内存和快磁盘、高并发和写密集型负载情况下，你将需要特殊的调整。然而这里的目标是使得你可以快速地获得一个稳健的MySQL配置，而不用花费太多时间在调整一些无关紧要的MySQL设置或读文档找出哪些设置对你来说很重要上。
 
-# 清理 MySQL binlog
-## 概要
+# mysql 日志
+
+MySQL 服务器上一共有六种日志：错误日志，查询日志，慢查询日志，二进制日志，事务日志，中继日志
+
+## 慢日志(5.1.73)
+
+慢查询日志，顾名思义就是记录执行比较慢查询的日志
+
+### 配置
+
+两种方法
+
+**修改配置(永久生效)**
+
+修改配置文件: ```/etc/my.cnf```
+
+```ini
+slow_query_log = 1
+slow_query_log_file = /var/log/mysql_slow_queries.log
+long_query_time = 10
+```
+配置后重启 mysql
+
+**修改变量(重启后失效)**
+
+`mysql> set global slow_query_log=1;`
+
+5.1.73默认慢查询日志路径为：/var/run/mysqld/mysqld-slow.log
+
+### 查看变量
+
+**慢查询打开状态(slow_query_log)和日志位置(slow_query_log_file)**
+
+`mysql> SHOW VARIABLES LIKE 'slow%';`
+
+```
++---------------------------+--------------------------------+
+| Variable_name             | Value                          |
++---------------------------+--------------------------------+
+| slow_launch_time          | 2                              |
+| slow_query_log            | ON                             |
+| slow_query_log_file       | /var/log/mysql_slow_queries.log|
++---------------------------+--------------------------------+
+3 rows in set (0.01 sec)
+```
+
+**慢查询时间**
+
+`mysql> SHOW VARIABLES LIKE 'long%';`
+
+```
++----------------------------------------------------------+-----------+
+| Variable_name                                            | Value     |
++----------------------------------------------------------+-----------+
+| long_query_time                                          | 10.000000 |
++----------------------------------------------------------+-----------+
+```
+### 测试 
+
+登陆mysql 
+
+`mysql>select sleep(11);`
+
+查看日志
+
+tail -f /var/log/mysql_slow_queries.log
+
+### 日志查询
+
+列出记录次数最多的10个sql语句
+
+```
+mysqldumpslow -s c -t 10 /var/log/mysql_slow_queries.log
+```
+
+得到返回记录最多的10个SQL。
+
+```
+mysqldumpslow -s r -t 10 /var/log/mysql_slow_queries.log
+```
+
+## 清理 MySQL binlog
+
+### 概要
 作为master的Mysql运行久了以后会在根目录中产生大量的binlog日志，如果不及时清理，会占用大量的磁盘空间，也会对数据库的正常运行带来隐患
 
 >之所以要开启binlog是因为，mysql的主备复制是建立在master产生binlog的基础上
 
-## 相关基本参数
+### 相关基本参数
 
 **--log-bin[=base_name]**
 
@@ -218,10 +305,9 @@ Range|0 .. 99
 
 ---
 
-## 清理方法 
+### 清理方法 
 
-
-### 手动清理
+#### 手动清理
 
 ***使用PURGE BINARY LOGS进行清理***
 
@@ -508,13 +594,7 @@ mysql>
 * 5.在master上执行**RESET MASTER**清除掉测试数据
 * 6.在检查所有的不想要的测试数据和日志已经清理掉后，可以在slave上重新开启复制
 
-
-
-
-
----
-
-### 自动清理
+#### 自动清理
 
 可以使用**expire_logs_days**系统变量来设定日志过期时间，自动删除过期日志，如果环境中有复制，注意要设定合适的值，这个值要大于最坏情况下slave可能落后于master的天数。
 
@@ -605,7 +685,6 @@ UPDATE user 表
 
     UPDATE user SET password=password('123456') WHERE user='name' AND host='12.44.33.22';
     FLUSH privileges;
-
 
 # 常见问题
 
