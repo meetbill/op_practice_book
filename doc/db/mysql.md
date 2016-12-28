@@ -21,6 +21,8 @@
 		* [清理方法](#清理方法)
 			* [手动清理](#手动清理)
 			* [自动清理](#自动清理)
+* [mysql主从](#mysql主从)
+	* [清除主从关系](#清除主从关系)
 * [数据库管理](#数据库管理)
 	* [用户管理](#用户管理)
 		* [创建用户](#创建用户)
@@ -626,6 +628,37 @@ mysql> show variables like "%expire%";
 
 mysql> 
 ~~~
+
+# mysql主从
+
+## 清除主从关系
+
+**RESET MASTER**
+
+删除所有index file 中记录的所有binlog 文件，将日志索引文件清空，创建一个新的日志文件，这个命令通常仅仅用于第一次用于搭建主从关系的时的主库，
+
+注意
+
+reset master 不同于purge binary log的两处地方
+
+> * reset master 将删除日志索引文件中记录的所有binlog文件，创建一个新的日志文件 起始值从000001 开始，然而purge binary log 命令并不会修改记录binlog的顺序的数值
+> * reset master 不能用于有任何slave 正在运行的主从关系的主库。因为在slave 运行时刻 reset master 命令不被支持，reset master 将master 的binlog从000001 开始记录,slave 记录的master log 则是reset master 时主库的最新的binlog,从库会报错无法找的指定的binlog文件。
+
+  
+**RESET SLAVE**
+
+```
+reset slave 将使slave 忘记主从复制关系的位置信息。该语句将被用于干净的启动, 它删除master.info文件和relay-log.info 文件以及所有的relay log 文件并重新启用一个新的relaylog文件。使用reset slave之前必须使用stop slave 命令将复制进程停止。
+
+在 5.1.73(后面的版本貌似也是) 的版本中 reset slave 并不会清理存储于内存中的复制信息比如  master host, master port, master user, or master password,也就是说如果没有使用change master 命令做重新定向，执行start slave 还是会指向旧的master 上面。当从库执行reset slave之后,将mysqld 重启后复制参数将被重置。
+  
+注 所有的relay log将被删除不管他们是否被SQL thread进程完全应用(这种情况发生于备库延迟以及在备库执行了stop slave 命令),存储复制链接信息的master.info文件将被立即清除,如果SQL thread 正在复制临时表的过程中，执行了stop slave ，并且执行了reset slave，这些被复制的临时表将被删除。
+```  
+  
+**RESET SLAVE  ALL**(5.6后支持)
+
+在5.6.3 版本以及以后 使用使用 RESET SLAVE ALL 来完全的清理复制连接参数信息。
+
 
 # 数据库管理
 
