@@ -42,6 +42,7 @@
 		* [Git数据结构](#git数据结构)
 	* [其他操作](#其他操作)
 		* [解决GitHub commit次数过多.git文件过大](#解决github-commit次数过多git文件过大)
+		* [fatal: HTTP request failed](#fatal-http-request-failed)
 * [curl](#curl)
 	* [curl 基础](#curl-基础)
 		* [直接获取（GET）一个url](#直接获取get一个url)
@@ -492,7 +493,23 @@ Git的核心数是很简单的，就是一个链表(或者一棵树更准确一�
 # git remote add origin <your_github_repo_url>
 # git push -f -u origin master
 ```
+### fatal: HTTP request failed
 
+
+使用git clone失败
+
+```
+[root@localhost ~]# git clone https://github.com/BillWang139967/Vim.git
+Initialized empty Git repository in /root/Vim/.git/
+error:  while accessing https://github.com/BillWang139967/Vim.git/info/refs
+
+fatal: HTTP request failed
+```
+解决方法
+```
+#git config --global http.sslVerify false
+
+```
 # curl 
 ## curl 基础
 在介绍前，我需要先做两点说明：

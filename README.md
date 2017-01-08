@@ -1,17 +1,11 @@
 ## 目录
 
-* [阅读本书](#阅读本书)
-	* [网上阅读](#网上阅读)
+* 阅读本书
+	* [网上阅读(推荐)](https://billwang139967.gitbooks.io/op_practice_book/content/)
 	* [本地阅读](#本地阅读)
+* [下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
 * [参加步骤](#参加步骤)
 * [小额捐款](#小额捐款)
-
-# 阅读本书
-
-## 网上阅读
-
-[运维实践手册](https://billwang139967.gitbooks.io/op_practice_book/content/)
-
 
 ## 本地阅读
 
@@ -25,7 +19,6 @@
 2. `./run_web.sh`
 
 运行run_web后，可以在本地输入http://IP:8000进行html访问本地书籍
-
 
 
 # 参加步骤

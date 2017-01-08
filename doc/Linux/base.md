@@ -67,11 +67,14 @@
 * [用户管理](#用户管理-1)
 	* [Linux踢出其他正在SSH登陆用户](#linux踢出其他正在ssh登陆用户)
 	* [使用脚本创建用户，同时用户有 sudo 权限](#使用脚本创建用户同时用户有-sudo-权限)
+	* [无交互式修改用户密码](#无交互式修改用户密码)
 * [其他设置](#其他设置)
 	* [时区及时间](#时区及时间)
 		* [UTC 和 GMT](#utc-和-gmt)
 		* [时间换算](#时间换算)
 		* [Linux 下调整时区及更新时间](#linux-下调整时区及更新时间)
+	* [登录相关](#登录相关)
+		* [修改登录成功后的信息](#修改登录成功后的信息)
 * [CentOS 7 vs CentOS 6的不同](#centos-7-vs-centos-6的不同)
 	* [运行相关](#运行相关)
 	* [服务相关](#服务相关)
@@ -1304,6 +1307,12 @@ EOF
 ```
 以上脚本会创建用户 `ceshi` 同时用户的密码为 `ceshi_password` ，并且此用户有 sudo 权限
 
+## 无交互式修改用户密码
+
+```
+echo "123456" | passwd --stdin root
+```
+
 # 其他设置
 
 
@@ -1360,6 +1369,14 @@ echo "0 5 * * *  /usr/sbin/ntpdate cn.ntp.org.cn" >> /var/spool/cron/root
 echo "0 5 * * *  /usr/sbin/ntpdate 133.100.11.8" >> /var/spool/cron/root
 
 ```
+## 登录相关
+
+### 修改登录成功后的信息
+
+motd(message of the day)
+
+修改登录成功后的提示信息在此文件中添加内容即可：/etc/motd
+
 # CentOS 7 vs CentOS 6的不同
 
 ## 运行相关
