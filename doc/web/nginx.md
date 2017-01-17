@@ -463,9 +463,24 @@ Linux 下的工具们通常使用 base64 编码的文本格式，相关常用后
 
 ```
 1.生成服务器端的私钥(key文件)
-$ openssl genrsa  -out server.key 1024
+$openssl genrsa  -out server.key 1024
+
 2.生成服务器端证书签名请求文件(csr文件);
 $ openssl req -new -key server.key -out server.csr
+    You are about to be asked to enter information that will be incorporated into your certificate request.
+    What you are about to enter is what is called a Distinguished Name or a DN.
+    There are quite a few fields but you can leave some blank
+    For some fields there will be a default value,
+    If you enter '.', the field will be left blank.
+    -----
+    Country Name (2 letter code) [XX]:CN-----------------------------------证书持有者所在国家
+    State or Province Name (full name) []:BJ-------------------------------证书持有者所在州或省份(可省略不填)
+    Locality Name (eg, city) []:BJ-----------------------------------------证书持有者所在城市(可省略不填)
+    Organization Name (eg, company) []:SC----------------------------------证书持有者所属组织或公司
+    Organizational Unit Name (eg, section) []:.----------------------------证书持有者所属部门(可省略不填)
+    Common Name (eg, your name or your server's hostname) []:ceshi.com-----域名
+    Email Address []:------------------------------------------------------邮箱(可省略不填)
+
 3.生成证书文件(crt文件)
 $ openssl x509 -req -days 1000 -in server.csr -signkey server.key -out server.crt
 ```
