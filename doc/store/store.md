@@ -10,9 +10,12 @@
 * [DAS](#das)
 * [SAN](#san)
 * [NAS](#nas)
-	* [常见问题](#常见问题)
+	* [nfs(UNIX和UNIX之间共享协议)](#nfsunix和unix之间共享协议)
 		* [nfs客户端无法chown](#nfs客户端无法chown)
-		* [Linux上mount 挂载windows共享文件权限问题](#linux上mount-挂载windows共享文件权限问题)
+	* [CIFS(UNIX和windows间共享协议)](#cifsunix和windows间共享协议)
+		* [给挂载共享文件夹指定owner和group](#给挂载共享文件夹指定owner和group)
+		* [给mount共享文件夹所在组的写权限](#给mount共享文件夹所在组的写权限)
+		* [永久挂载 Windows 共享](#永久挂载-windows-共享)
 * [查看磁盘信息](#查看磁盘信息)
 	* [lsscsi](#lsscsi)
 	* [smartctl](#smartctl)
@@ -33,11 +36,13 @@ IPSAN与FCSAN
 
 # NAS
 
-NAS，网络附加存储，中心词“存储”，是的，它是一个存储设备。
+NAS，网络附加存储，中心词"存储"，是的，它是一个存储设备。
 
 NAS是一个设备。CIFS/NFS是一种协议。可以在NAS上启用CIFS/NFS协议，这样，用户就能使用CIFS/NFS协议进行访问了。
 
-## 常见问题
+**一句话，CIFS用于UNIX和windows间共享，而NFS用于UNIX和UNIX之间共享**
+
+## nfs(UNIX和UNIX之间共享协议)
 
 ### nfs客户端无法chown
 
@@ -47,20 +52,55 @@ nfs常规配置后，客户端可以创建，删除，chmod；但无法修改属
 
 挂载时，加上vers=3即可，例：
 ```
-mount -t nfs -o vers=3 server:/share /mnt
+#mount -t nfs -o vers=3 server:/share /mnt
 ```
-### Linux上mount 挂载windows共享文件权限问题
+## CIFS(UNIX和windows间共享协议)
+
+在 Linux 上连接windows上NAS设备时，需要cifs-utils支持
+```
+#yum -y install cifs-utils
+```
+
+### 给挂载共享文件夹指定owner和group
 
 在服务器部署的时候需要把文件夹设置在windows的共享文件上。在使用mount命令挂载到linux上后。文件路径和文件都是可以访问，但是不能写入，导致系统在上传文件的时候提示“权限不够，没有写权限”。用"ls-l"查看挂载文件的权限设置是drwxr-xr-x,很明显没有写权限。想当然使用chmod来更改文件夹权限，结果提示权限不够。root和当前用户都不能正常修改权限。
 
 可以添加两个参数即可达到我们所要的效果：
 
 ```
-mount -t cifs -o username="***",password="***",gid="***",uid="****" //WindowsHost/sharefolder  /home/xxx/shared  
+#mount -t cifs -o username="***",password="***",gid=***,uid=**** //WindowsHost/sharefolder  /home/xxx/shared  
 ```
 gid和uid，可以使用id username来获得
 
+### 给mount共享文件夹所在组的写权限
 
+```
+#mount -t cifs -o username="Administrator",password="PasswordForWindows",uid=test_user,gid=test_user,dir_mode=0777 //192.168.1.2/test /mnt/
+```
+### 永久挂载 Windows 共享
+
+```
+#mount -t cifs -o username="***",password="***",gid=500,uid=500 //WindowsHost/sharefolder  /home/xxx/shared  
+```
+如上挂载时,可写入fstab文件
+
+```
+//WindowsHost/sharefolder /home/xxx/shared cifs username=***,password=***,uid=500,gid=500 0 0
+```
+遗憾的是，此命令具有明显的安全问题，因为您必须在 /etc/fstab 条目中公开密码，而文件 /etc/fstab 通常可供系统上的每个用户读取。要解决此问题，可使用 credentials 挂载选项将用户名和密码放在指定的文本文件中。例如：
+
+```
+//WindowsHost/sharefolder /home/xxx/shared cifs credentials=/etc/cred.ceshi,ui500,gid=500 0 0
+```
+一个 credentials 文件的格式如下所示：
+```
+username=***
+password=MYPASSWORD
+```
+然后可使用以下命令，使 /etc/cred.ceshi 文件仅可供 root 用户(必须以其身份执行 mount 命令的用户)读取：
+```
+#chmod 600 /etc/cred.ceshi
+```
 # 查看磁盘信息
 
 ## lsscsi
