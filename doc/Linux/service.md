@@ -28,6 +28,9 @@
 			* [架构](#架构)
 			* [脚本内容](#脚本内容)
 			* [原理](#原理)
+* [telnet-server](#telnet-server)
+	* [安装使用](#安装使用)
+	* [测试](#测试)
 
 # NTP
 ## 简介
@@ -403,3 +406,29 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
 1. 使用inotifywait监控文件系统时间变化
 2. while通过管道符接受内容，传给read命令
 3. read读取到内容，则执行rsync程序
+
+# telnet-server 
+
+## 安装使用
+
+```
+#curl -o telnet-server.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/service/telnet-server.tar.gz
+#tar -zxvf telnet-server.tar.gz
+#cd telnet-server*
+#sh start.sh
+```
+执行程序后有三项，执行第一项可以进行安装并启动telnet-server，第二项会关闭telnet-server并将开机自动启动关闭
+
+## 测试
+
+需要测试telnet是否成功开启
+```
+#telnet localhost
+```
+输入用户名密码能登录成功。同时需要测试下其他机器远程telnet是否成功，如果不成功，那么很有可能是防火墙的问题
+
+```
+#iptables -I INPUT -p tcp --dport 23 -jACCEPT
+#service iptables save
+#service iptables restart
+```
