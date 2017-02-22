@@ -57,12 +57,14 @@
 		* [Microsoft windows 网络 \(samba\)](#microsoft-windows-网络-samba)
 		* [IPTABLES \(firewall\)](#iptables-firewall)
 * [ssh](#ssh)
-	* [ssh登陆原理以及端口转发](#ssh登陆原理以及端口转发)
+	* [ssh简介及基本操作](#ssh简介及基本操作)
 		* [简介：](#简介)
 		* [密钥:](#密钥)
 		* [基于口令的安全验证通讯原理：](#基于口令的安全验证通讯原理)
 		* [基于密匙的安全验证通讯原理：](#基于密匙的安全验证通讯原理)
-		* [SSH forwarding:](#ssh-forwarding)
+	* [SSH forwarding(端口转发):](#ssh-forwarding端口转发)
+		* [SSH 本地转发(正向连接)](#ssh-本地转发正向连接)
+		* [SSH 远程转发(反向连接)](#ssh-远程转发反向连接)
 		* [windows ---xshell](#windows----xshell)
 * [用户管理](#用户管理-1)
 	* [Linux踢出其他正在SSH登陆用户](#linux踢出其他正在ssh登陆用户)
@@ -72,12 +74,11 @@
 	* [时区及时间](#时区及时间)
 		* [UTC 和 GMT](#utc-和-gmt)
 		* [时间换算](#时间换算)
-		* [Linux 下调整时区及更新时间](#linux-下调整时区及更新时间)
+* [ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime](#ln--sf-usrsharezoneinfoasiashanghai-etclocaltime)
 	* [登录相关](#登录相关)
 		* [修改登录成功后的信息](#修改登录成功后的信息)
 * [CentOS 7 vs CentOS 6的不同](#centos-7-vs-centos-6的不同)
 	* [运行相关](#运行相关)
-	* [服务相关](#服务相关)
 	* [网络](#网络-1)
 
 # 安装
@@ -1150,7 +1151,7 @@ sslinux
 
 # ssh
 
-## ssh登陆原理以及端口转发
+## ssh简介及基本操作
 
 ### 简介：
 SSH，全名secure shell，其目的是用来从终端与远程机器交互，SSH设计之处初，遵循了如下原则：
@@ -1212,21 +1213,34 @@ tips:
 
    ssh-copy-id "-p 端口号 b@B"
 
-### SSH forwarding:
+## SSH forwarding(端口转发):
+
+SSH 还同时提供了一个非常有用的功能，这就是端口转发。它能够将其他 TCP 端口的网络数据通过 SSH 链接来转发，并且自动提供了相应的加密及解密服务。这一过程有时也被叫做“隧道”(tunneling)，这是因为 SSH 为其他 TCP 链接提供了一个安全的通道来进行传输而得名。
 
 SSH 端口转发自然需要 SSH 连接，而 SSH 连接是有方向的，从 SSH Client 到 SSH Server 。
 而我们所要访问的应用也是有方向的，应用连接的方向也是从应用的 Client端连接到应用的 Server端。
 比如需要我们要访问Internet上的Web站点时，Http应用的方向就是从我们自己这台主机(Client)到远处的Web Server。
 
-如果SSH连接和应用的连接这两个连接的方向一致，那我们就说它是本地转发。
+> * SSH连接和应用的连接这两个连接的方向一致，那我们就说它是本地转发。
+> * SSH连接和应用的连接这两个连接的方向不同，那我们就说它是远程转发。
 
-本地转发Local Forward
+### SSH 本地转发(正向连接)
+
+正向连接就是client连上server，然后把server能访问的机器地址和端口(当然也包括server自己)镜像到client的端口上。
+
+```
+何时使用本地Tunnel？
+
+> * 比如说你在本地访问不了某个网络服务(如www.google.com)，而有一台机器(如：xx.xx.xx.xx)可以，那么你就可以通过这台机器的ssh服务来转发
+```
+使用方法
 ```
 ssh -L <local port>:<remote host>:<remote port> <SSH hostname>
+ssh -L [客户端IP或省略]:[客户端端口]:[服务器能访问的IP]:[服务器能访问的IP的端口] [登陆服务器的用户名@服务器IP] -p [服务器ssh服务端口（默认22）]
 ```
 ssh  -L 1433:target_server:1433 user@ssh_host
 
-**xshell**
+***windows 下使用本地转发xshell***
 
 ```
 (1)ssh远程连接到Linux
@@ -1240,11 +1254,57 @@ Destination Host使用默认的localhost；Destination Port添上80;
 Destination Host设置为localhost为要访问的机器，可以设置为登陆后的机器可以访问到的IP
 ```
 
-如果SSH连接和应用的连接这两个连接的方向不同，那我们就说它是远程转发。
-```
-ssh -R <local port>:<remote host>:<remote port> <SSH hostname>
-```
+### SSH 远程转发(反向连接)
 
+反向连接就是client连上server，然后把client能访问的机器地址和端口(也包括client自己)镜像到server的端口上。
+
+```
+何时使用反向连接？
+
+比如当你下班回家后就访问不了公司内网的机器了，遇到这种情况可以事先在公司内网的机器上执行远程Tunnel，连上一台公司外网的机器，等你下班回家后就可以通过公司外网的机器去访问公司内网的机器了。
+```
+使用方法
+```
+ssh -R <remote port>:<local host>:<local port> <SSH hostname>
+ssh -R [服务器IP或省略]:[服务器端口]:[客户端能访问的IP]:[客户端能访问的IP的端口] [登陆服务器的用户名@服务器IP] -p [服务器ssh服务端口（默认22）]
+```
+**外网机器 A 要控制 内网机器 B**
+
+A主机：外网，ip：122.122.122.122，sshd端口：2222(默认是22)
+
+B主机：内网，sshd端口：2222(默认是22)
+
+无论是外网主机A，还是内网主机B都需要跑ssh daemon
+
+***首先在内网机器 B 上执行***
+
+    `ssh -NfR 1234:localhost:2222 user1@122.122.122.122 -p 2222`
+
+这句话的意思是将A主机的1234端口和B主机的2222端口绑定，相当于远程端口映射(Remote Port Forwarding)。
+
+***外网机器A会listen本地1234端口***
+
+```
+----外网机器A sshd 会listen本地1234端口
+    #netstat -tanp | grep sshd
+    #Proto Recv-Q Send-Q   Local Address   Foreign Address   State       PID/Program name
+    #tcp     0      0      127.0.0.1:1234    0.0.0.0:*       LISTEN      4234/sshd
+
+----在外网机器A登录内网机器B
+    #ssh localhost -p1234
+```
+**内网机器B自动连接外网机器A**
+
+上面的反向连接（Reverse Connection）不稳定，可能随时断开，需要内网主机B再次向外网A发起连接，这时需要个"朋友"帮你在内网B主机执行这条命令。它就是Autossh。
+
+(1)在B机器上将B机器公钥放到外网机器A上
+
+(2)用Autossh保持ssh反向隧道一直连接，CentOS 需要使用epel源下载
+
+```
+#autossh -M 5678 -NfR 1234:localhost:2222 user1@122.122.122.122 -p2222
+```
+比之前的命令添加的一个-M 5678参数，负责通过5678端口监视连接状态，连接有问题时就会自动重连
 
 ### windows ---xshell
 
@@ -1311,6 +1371,25 @@ EOF
 
 ```
 echo "123456" | passwd --stdin root
+```
+
+# 其他设置
+
+
+## 时区及时间
+
+时区就是时间区域，主要是为了克服时间上的混乱，统一各地时间。地球上共有 24 个时区，东西各 12 个时区（东12与西12合二为一）。
+
+### UTC 和 GMT
+
+时区通常写成`+0800`，有时也写成`GMT +0800`，其实这两个是相同的概念。
+
+GMT 是格林尼治标准时间（Greenwich Mean Time）。
+
+UTC 是协调世界时间（Universal Time Coordinated），又叫世界标准时间，其实就是`0000`时区的时间。
+
+### 时间换算
+
 ```
 
 # 其他设置
@@ -1496,25 +1575,6 @@ motd(message of the day)
     $systemctl isolate graphical.target
     默认
     $ systemctl set-default graphical.target
-    $ systemctl set-default multi-user.target
-    当前
-    $ systemctl get-default
-
-## 服务相关
-
-**启动停止**
-
-    [CentOS6]
-    $ service service_name start
-    $ service service_name stop
-    $ service sshd restart/status/reload
-
-    [CentOS7]
-    $ systemctl start service_name
-    $ systemctl stop service_name
-    $ systemctl restart/status/reload sshd
-
-**自启动**
 
     [CentOS6]
     $ chkconfig service_name on/off
