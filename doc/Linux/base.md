@@ -1448,13 +1448,46 @@ echo "0 5 * * *  /usr/sbin/ntpdate cn.ntp.org.cn" >> /var/spool/cron/root
 echo "0 5 * * *  /usr/sbin/ntpdate 133.100.11.8" >> /var/spool/cron/root
 
 ```
-## 登录相关
+## 登录提示信息
+
+### 修改登录前的提示信息
+
+**(1)系统级别的设置方法/etc/issue**
+
+使用此方法时远程ssh连接的时候并不会显示
+
+```
+在登录系统输入用户名之前，可以看到上方有WELCOME......之类的信息，这里会显示LINUX发行版本名称，内核版本号，日期，机器信息等等信息，
+
+首先打开/etc/issue文件，可以看到里面是这样一段"Welcome to <LINUX 发行版本名称>-kernel 后接各项参数\" 
+
+参数的各项说明：
+\r 显示KERNEL内核版本号；
+\l 显示虚拟控制台号；
+\d 显示当前日期；
+\n 显示主机名；
+\m 显示机器类型，即CPU架构，如i386等；
+
+可以显示所有必要的信息：
+ 
+Welcome to <LINUX 发行版本名称>-kernel \r (\l) \d \n \m.
+``` 
 
 ### 修改登录成功后的信息
 
 motd(message of the day)
 
 修改登录成功后的提示信息在此文件中添加内容即可：/etc/motd
+
+如:
+```
+#########################
+系统初始化配置提示
+xxxx
+
+应用联系人:xxxx 联系方式:xxxx
+#########################
+```
 
 # CentOS 7 vs CentOS 6的不同
 
