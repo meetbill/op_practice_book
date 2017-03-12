@@ -14,14 +14,12 @@
     * [mysql](doc/db/mysql.md)
 * web篇
     * [nginx](doc/web/nginx.md)
-    * tornado
     * [django](doc/web/django.md)
 * 监控篇
     * [zabbix](doc/monitor/zabbix.md)
-    * sparrow
-    * Starfish
+    * [monit](doc/monitor/monit.md)
 * 存储篇
-    * [DAS/SAN/NAS](doc/store/store.md)
+    * [DAS/SAN/NAS及磁盘常规操作](doc/store/store.md)
     * [RAID](doc/store/RAID.md)
     * [gfs](doc/store/gfs.md)
     * [Glusterfs](doc/store/glusterfs.md)
@@ -31,7 +29,6 @@
     * [aws](doc/cloud/aws.md)
     * [阿里云](doc/cloud/aliyun.md)
     * [KVM](doc/cloud/kvm.md)
-    * openstack
     * [docker](doc/cloud/docker.md)
 * 集群应用篇
     * [负载均衡](doc/HA/lb.md)

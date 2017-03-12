@@ -25,16 +25,24 @@
 	* [MegaCli](#megacli)
 	* [LSIUtil](#lsiutil)
 	* [lsblk](#lsblk)
+* [磁盘扩展](#磁盘扩展)
+	* [Linux下xfs扩展](#linux下xfs扩展)
 
 # DAS
+
+DAS :  Application --> File system --> Disk Storage
 
 DAS：直连式存储依赖服务器主机操作系统进行数据的IO读写和存储维护管理，数据备份和恢复要求占用服务器主机资源(包括CPU、系统IO等)
 
 # SAN
 
+SAN :  Application --> File system --> Networking --> Disk Storage
+
 IPSAN与FCSAN
 
 # NAS
+
+NAS :  Application --> Networking --> File system --> Disk Storage
 
 NAS，网络附加存储，中心词"存储"，是的，它是一个存储设备。
 
@@ -313,3 +321,51 @@ SSD上剩余的保留空间, 初始值为100，表示100%，阀值为10，递减
 ## lsblk
 
 
+# 磁盘扩展
+
+## Linux下xfs扩展
+
+XFS是一个开源的（GPL）日志文件系统，最初由硅谷图形（SGI）开发，现在大多数的Linux发行版都支持。事实上，XFS已被最新的CentOS/RHEL 7采用，成为其默认的文件系统。在其众多的特性中，包含了“在线调整大小”这一特性，使得现存的XFS文件系统在已经挂载的情况下可以进行扩展。
+
+扩展前
+```
+[root@meetbill ~]# xfs_info /mnt/
+meta-data=/dev/sdb               isize=512    agcount=4, agsize=196608 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=0 spinodes=0
+data     =                       bsize=4096   blocks=786432, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+[root@meetbill ~]# df -h
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/cl-root   17G  8.4G  8.7G  49% /
+devtmpfs             902M     0  902M   0% /dev
+tmpfs                912M     0  912M   0% /dev/shm
+tmpfs                912M  8.7M  904M   1% /run
+tmpfs                912M     0  912M   0% /sys/fs/cgroup
+/dev/sda1           1014M  141M  874M  14% /boot
+tmpfs                183M     0  183M   0% /run/user/0
+/dev/sdb             3.0G   33M  3.0G   2% /mnt
+```
+将磁盘(/dev/sdb)进行扩展后,扩展磁盘的方式比如虚拟机对虚拟磁盘进行扩展或isics对存储进行扩展，磁盘扩展后，我们还需要对文件系统进行扩展(/mnt)
+
+我们用到的是 `xfs_growfs` 命令
+```
+[root@meetbill ~]# xfs_growfs /mnt/
+meta-data=/dev/sdb               isize=512    agcount=4, agsize=196608 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=0 spinodes=0
+data     =                       bsize=4096   blocks=786432, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 786432 to 1310720
+```
+大功告成，如果`xfs_growfs` 不加任何参数，则会对指定挂载目录自动扩展XFS文件系统到最大的可用大小。`-D`参数可以设置为指定大小
