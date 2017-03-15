@@ -1278,7 +1278,9 @@ B主机：内网，sshd端口：2222(默认是22)
 
 ***首先在内网机器 B 上执行***
 
-    `ssh -NfR 1234:localhost:2222 user1@122.122.122.122 -p 2222`
+```
+    ssh -NfR 1234:localhost:2222 user1@122.122.122.122 -p 2222
+```
 
 这句话的意思是将A主机的1234端口和B主机的2222端口绑定，相当于远程端口映射(Remote Port Forwarding)。
 
@@ -1301,6 +1303,12 @@ B主机：内网，sshd端口：2222(默认是22)
 
 (2)用Autossh保持ssh反向隧道一直连接，CentOS 需要使用epel源下载
 
+在CentOS6和CentOS7都可以执行下面的命令安装epel仓库
+
+```
+#yum -y install epel-release
+```
+安装号 autossh 后使用如下方法进行反向连接
 ```
 #autossh -M 5678 -NfR 1234:localhost:2222 user1@122.122.122.122 -p2222
 ```
