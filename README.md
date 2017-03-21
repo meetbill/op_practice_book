@@ -4,6 +4,7 @@
 	* [网上阅读(推荐)](https://billwang139967.gitbooks.io/op_practice_book/content/)
 	* [本地阅读](#本地阅读)
 * [下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
+* [wiki](https://github.com/BillWang139967/op_practice_book/wiki)
 * [参加步骤](#参加步骤)
 * [小额捐款](#小额捐款)
 
