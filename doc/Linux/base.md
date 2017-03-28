@@ -1,85 +1,85 @@
 ## linux基础
 
+<!-- vim-markdown-toc GFM -->
 * [安装](#安装)
-	* [安装准备](#安装准备)
-	* [安装centos6.8](#安装centos68)
-	* [系统安装后的配置](#系统安装后的配置)
+    * [安装准备](#安装准备)
+    * [安装centos6.8](#安装centos68)
+    * [系统安装后的配置](#系统安装后的配置)
 * [Bash基础特性](#bash基础特性)
-	* [命令历史](#命令历史)
-	* [命令补全](#命令补全)
-	* [路径补全](#路径补全)
-	* [命令行展开](#命令行展开)
-	* [命令的执行状态结果](#命令的执行状态结果)
-	* [命令别名](#命令别名)
-		* [User specific aliases and functions](#user-specific-aliases-and-functions)
-	* [通配符glob](#通配符glob)
-	* [bash快捷键](#bash快捷键)
-		* [编辑命令：](#编辑命令)
-		* [重新执行命令：](#重新执行命令)
-		* [控制命令：](#控制命令)
-		* [Bang (!) 命令](#bang--命令)
-		* [友情提示：](#友情提示)
-	* [bash的io重定向及管道](#bash的io重定向及管道)
-		* [I/O重定向：改变标准位置；](#io重定向改变标准位置)
+    * [命令历史](#命令历史)
+    * [命令补全](#命令补全)
+    * [路径补全](#路径补全)
+    * [命令行展开](#命令行展开)
+    * [命令的执行状态结果](#命令的执行状态结果)
+    * [命令别名](#命令别名)
+        * [User specific aliases and functions](#user-specific-aliases-and-functions)
+    * [通配符glob](#通配符glob)
+    * [bash快捷键](#bash快捷键)
+        * [编辑命令：](#编辑命令)
+        * [重新执行命令：](#重新执行命令)
+        * [控制命令：](#控制命令)
+        * [Bang (!) 命令](#bang--命令)
+        * [友情提示：](#友情提示)
+    * [bash的io重定向及管道](#bash的io重定向及管道)
+        * [I/O重定向：改变标准位置；](#io重定向改变标准位置)
 * [linux 常用命令](#linux-常用命令)
-	* [系统](#系统)
-		* [系统信息](#系统信息)
-		* [关机](#关机)
-		* [监视和调试](#监视和调试)
-		* [公钥私钥](#公钥私钥)
-		* [其他](#其他)
-	* [资源](#资源)
-		* [磁盘空间](#磁盘空间)
-	* [文件及文本处理](#文件及文本处理)
-		* [文件和目录](#文件和目录)
-		* [文件搜索](#文件搜索)
-		* [文件的权限](#文件的权限)
-		* [文件的特殊属性](#文件的特殊属性)
-		* [查看文件内容](#查看文件内容)
-		* [文本处理](#文本处理)
-		* [字符设置和文件格式](#字符设置和文件格式)
-	* [挂载](#挂载)
-		* [挂载一个文件系统](#挂载一个文件系统)
-		* [光盘](#光盘)
-	* [用户管理](#用户管理)
-		* [用户和群组](#用户和群组)
-	* [包管理](#包管理)
-		* [打包和压缩文件](#打包和压缩文件)
-		* [RPM包 \(Fedora,RedHat and alike\)](#rpm包-fedoraredhat-and-alike)
-		* [YUM 软件工具 \(Fedora,RedHat and alike\)](#yum-软件工具-fedoraredhat-and-alike)
-		* [备份](#备份)
-	* [磁盘和分区](#磁盘和分区)
-		* [文件系统分析](#文件系统分析)
-		* [初始化一个文件系统](#初始化一个文件系统)
-		* [SWAP 文件系统](#swap-文件系统)
-	* [网络](#网络)
-		* [网络 \(LAN / WiFi\)](#网络-lan--wifi)
-		* [Microsoft windows 网络 \(samba\)](#microsoft-windows-网络-samba)
-		* [IPTABLES \(firewall\)](#iptables-firewall)
+    * [系统](#系统)
+        * [系统信息](#系统信息)
+        * [关机](#关机)
+        * [监视和调试](#监视和调试)
+        * [公钥私钥](#公钥私钥)
+        * [其他](#其他)
+    * [资源](#资源)
+        * [磁盘空间](#磁盘空间)
+    * [文件及文本处理](#文件及文本处理)
+        * [文件和目录](#文件和目录)
+        * [文件搜索](#文件搜索)
+        * [文件的权限](#文件的权限)
+        * [文件的特殊属性](#文件的特殊属性)
+        * [查看文件内容](#查看文件内容)
+        * [文本处理](#文本处理)
+        * [字符设置和文件格式](#字符设置和文件格式)
+    * [挂载](#挂载)
+        * [挂载一个文件系统](#挂载一个文件系统)
+        * [光盘](#光盘)
+    * [用户管理](#用户管理)
+        * [用户和群组](#用户和群组)
+    * [包管理](#包管理)
+        * [打包和压缩文件](#打包和压缩文件)
+        * [RPM包 \(Fedora,RedHat and alike\)](#rpm包-fedoraredhat-and-alike)
+        * [YUM 软件工具 \(Fedora,RedHat and alike\)](#yum-软件工具-fedoraredhat-and-alike)
+        * [备份](#备份)
+    * [磁盘和分区](#磁盘和分区)
+        * [文件系统分析](#文件系统分析)
+        * [初始化一个文件系统](#初始化一个文件系统)
+        * [SWAP 文件系统](#swap-文件系统)
+    * [网络](#网络)
+        * [网络 \(LAN / WiFi\)](#网络-lan--wifi)
+        * [Microsoft windows 网络 \(samba\)](#microsoft-windows-网络-samba)
+        * [IPTABLES \(firewall\)](#iptables-firewall)
 * [ssh](#ssh)
-	* [ssh简介及基本操作](#ssh简介及基本操作)
-		* [简介：](#简介)
-		* [密钥:](#密钥)
-		* [基于口令的安全验证通讯原理：](#基于口令的安全验证通讯原理)
-		* [基于密匙的安全验证通讯原理：](#基于密匙的安全验证通讯原理)
-	* [SSH forwarding(端口转发):](#ssh-forwarding端口转发)
-		* [SSH 本地转发(正向连接)](#ssh-本地转发正向连接)
-		* [SSH 远程转发(反向连接)](#ssh-远程转发反向连接)
-		* [windows ---xshell](#windows----xshell)
+    * [ssh简介及基本操作](#ssh简介及基本操作)
+        * [简介：](#简介)
+        * [密钥:](#密钥)
+        * [基于口令的安全验证通讯原理：](#基于口令的安全验证通讯原理)
+        * [基于密匙的安全验证通讯原理：](#基于密匙的安全验证通讯原理)
+    * [SSH forwarding(端口转发):](#ssh-forwarding端口转发)
+        * [SSH 本地转发(正向连接)](#ssh-本地转发正向连接)
+        * [SSH 远程转发(反向连接)](#ssh-远程转发反向连接)
+        * [windows ---xshell](#windows----xshell)
 * [用户管理](#用户管理-1)
-	* [Linux踢出其他正在SSH登陆用户](#linux踢出其他正在ssh登陆用户)
-	* [使用脚本创建用户，同时用户有 sudo 权限](#使用脚本创建用户同时用户有-sudo-权限)
-	* [无交互式修改用户密码](#无交互式修改用户密码)
+    * [Linux踢出其他正在SSH登陆用户](#linux踢出其他正在ssh登陆用户)
+    * [使用脚本创建用户，同时用户有 sudo 权限](#使用脚本创建用户同时用户有-sudo-权限)
+    * [无交互式修改用户密码](#无交互式修改用户密码)
 * [其他设置](#其他设置)
-	* [时区及时间](#时区及时间)
-		* [UTC 和 GMT](#utc-和-gmt)
-		* [时间换算](#时间换算)
-* [ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime](#ln--sf-usrsharezoneinfoasiashanghai-etclocaltime)
-	* [登录相关](#登录相关)
-		* [修改登录成功后的信息](#修改登录成功后的信息)
+    * [时区及时间](#时区及时间)
+        * [UTC 和 GMT](#utc-和-gmt)
+        * [时间换算](#时间换算)
 * [CentOS 7 vs CentOS 6的不同](#centos-7-vs-centos-6的不同)
-	* [运行相关](#运行相关)
-	* [网络](#网络-1)
+    * [运行相关](#运行相关)
+    * [网络](#网络-1)
+
+<!-- vim-markdown-toc -->
 
 # 安装
 
@@ -1292,8 +1292,8 @@ B主机：内网，sshd端口：2222(默认是22)
     #Proto Recv-Q Send-Q   Local Address   Foreign Address   State       PID/Program name
     #tcp     0      0      127.0.0.1:1234    0.0.0.0:*       LISTEN      4234/sshd
 
-----在外网机器A登录内网机器B
-    #ssh localhost -p1234
+----在外网机器A登录内网机器B(非root用户的话，直接user@localhost即可)
+    #ssh user@localhost -p1234
 ```
 **内网机器B自动连接外网机器A**
 
@@ -1428,7 +1428,7 @@ UTC 是协调世界时间（Universal Time Coordinated），又叫世界标准�
 修改系统时间
 
 ```
-# ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+$ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 ```
 修改/etc/sysconfig/clock文件，修改为：
 
@@ -1439,11 +1439,11 @@ ARC=false
 ```
 校对时间
 ```
-#ntpdate cn.ntp.org.cn
+$ntpdate cn.ntp.org.cn
 ```
 设置硬件时间和系统时间一致并校准
 ```
-#/sbin/hwclock --systohc
+$/sbin/hwclock --systohc
 ```
 
 ***定时同步时间设置***
@@ -1489,12 +1489,12 @@ motd(message of the day)
 
 如:
 ```
-#########################
+/////////////////////////////////////
 系统初始化配置提示
 xxxx
 
 应用联系人:xxxx 联系方式:xxxx
-#########################
+/////////////////////////////////////
 ```
 
 # CentOS 7 vs CentOS 6的不同
