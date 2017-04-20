@@ -15,7 +15,9 @@
         * [启动 NFS 服务端](#启动-nfs-服务端)
         * [配置 NFS 服务端](#配置-nfs-服务端)
         * [配置 NFS 客户端](#配置-nfs-客户端)
-        * [nfs 客户端无法 chown](#nfs-客户端无法-chown)
+        * [常见问题](#常见问题)
+            * [rpcbind 安装失败](#rpcbind-安装失败)
+            * [nfs 客户端无法 chown](#nfs-客户端无法-chown)
     * [CIFS(UNIX 和 windows 间共享协议）](#cifsunix-和-windows-间共享协议)
         * [给挂载共享文件夹指定 owner 和 group](#给挂载共享文件夹指定-owner-和-group)
         * [给 mount 共享文件夹所在组的写权限](#给-mount-共享文件夹所在组的写权限)
@@ -266,8 +268,25 @@ mount -t nfs -o nosuid,noexec,nodev,noatime,nodiratime,intr,rsize=131072,wsize=1
 # 默认挂载方式（无）
 mount -t nfs 192.168.24.7:/data /mnt
 ```
+### 常见问题
+#### rpcbind 安装失败
 
-### nfs 客户端无法 chown
+yum 安装时提示如下
+
+```
+error: %pre(rpcbind-0.2.0-12.el6.x86_64) scriptlet failed, exit status 6
+Error in PREIN scriptlet in rpm package rpcbind-0.2.0-12.el6.x86_64
+error:   install: %pre scriptlet failed (2), skipping rpcbind-0.2.0-12.el6
+  Verifying  : rpcbind-0.2.0-12.el6.x86_64                                                                                    1/1
+  Failed:
+    rpcbind.x86_64 0:0.2.0-12.el6 
+```
+
+因为通过chattr +i 把/etc/passwd /etc/group /etc/shadow /etc/gshadow锁定了。
+
+chattr -i 解锁后，问题解决。
+
+#### nfs 客户端无法 chown
 
 nfs 常规配置后，客户端可以创建，删除，chmod；但无法修改属主和属组；
 
