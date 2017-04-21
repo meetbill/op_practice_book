@@ -45,14 +45,23 @@ baseurl=https://yum.dockerproject.org/repo/main/centos/7
 enabled=1
 gpgcheck=1
 gpgkey=https://yum.dockerproject.org/gpg
+
+[docker-ce-stable]
+name=Docker CE Stable - $basearch
+baseurl=https://download.docker.com/linux/centos/7/$basearch/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
 EOF
 ```
 ### 3. 安装 docker
 
 docker 在 17 年 3 月份后，Docker 分成了企业版（EE）和社区版（CE），转向基于时间的 YY.MM 形式的版本控制方案，17.03 相当于 1.13.1 版本
 ```
-#yum install docker-engine
+#yum install docker-ce
 ```
+安装旧版本 (1.12) 方法 `yum install docker-engine`
+
 ### 4. 设置 docker 开机自启动
 ```
 #systemctl enable docker.service
@@ -91,6 +100,8 @@ For more examples and ideas, visit:
  https://docs.docker.com/engine/userguide/
 ```
 ### 7. 创建 docker 组
+
+将 host 下的普通用户添加到 docker 组中后，可以不使用 sudo 即可执行 docker 程序（只是减少了每次使用 sudo 时输入密码的过程罢了，其实 docker 本身还是以 sudo 的权限在运行的。)
 ```
 sudo usermod -aG docker your_username
 ```
