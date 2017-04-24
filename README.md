@@ -1,14 +1,24 @@
 ## 目录
 
-* 阅读本书
-	* [网上阅读(推荐)](https://billwang139967.gitbooks.io/op_practice_book/content/)
-	* [本地阅读](#本地阅读)
-* [下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
-* [wiki](https://github.com/BillWang139967/op_practice_book/wiki)
+<!-- vim-markdown-toc GFM -->
+* [阅读本书](#阅读本书)
+* [相关内容](#相关内容)
+    * [下载本书](#下载本书)
+    * [本书相关wiki](#本书相关wiki)
+    * [本书相关程序](#本书相关程序)
+    * [其他](#其他)
 * [参加步骤](#参加步骤)
 * [小额捐款](#小额捐款)
 
-## 本地阅读
+<!-- vim-markdown-toc -->
+
+# 阅读本书
+
+> * [网上阅读(推荐)](https://billwang139967.gitbooks.io/op_practice_book/content/)
+> * [本地阅读](#本地阅读)
+> * 本地阅读
+```
+本地阅读操作
 
 需要安装
 
@@ -20,7 +30,25 @@
 2. `./run_web.sh`
 
 运行run_web后，可以在本地输入http://IP:8000进行html访问本地书籍
+```
+# 相关内容
 
+## 下载本书
+
+[下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
+
+## 本书相关wiki
+
+[wiki](https://github.com/BillWang139967/op_practice_book/wiki)
+
+## 本书相关程序
+
+[相关程序下载](https://github.com/BillWang139967/op_practice_code)
+
+## 其他
+
+> * 中文排版使用的 vim(https://github.com/BillWang139967/Vim) Pangu 插件一键排版
+> * 文档目录使用的 vim(https://github.com/BillWang139967/Vim) GenTocGFM 插件一键生成目录，只需第一次生成目录，后续文档在保存时会自动更新目录
 
 # 参加步骤
 

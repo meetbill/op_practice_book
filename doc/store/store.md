@@ -67,10 +67,10 @@ NFS 的基本原则是“容许不同的客户端及服务端通过一组 RPC �
 
 > NFS 服务端部署环境准备
 
-服务器系统|角色|IP
-----|----|----
-CentOS6.6 x86_64|NFS 服务端（NFS-SERVER）|192.168.1.21
-CentOS6.6 x86_64|NFS 客户端（NFS-CLIENT1）|192.168.1.22
+服务器系统|角色|IP|
+----|----|----|
+CentOS6.6 x86_64|NFS 服务端（NFS-SERVER）|192.168.1.21|
+CentOS6.6 x86_64|NFS 客户端（NFS-CLIENT1）|192.168.1.22|
 
 
 服务器版本：6.x
@@ -96,34 +96,34 @@ CentOS6.6 x86_64|NFS 客户端（NFS-CLIENT1）|192.168.1.22
 
 * `NFS`的常用目录
 
-	目录路径|目录说明
-	----|----
-	/etc/exports|NFS 服务的主要配置文件
-	/usr/sbin/exportfs|NFS 服务的管理命令
-	/usr/sbin/showmount|客户端的查看命令
-	/var/lib/nfs/etab|记录 NFS 分享出来的目录的完整权限设定值
-	/var/lib/nfs/rtab|记录连接的客户端信息
+	| 目录路径|目录说明|
+	|----|----|
+	| /etc/exports | NFS 服务的主要配置文件|
+	| /usr/sbin/exportfs | NFS 服务的管理命令|
+	| /usr/sbin/showmount | 客户端的查看命令|
+	| /var/lib/nfs/etab | 记录 NFS 分享出来的目录的完整权限设定值|
+	| /var/lib/nfs/rtab | 记录连接的客户端信息|
 
 
 * `NFS`服务端的权限设置，`/etc/exports`文件配置格式中小括号中的参数
 
-	参数名称 (*为重要参数）|参数用途
-	----|----
-	rw*|Read-write，表示可读写权限
-	ro|Read-only，表示只读权限
-	sync*|请求或写入数据时，数据同步写入到 NF SServer 中，（优点：数据安全不会丢，缺点：性能较差）
-	async*|请求或写入数据时，先返回请求，再将数据写入到 NFSServer 中，异步写入数据
-	no_root_squash|访问 NFS Server 共享目录的用户如果是 root 的话，它对共享目录具有 root 权限
-	not_squash|访问 NFS Server 共享目录的用户如果是 root 的话，则它的权限，将被压缩成匿名用户
-	all_squash*|不管访问 NFS Server 共享目录的身份如何，它的权限都被压缩成一个匿名用户，同事它的 UID、GID 都会变成 nfsnobody 账号身份
-	anonuid*|匿名用户 ID
-	anongid*|匿名组 ID
-	insecure|允许客户端从大于 1024 的 TCP/IP 端口连 NFS 服务器
-	secure|限制客户端只能从小于 1024 的 TCP/IP 端口连接 NFS 服务器（默认设置）
-	wdelay|检查是否有相关的写操作，如果有则将这些写操作一起执行，这样可提高效率（默认设置）
-	no_wdelay|若有写操作则立即执行（应与 sync 配置）
-	subtree_check|若输出目录是一个子目录，则 NFS 服务器将检查其父目录的权限（默认设置）
-	no_subtree_check|即使输出目录是一个子目录，NFS 服务器也不检查其父目录的权限，这样做可提高效率
+	| 参数名称 (*为重要参数）|参数用途|
+	|----|----
+	|rw*|Read-write，表示可读写权限|
+	|ro|Read-only，表示只读权限|
+	|sync*|请求或写入数据时，数据同步写入到 NF SServer 中，（优点：数据安全不会丢，缺点：性能较差）|
+	|async*|请求或写入数据时，先返回请求，再将数据写入到 NFSServer 中，异步写入数据|
+	|no_root_squash|访问 NFS Server 共享目录的用户如果是 root 的话，它对共享目录具有 root 权限|
+	|not_squash|访问 NFS Server 共享目录的用户如果是 root 的话，则它的权限，将被压缩成匿名用户|
+	|all_squash*|不管访问 NFS Server 共享目录的身份如何，它的权限都被压缩成一个匿名用户，同事它的 UID、GID 都会变成 nfsnobody 账号身份|
+	|anonuid*|匿名用户 ID|
+	|anongid*|匿名组 ID|
+	|insecure|允许客户端从大于 1024 的 TCP/IP 端口连 NFS 服务器|
+	|secure|限制客户端只能从小于 1024 的 TCP/IP 端口连接 NFS 服务器（默认设置）|
+	|wdelay|检查是否有相关的写操作，如果有则将这些写操作一起执行，这样可提高效率（默认设置）|
+	|no_wdelay|若有写操作则立即执行（应与 sync 配置）|
+	|subtree_check|若输出目录是一个子目录，则 NFS 服务器将检查其父目录的权限（默认设置）|
+	|no_subtree_check|即使输出目录是一个子目录，NFS 服务器也不检查其父目录的权限，这样做可提高效率|
 
 ### 启动 NFS 服务端
 

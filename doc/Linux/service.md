@@ -379,9 +379,11 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
 
 所有配置只需要在服务器 A 上配置即可
 
-(1) 配置服务器 A 使用秘钥登录服务器 B
+(1) 安装 `inotify_tools`(yum -y install inotify_tools)
 
-(2) 在服务器 A 上编写脚本，主要配置服务器 B 的机器 IP，登录用户，以及服务器器 A 的存储目录和存储数据异地灾备目录
+(2) 配置服务器 A 使用秘钥登录服务器 B
+
+(3) 在服务器 A 上编写脚本，主要配置服务器 B 的机器 IP，登录用户，以及服务器器 A 的存储目录和存储数据异地灾备目录
 
 将此文件保存到 /opt/inotify_rsync.sh
 
@@ -399,6 +401,13 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
         rsync -avPz --delete $src $user@$host:$dest &>>./rsync.log
     done
 ```
+
+下载脚本
+
+```
+#curl -o inotify_rsync.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/service/inotify_rsync.sh
+```
+
 (3) 启动异地灾备程序
 
 ```
@@ -450,7 +459,7 @@ ftp 工作会启动两个通道：控制通道 ， 数据通道。在 ftp 协议
 传送数据时，ftp_client —> PASV 命令 —> ftp_server(21) 发送 PASV 命令时，ftp_server 自动打开一个 1024--5000 之间的随机端口并且通知 ftp_client 在这个端口上传送数据，然后客户端向指定的端口发出请求连接，建立一条数据链路进行数据传输。
 
 
-如果想对访问 FTP 的帐户给予更多的权限，可以用本地帐户来实现. 但是，本地帐户默认情况下是可以登陆 Linux 系统的，这样对 Linux 系统来说是一个安全隐患. 那么怎么能在灵活的赋予 FTP 用户权限的前提下，保证 FTP 服务器乃至整个 Linux 系统的安全呢？使用虚拟用户就是一种解决办法
+如果想对访问 FTP 的帐户给予更多的权限，可以用本地帐户来实现。但是，本地帐户默认情况下是可以登陆 Linux 系统的，这样对 Linux 系统来说是一个安全隐患。那么怎么能在灵活的赋予 FTP 用户权限的前提下，保证 FTP 服务器乃至整个 Linux 系统的安全呢？使用虚拟用户就是一种解决办法
 
 安装包
 > * vsftpd
