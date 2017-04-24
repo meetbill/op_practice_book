@@ -379,7 +379,7 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
 
 所有配置只需要在服务器 A 上配置即可
 
-(1) 安装 `inotify_tools`(yum -y install inotify_tools)
+(1) 安装 `inotify-tools`(yum -y install inotify-tools)
 
 (2) 配置服务器 A 使用秘钥登录服务器 B
 
