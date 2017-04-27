@@ -17,6 +17,7 @@
         * [配置 NFS 客户端](#配置-nfs-客户端)
         * [常见问题](#常见问题)
             * [rpcbind 安装失败](#rpcbind-安装失败)
+            * [nfs 客户端挂载失败](#nfs-客户端挂载失败)
             * [nfs 客户端无法 chown](#nfs-客户端无法-chown)
     * [CIFS(UNIX 和 windows 间共享协议）](#cifsunix-和-windows-间共享协议)
         * [给挂载共享文件夹指定 owner 和 group](#给挂载共享文件夹指定-owner-和-group)
@@ -221,7 +222,7 @@ tmpfs               491M     0  491M   0% /dev/shm
 192.168.0.1:/data   18G  1.6G   15G  10% /mnt
 
 # 配置例子
-/ceshi_test *(rw,sync,no_root_squash,nohide,no_root_squash,no_subtree_check,sync) 
+/ceshi_test *(rw,sync,no_root_squash,nohide,no_root_squash,no_subtree_check,sync)
 ```
 
 ### 配置 NFS 客户端
@@ -279,12 +280,23 @@ Error in PREIN scriptlet in rpm package rpcbind-0.2.0-12.el6.x86_64
 error:   install: %pre scriptlet failed (2), skipping rpcbind-0.2.0-12.el6
   Verifying  : rpcbind-0.2.0-12.el6.x86_64                                                                                    1/1
   Failed:
-    rpcbind.x86_64 0:0.2.0-12.el6 
+    rpcbind.x86_64 0:0.2.0-12.el6
 ```
 
-因为通过chattr +i 把/etc/passwd /etc/group /etc/shadow /etc/gshadow锁定了。
+因为通过 chattr +i 把 /etc/passwd /etc/group /etc/shadow /etc/gshadow 锁定了。
 
 chattr -i 解锁后，问题解决。
+
+#### nfs 客户端挂载失败
+
+现象：客户端 mount 失败，同时 rpcbind 服务是停止的，怎么都启不来
+mount 时提示如下：
+```
+mount.nfs: rpc.statd is not running but is required for remote locking.
+mount.nfs: Either use '-o nolock' to keep locks local, or start statd.
+mount.nfs: an incorrect mount option was specified
+```
+调试后发现，rpcbind 要求在 /etc/sysconfig/network 文件里写一个 NETWORKING=yes 才行，加上配置后，即可启动 rpcbind 服务
 
 #### nfs 客户端无法 chown
 
