@@ -29,6 +29,8 @@
             * [架构](#架构)
             * [脚本内容](#脚本内容)
             * [原理](#原理)
+        * [常见问题](#常见问题)
+            * [对大磁盘进行 inotify 监听时出错](#对大磁盘进行-inotify-监听时出错)
 * [telnet-server](#telnet-server)
     * [安装使用](#安装使用)
     * [测试](#测试)
@@ -420,6 +422,15 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
 1. 使用 inotifywait 监控文件系统时间变化
 2. while 通过管道符接受内容，传给 read 命令
 3. read 读取到内容，则执行 rsync 程序
+
+### 常见问题
+
+#### 对大磁盘进行 inotify 监听时出错
+```
+Failed to watch /mnt/;upper limit on inotify watches reached!
+Please increase the amount of inotify watches allowed per user via `/proc/sys/fs/inotify/max_user_watches’.`
+```
+cat 一下这个文件，默认值是 8192，echo 8192000 > /proc/sys/fs/inotify/max_user_watches 即可~
 
 # telnet-server
 
