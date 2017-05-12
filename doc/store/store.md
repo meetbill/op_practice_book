@@ -97,62 +97,62 @@ CentOS6.6 x86_64|NFS 客户端（NFS-CLIENT1）|192.168.1.22|
 
 * `NFS`的常用目录
 
-	| 目录路径|目录说明|  
-	|----|----|  
-	| /etc/exports | NFS 服务的主要配置文件|  
-	| /usr/sbin/exportfs | NFS 服务的管理命令|  
-	| /usr/sbin/showmount | 客户端的查看命令|  
-	| /var/lib/nfs/etab | 记录 NFS 分享出来的目录的完整权限设定值|  
-	| /var/lib/nfs/rtab | 记录连接的客户端信息|  
+	| 目录路径|目录说明|
+	|----|----|
+	| /etc/exports | NFS 服务的主要配置文件|
+	| /usr/sbin/exportfs | NFS 服务的管理命令|
+	| /usr/sbin/showmount | 客户端的查看命令|
+	| /var/lib/nfs/etab | 记录 NFS 分享出来的目录的完整权限设定值|
+	| /var/lib/nfs/rtab | 记录连接的客户端信息|
 
 
 * `NFS`服务端的权限设置，`/etc/exports`文件配置格式中小括号中的参数
 
-	| 参数名称 (*为重要参数）|参数用途|  
-	|----|----|  
-	|rw*|Read-write，表示可读写权限|  
-	|ro|Read-only，表示只读权限|  
-	|sync*|请求或写入数据时，数据同步写入到 NF SServer 中，（优点：数据安全不会丢，缺点：性能较差）|  
-	|async*|请求或写入数据时，先返回请求，再将数据写入到 NFSServer 中，异步写入数据|  
-	|no_root_squash|访问 NFS Server 共享目录的用户如果是 root 的话，它对共享目录具有 root 权限|  
-	|not_squash|访问 NFS Server 共享目录的用户如果是 root 的话，则它的权限，将被压缩成匿名用户|  
-	|all_squash*|不管访问 NFS Server 共享目录的身份如何，它的权限都被压缩成一个匿名用户，同事它的 UID、GID 都会变成 nfsnobody 账号身份|  
-	|anonuid*|匿名用户 ID|  
-	|anongid*|匿名组 ID|  
-	|insecure|允许客户端从大于 1024 的 TCP/IP 端口连 NFS 服务器|  
-	|secure|限制客户端只能从小于 1024 的 TCP/IP 端口连接 NFS 服务器（默认设置）|  
-	|wdelay|检查是否有相关的写操作，如果有则将这些写操作一起执行，这样可提高效率（默认设置）|  
-	|no_wdelay|若有写操作则立即执行（应与 sync 配置）|  
-	|subtree_check|若输出目录是一个子目录，则 NFS 服务器将检查其父目录的权限（默认设置）|  
-	|no_subtree_check|即使输出目录是一个子目录，NFS 服务器也不检查其父目录的权限，这样做可提高效率|  
+	| 参数名称 (*为重要参数）|参数用途|
+	|----|----|
+	|rw*|Read-write，表示可读写权限|
+	|ro|Read-only，表示只读权限|
+	|sync*|请求或写入数据时，数据同步写入到 NF SServer 中，（优点：数据安全不会丢，缺点：性能较差）|
+	|async*|请求或写入数据时，先返回请求，再将数据写入到 NFSServer 中，异步写入数据|
+	|no_root_squash|访问 NFS Server 共享目录的用户如果是 root 的话，它对共享目录具有 root 权限|
+	|not_squash|访问 NFS Server 共享目录的用户如果是 root 的话，则它的权限，将被压缩成匿名用户|
+	|all_squash*|不管访问 NFS Server 共享目录的身份如何，它的权限都被压缩成一个匿名用户，同事它的 UID、GID 都会变成 nfsnobody 账号身份|
+	|anonuid*|匿名用户 ID|
+	|anongid*|匿名组 ID|
+	|insecure|允许客户端从大于 1024 的 TCP/IP 端口连 NFS 服务器|
+	|secure|限制客户端只能从小于 1024 的 TCP/IP 端口连接 NFS 服务器（默认设置）|
+	|wdelay|检查是否有相关的写操作，如果有则将这些写操作一起执行，这样可提高效率（默认设置）|
+	|no_wdelay|若有写操作则立即执行（应与 sync 配置）|
+	|subtree_check|若输出目录是一个子目录，则 NFS 服务器将检查其父目录的权限（默认设置）|
+	|no_subtree_check|即使输出目录是一个子目录，NFS 服务器也不检查其父目录的权限，这样做可提高效率|
 
 ### 启动 NFS 服务端
 
 ```
 # 启动 rpcbind 状态
 [root@nfs-server ~]# /etc/init.d/rpcbind start
-Starting rpcbind:                                          [  OK  ]
+Starting rpcbind:                                       [  OK  ]
 # 查看 rpcbind 状态
 [root@nfs-server ~]# /etc/init.d/rpcbind status
 rpcbind (pid  1826) is running...
 # 查看 rpcbind 默认端口 111
 [root@nfs-server ~]# lsof -i :111
 COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
-rpcbind 1826  rpc    6u  IPv4  12657      0t0  UDP *:sunrpc
-rpcbind 1826  rpc    8u  IPv4  12660      0t0  TCP *:sunrpc (LISTEN)
-rpcbind 1826  rpc    9u  IPv6  12662      0t0  UDP *:sunrpc
-rpcbind 1826  rpc   11u  IPv6  12665      0t0  TCP *:sunrpc (LISTEN)
+rpcbind 1826  rpc  6u IPv4 12657      0t0  UDP *:sunrpc
+rpcbind 1826  rpc  8u IPv4 12660      0t0  TCP *:sunrpc (LISTEN)
+rpcbind 1826  rpc  9u IPv6 12662      0t0  UDP *:sunrpc
+rpcbind 1826  rpc 11u IPv6 12665      0t0  TCP *:sunrpc (LISTEN)
 # 查看 rpcbind 服务端口
 [root@nfs-server ~]# netstat -lntup|grep rpcbind
-tcp        0      0 0.0.0.0:111                 0.0.0.0:*                   LISTEN      1826/rpcbind
-tcp        0      0 :::111                      :::*                        LISTEN      1826/rpcbind
-udp        0      0 0.0.0.0:729                 0.0.0.0:*                               1826/rpcbind
-udp        0      0 0.0.0.0:111                 0.0.0.0:*                               1826/rpcbind
-udp        0      0 :::729                      :::*                                    1826/rpcbind
-udp        0      0 :::111                      :::*                                    1826/rpcbind
+tcp  0 0 0.0.0.0:111  0.0.0.0:*         LISTEN      1826/rpcbind
+tcp  0 0 :::111       :::*              LISTEN      1826/rpcbind
+udp  0 0 0.0.0.0:729  0.0.0.0:*                     1826/rpcbind
+udp  0 0 0.0.0.0:111  0.0.0.0:*                     1826/rpcbind
+udp  0 0 :::729       :::*                          1826/rpcbind
+udp  0 0 :::111       :::*                          1826/rpcbind
 # 查看 rpcbind 开机是否自启动
 [root@nfs-server ~]# chkconfig --list rpcbind
-rpcbind         0:off   1:off   2:on    3:on    4:on    5:on    6:off
+rpcbind    0:off   1:off   2:on    3:on    4:on    5:on    6:off
 # 查看 nfs 端口信息（没有发现）
 [root@nfs-server ~]# rpcinfo -p localhost
    program vers proto   port  service
@@ -164,11 +164,11 @@ rpcbind         0:off   1:off   2:on    3:on    4:on    5:on    6:off
     100000    2   udp    111  portmapper
 # 启动 NFS 服务
 [root@nfs-server ~]# /etc/init.d/nfs start
-Starting NFS services:                                     [  OK  ]
-Starting NFS quotas:                                       [  OK  ]
-Starting NFS mountd:                                       [  OK  ]
-Starting NFS daemon:                                       [  OK  ]
-正在启动 RPC idmapd：                                      [确定]
+Starting NFS services:                                  [  OK  ]
+Starting NFS quotas:                                    [  OK  ]
+Starting NFS mountd:                                    [  OK  ]
+Starting NFS daemon:                                    [  OK  ]
+正在启动 RPC idmapd：                                   [确定]
 
 # 设置 nfs 开机自启动
 [root@nfs-server ~]# chkconfig nfs on
@@ -229,7 +229,7 @@ tmpfs               491M     0  491M   0% /dev/shm
 ```
 # 启动 rpcbind 服务
 [root@lamp01 ~]# /etc/init.d/rpcbind start
-Starting rpcbind:                                          [  OK  ]
+Starting rpcbind:                                       [  OK  ]
 # 测试是否可以连接 NFS 服务器
 [root@client ~]# showmount -e 192.168.1.21
 Export list for 192.168.1.21:
@@ -278,8 +278,8 @@ yum 安装时提示如下
 error: %pre(rpcbind-0.2.0-12.el6.x86_64) scriptlet failed, exit status 6
 Error in PREIN scriptlet in rpm package rpcbind-0.2.0-12.el6.x86_64
 error:   install: %pre scriptlet failed (2), skipping rpcbind-0.2.0-12.el6
-  Verifying  : rpcbind-0.2.0-12.el6.x86_64                                                                                    1/1
-  Failed:
+Verifying  : rpcbind-0.2.0-12.el6.x86_64                     1/1
+Failed:
     rpcbind.x86_64 0:0.2.0-12.el6
 ```
 
@@ -360,21 +360,21 @@ password=MYPASSWORD
 ## lsscsi
 
 ```
-    --classic|-c      alternate output similar to 'cat /proc/scsi/scsi'
-    --device|-d       show device node's major + minor numbers
-    --generic|-g      show scsi generic device name
-    --help|-h         this usage information
-    --hosts|-H        lists scsi hosts rather than scsi devices
-    --kname|-k        show kernel name instead of device node name
-    --list|-L         additional information output one
-                      attribute=value per line
-    --long|-l         additional information output
-    --protection|-p   show data integrity (protection) information
-    --sysfsroot=PATH|-y PATH    set sysfs mount point to PATH (def: /sys)
-    --transport|-t    transport information for target or, if '--hosts'
-                      given, for initiator
-    --verbose|-v      output path names where data is found
-    --version|-V      output version string and exit
+--classic|-c      alternate output similar to 'cat /proc/scsi/scsi'
+--device|-d       show device node's major + minor numbers
+--generic|-g      show scsi generic device name
+--help|-h         this usage information
+--hosts|-H        lists scsi hosts rather than scsi devices
+--kname|-k        show kernel name instead of device node name
+--list|-L         additional information output one
+                  attribute=value per line
+--long|-l         additional information output
+--protection|-p   show data integrity (protection) information
+--sysfsroot=PATH|-y PATH    set sysfs mount point to PATH (def: /sys)
+--transport|-t    transport information for target or, if '--hosts'
+                  given, for initiator
+--verbose|-v      output path names where data is found
+--version|-V      output version string and exit
 ```
 
 查看磁盘运行状态
@@ -400,7 +400,6 @@ lsscsi -l
 [0:1:0:0]    disk    LSILOGIC Logical Volume   3000  /dev/sdg
   state=running queue_depth=64 scsi_level=3 type=0 device_blocked=0 timeout=30
 ```
-
 
 ## smartctl
 
@@ -465,7 +464,7 @@ No Errors Logged
 
 ### 解释下各属性的含义
 
-    ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+ID# ATTRIBUTE_NAME FLAG VALUE WORST THRESH TYPE UPDATED WHEN_FAILED RAW_VALUE
 
 > - **ID**    属性 ID，1~255
 > - **ATTRIBUTE_NAME**    属性名
@@ -576,15 +575,15 @@ XFS 是一个开源的（GPL）日志文件系统，最初由硅谷图形（SGI�
 扩展前
 ```
 [root@meetbill ~]# xfs_info /mnt/
-meta-data=/dev/sdb               isize=512    agcount=4, agsize=196608 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=0 spinodes=0
-data     =                       bsize=4096   blocks=786432, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal               bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+meta-data=/dev/sdb    isize=512    agcount=4, agsize=196608 blks
+         =            sectsz=512   attr=2, projid32bit=1
+         =            crc=1        finobt=0 spinodes=0
+data     =            bsize=4096   blocks=786432, imaxpct=25
+         =            sunit=0      swidth=0 blks
+naming   =version 2   bsize=4096   ascii-ci=0 ftype=1
+log      =internal    bsize=4096   blocks=2560, version=2
+         =            sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none        extsz=4096   blocks=0, rtextents=0
 
 
 [root@meetbill ~]# df -h
@@ -603,15 +602,15 @@ tmpfs                183M     0  183M   0% /run/user/0
 我们用到的是 `xfs_growfs` 命令
 ```
 [root@meetbill ~]# xfs_growfs /mnt/
-meta-data=/dev/sdb               isize=512    agcount=4, agsize=196608 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=0 spinodes=0
-data     =                       bsize=4096   blocks=786432, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal               bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+meta-data=/dev/sdb    isize=512    agcount=4, agsize=196608 blks
+         =            sectsz=512   attr=2, projid32bit=1
+         =            crc=1        finobt=0 spinodes=0
+data     =            bsize=4096   blocks=786432, imaxpct=25
+         =            sunit=0      swidth=0 blks
+naming   =version 2   bsize=4096   ascii-ci=0 ftype=1
+log      =internal    bsize=4096   blocks=2560, version=2
+         =            sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none        extsz=4096   blocks=0, rtextents=0
 data blocks changed from 786432 to 1310720
 ```
 大功告成，如果`xfs_growfs` 不加任何参数，则会对指定挂载目录自动扩展 XFS 文件系统到最大的可用大小。`-D`参数可以设置为指定大小
