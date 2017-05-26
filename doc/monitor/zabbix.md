@@ -1,27 +1,20 @@
 # zabbix
 
+<!-- vim-markdown-toc GFM -->
 * [快速安装](#快速安装)
-	* [server端](#server端)
-	* [agent端](#agent端)
+* [zabbix 模板](#zabbix-模板)
+* [zabbix 管理工具](#zabbix-管理工具)
 
-# 快速安装
-## server端
-```
-#git clone https://github.com/BillWang139967/zabbix_install.git
-#cd zabbix_install/zabbix3.0.4/server
-#sh zabbix_server.sh
-```
-## agent端
-```
-#curl -o zabbix_agent.sh "https://raw.githubusercontent.com/BillWang139967/zabbix_install/master/zabbix3.0.4/agent/zabbix_agent.sh"
-#sh zabbix_agent.sh
-```
-安装agent时需要输入server端IP
+<!-- vim-markdown-toc -->
+## 快速安装
 
-安装zabbix_agent时会自动将iptables关闭，同样也可以如下设置:
+> [物理机上安装](https://github.com/BillWang139967/zabbix_install/wiki/install)
+> [docker部署](https://github.com/BillWang139967/zabbix_install/wiki/docker)
 
-```
-#vim /etc/sysconfig/iptables  
--A INPUT -m state --state NEW -m tcp -p tcp --dport 10050 -j ACCEPT  
-```
+## zabbix 模板
 
+[zabbix_templates](https://github.com/BillWang139967/zabbix_templates)
+
+## zabbix 管理工具
+
+[zabbix_manager](https://github.com/BillWang139967/zabbix_manager)

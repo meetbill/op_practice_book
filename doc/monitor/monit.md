@@ -10,6 +10,7 @@
     * [守护进程模式](#守护进程模式)
     * [Init 支持](#init-支持)
     * [包含文件](#包含文件)
+* [管理工具](#管理工具)
 
 <!-- vim-markdown-toc -->
 
@@ -226,7 +227,9 @@ Monit 应该总是以后台的守护进程模式运行，如果你不指定该�
 
 例如`include /etc/monit.d/*.cfg`会将`/etc/monit.d/`目录下所有的`.cfg`文件包含到配置文件中。
 
+### 管理工具
 
+[monit_manager](https://github.com/BillWang139967/monit_manager)
 
 ------
 
