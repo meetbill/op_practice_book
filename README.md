@@ -3,7 +3,6 @@
 <!-- vim-markdown-toc GFM -->
 * [阅读本书](#阅读本书)
 * [相关内容](#相关内容)
-    * [下载本书](#下载本书)
     * [本书相关wiki](#本书相关wiki)
     * [本书相关程序](#本书相关程序)
     * [其他](#其他)
@@ -15,27 +14,9 @@
 # 阅读本书
 
 > * [网上阅读(推荐)](https://billwang139967.gitbooks.io/op_practice_book/content/)
-> * [本地阅读](#本地阅读)
-> * 本地阅读
-```
-本地阅读操作
+> * [下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
 
-需要安装
-
-+ git
-+ pandoc---将md文件转为html工具
-+ python
-
-1. `git clone https://github.com/BillWang139967/op_practice_book.git`
-2. `./run_web.sh`
-
-运行run_web后，可以在本地输入http://IP:8000进行html访问本地书籍
-```
 # 相关内容
-
-## 下载本书
-
-[下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
 
 ## 本书相关wiki
 

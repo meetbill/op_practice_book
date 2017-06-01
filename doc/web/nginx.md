@@ -47,6 +47,7 @@
     * [Nginx 的事件驱动模型](#nginx-的事件驱动模型)
 * [应用](#应用)
     * [架设简单文件服务器](#架设简单文件服务器)
+    * [nginx 正向代理](#nginx-正向代理)
 * [其他](#其他)
 
 <!-- vim-markdown-toc -->
@@ -424,6 +425,13 @@ https 是在 http 和 TCP 中间加上一层加密层
 在这个过程中，需要保证服务端给浏览器的公钥不是假冒的。证明服务端公钥信息的机构是 CA（数字认证中心）
 
 可以理解为：如果想证明一个人的身份是真的，就得证明这个人的身份证是真的
+
+**数字证书**
+```
+数字证书相当于物理世界中的身份证，
+在网络中传递信息的双方互相不能见面，利用数字证书可确认双方身份，而不是他人冒充的。
+这个数字证书由信任的第三方，即认证中心使用自己的私钥对A的公钥加密，加密后文件就是网络上的身份证了，即数字证书
+```
 
 大致可以理解为如下
 
@@ -894,6 +902,43 @@ http {
        }
 }
 ```
+
+## nginx 正向代理
+
+ -  正向代理指代理客户端访问服务器的一个中介服务器，代理的对象是客户端。正向代理就是代理服务器替客户端去访问目标服务器
+ -  反向代理指代理后端服务器响应客户端请求的一个中介服务器，代理的对象是服务器。
+
+1. 配置
+
+代理服务器配置
+
+nginx.conf
+
+```
+server{
+        resolver x.x.x.x;
+#       resolver 8.8.8.8;
+        listen 82;
+        location / {
+                proxy_pass http://$http_host$request_uri;
+        }
+        access_log  /data/httplogs/proxy-$host-aceess.log;
+}
+```
+
+location保持原样即可，根据自己的配置更改listen port 和dnf 即resolver
+验证：
+在需要访问外网的机器上执行以下操作之一即可：
+
+```
+1. export http_proxy=http://yourproxyaddress：proxyport(建议)
+2. vim ~/.bashrc  
+    export http_proxy=http://yourproxyaddress：proxyport
+```
+
+2 不足 
+nginx不支持CONNECT方法，不像我们平时用的GET或者POST，可以选用apache或squid作为代替方案。
+
 # 其他
 
 * ngx_http_sub_module nginx 用来替换响应内容的一个模块（应用：有些程序中写死了端口，可以通过此工具将页面中的端口替换为其他端口）

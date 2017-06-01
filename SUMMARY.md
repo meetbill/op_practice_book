@@ -12,6 +12,7 @@
     * [常用运维工具](doc/Linux/op.md)
 * [数据库篇](doc/db/README.md)
     * [mysql](doc/db/mysql.md)
+    * [mongodb](doc/db/mongodb.md)
 * [web篇](doc/web/README.md)
     * [nginx](doc/web/nginx.md)
     * [django](doc/web/django.md)
