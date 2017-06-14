@@ -6,13 +6,15 @@
         * [1. centos7 x86-64](#1-centos7-x86-64)
         * [2. 查看版本：](#2-查看版本)
     * [二 安装 docker](#二-安装-docker)
-        * [1. 更新系统：](#1-更新系统)
-        * [2. 添加 docker 版本仓库：](#2-添加-docker-版本仓库)
-        * [3. 安装 docker](#3-安装-docker)
-        * [4. 设置 docker 开机自启动](#4-设置-docker-开机自启动)
-        * [5. 启动 Docker daemon：](#5-启动-docker-daemon)
-        * [6. 验证 docker 安装是否成功](#6-验证-docker-安装是否成功)
-        * [7. 创建 docker 组](#7-创建-docker-组)
+        * [本地源安装](#本地源安装)
+        * [网络源安装](#网络源安装)
+            * [1. 更新系统：](#1-更新系统)
+            * [2. 添加 docker 版本仓库：](#2-添加-docker-版本仓库)
+            * [3. 安装 docker](#3-安装-docker)
+            * [4. 设置 docker 开机自启动](#4-设置-docker-开机自启动)
+            * [5. 启动 Docker daemon：](#5-启动-docker-daemon)
+            * [6. 验证 docker 安装是否成功](#6-验证-docker-安装是否成功)
+            * [7. 创建 docker 组](#7-创建-docker-组)
     * [三 卸载 docker](#三-卸载-docker)
         * [1. 列出安装的 docker](#1-列出安装的-docker)
         * [2. 删除安装包](#2-删除安装包)
@@ -32,11 +34,24 @@
 3.10.0-123.el7.x86_64
 ```
 ## 二 安装 docker
-### 1. 更新系统：
+### 本地源安装
+
+Centos 7.3 离线安装 docker-ce(1703)
+
+```
+[root@meetbill ~]#curl -o docker_install.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/cloud/docker/docker_install.tar.gz
+[root@meetbill ~]#tar -zxvf docker_install.tar.gz 
+[root@meetbill ~]#cd docker_install
+[root@meetbill ~]#sh install.sh
+[root@meetbill ~]#systemctl start docker
+
+```
+### 网络源安装
+#### 1. 更新系统：
 ```
 #yum update -y
 ```
-### 2. 添加 docker 版本仓库：
+#### 2. 添加 docker 版本仓库：
 ```
 cat >/etc/yum.repos.d/docker.repo <<-'EOF'
 [dockerrepo]
@@ -54,7 +69,7 @@ gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
 EOF
 ```
-### 3. 安装 docker
+#### 3. 安装 docker
 
 docker 在 17 年 3 月份后，Docker 分成了企业版（EE）和社区版（CE），转向基于时间的 YY.MM 形式的版本控制方案，17.03 相当于 1.13.1 版本
 ```
@@ -62,15 +77,15 @@ docker 在 17 年 3 月份后，Docker 分成了企业版（EE）和社区版（
 ```
 安装旧版本 (1.12) 方法 `yum install docker-engine`
 
-### 4. 设置 docker 开机自启动
+#### 4. 设置 docker 开机自启动
 ```
 #systemctl enable docker.service
 ```
-### 5. 启动 Docker daemon：
+#### 5. 启动 Docker daemon：
 ```
 #systemctl start docker
 ```
-### 6. 验证 docker 安装是否成功
+#### 6. 验证 docker 安装是否成功
 ```
 #docker run --rm hello-world
 --------------------------------------------------- 以下是程序输出
@@ -99,7 +114,7 @@ Share images, automate workflows, and more with a free Docker Hub account:
 For more examples and ideas, visit:
  https://docs.docker.com/engine/userguide/
 ```
-### 7. 创建 docker 组
+#### 7. 创建 docker 组
 
 将 host 下的普通用户添加到 docker 组中后，可以不使用 sudo 即可执行 docker 程序（只是减少了每次使用 sudo 时输入密码的过程罢了，其实 docker 本身还是以 sudo 的权限在运行的。)
 ```

@@ -66,6 +66,15 @@
         * [终止一个 Screen Session](#终止一个-screen-session)
         * [查看一个 screen 里的输出](#查看一个-screen-里的输出)
     * [开启 screen 状态栏](#开启-screen-状态栏)
+* [tcpdump](#tcpdump)
+    * [tcp 三次握手和四次挥手](#tcp-三次握手和四次挥手)
+        * [三次握手](#三次握手)
+        * [四次挥手](#四次挥手)
+    * [tcpdump 使用](#tcpdump-使用)
+        * [针对特定网口抓包(-i选项)](#针对特定网口抓包-i选项)
+        * [指定抓包端口](#指定抓包端口)
+        * [抓取特定目标ip和端口的包](#抓取特定目标ip和端口的包)
+        * [增加抓包时间戳(-tttt选项)](#增加抓包时间戳-tttt选项)
 
 <!-- vim-markdown-toc -->
 
@@ -894,3 +903,128 @@ $ Ctrl + a ESC
 #curl -o screen.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/tools/screen.sh
 #sh screen.sh
 ```
+
+# tcpdump
+
+
+## tcp 三次握手和四次挥手
+
+### 三次握手
+
+**A主动打开连接，B被动打开连接**
+
+(1) 第一次握手：建立连接时，客户端A发送SYN包(SYN=x)到服务器B，并进入SYN_SEND状态，等待服务器B确认。
+
+(2) 第二次握手：服务器B收到SYN包，必须确认客户A的SYN(ACK=x+1)，同时自己也发送一个SYN包(SYN=y)，即SYN+ACK包，此时服务器B进入SYN_RECV状态。
+
+(3) 第三次握手：客户端A收到服务器B的SYN＋ACK包，向服务器B发送确认包ACK(ACK=y+1)，此包发送完毕，客户端A和服务器B进入ESTABLISHED状态，完成三次握手。
+完成三次握手，客户端与服务器开始传送数据。
+
+**为什么A还要发送一次确认呢？**
+
+主要是为了防止已失效的连接请求报文段突然有传送到B，因而产生错误。
+
+***正常情况***
+
+A发出连接请求，但是因为连接请求报文丢失为未收到确认。于是A在重传一次连接请求，后来收到了确认，建立了连接。数据传输完毕后，就释放了连接。A共发送两个连接请求报文段，其中第一个丢失第二个到达了B。
+
+***异常情况***
+A发出的第一个连接请求报文段并没有丢失，而是在某些网络节点长时间滞留，导致延误到连接释放之后才到达了B，本来这是一个早已经失效的报文段，但是B收到此失效的连接请求报文段之后，误以为是A又发出一次新的连接请求，于是就向A发送确认报段，同意建立连接。假如不采用三次握手，那么只要B发出确认，新的连接就建立了。由于现在A并没有发出建立连接的请求，因此不会理睬B的确认，也不会向B发送数据，但B却以为新的运输连接已经建立了，并且一直等待A发来数据。B的资源就这样白白的浪费了，
+采用三次握手的办法可以防止上述现象的发生。例如刚才的情况，A不会向B的确认发出确认。B由于接收不到确认，就知道A并没有要求建立连接。
+
+使用tcpdump来验证TCP的三次握手
+
+使用ssh localhost来连接主机，使用使用tcpdump来验证TCP的三次握手
+
+    
+    [root@localhost apue]# tcpdump -i lo tcp -S                                         
+    tcpdump: verbose output suppressed, use -v or -vv for full protocol decode          
+    listening on lo, link-type EN10MB (Ethernet), capture size 65535 bytes              
+    1 15:08:03.039511 IP6 localhost.44910 > localhost.ssh: Flags [S], seq 3120401438, win 32752, options [mss 16376,sackOK,TS val 1319756 ecr 0,nop,wscale 7], length 0                                                                            
+    2 15:08:03.039546 IP6 localhost.ssh > localhost.44910: Flags [S.], seq 404185237, ack 3120401439, win 32728, options [mss 16376,sackOK,TS val 1319756 ecr 1319756,nop,wscale 7], length 0                                                               
+    3 15:08:03.039576 IP6 localhost.44910 > localhost.ssh: Flags [.], ack 404185238, win 256, options [nop,nop,TS val 1319756 ecr 1319756], length 0                                                                                                                              
+    4 15:08:03.064809 IP6 localhost.ssh > localhost.44910: Flags [P.], seq 404185238:404185259, ack 3120401439, win 256, options [nop,nop,TS val 1319781 ecr 1319756], length 21                                                                                                  
+    15:08:03.064944 IP6 localhost.44910 > localhost.ssh: Flags [.], ack 404185259, win 256, options [nop,nop,TS val 1319781 ecr 1319781], length 0
+
+
+第一行就是第一次握手，客户端向服务器发送SYN标志(Flags [S])，其中seq = 3120401438；
+第二行就是第二次握手，服务器向客户端进行SYN+ACK响应(Flags [S.]),其中seq 404185237, ack 3120401439(是客户端的seq+1的值)
+第三行就是第三次握手，客户端向服务器进行ACK响应(Flags [.]),其中ack 404185238(就是服务器的seq+1的值)。
+
+### 四次挥手
+通信传输结束后，通信的双方都可以释放连接，现在A和B都处于ESTABLISHED状态。
+
+由于TCP连接是全双工的，因此每个方向都必须单独进行关闭。这个原则是当一方完成它的数据发送任务后就能发送一个FIN来终止这个方向的连接。收到一个 FIN只意味着这一方向上没有数据流动，一个TCP连接在收到一个FIN后仍能发送数据。首先进行关闭的一方将执行主动关闭，而另一方执行被动关闭。
+
+(1)客户端A发送一个FIN包，用来关闭客户A到服务器B的数据传送。序列号seq = u，它等于前面已传送过的数据的最后一个字节的序号加1.这时A进入FIN-WAIT-1(终止等待1)状态，等待B的确认。
+
+(2)服务器B收到这个FIN，它发回一个ACK，确认序号是ack = u +1。和SYN一样，一个FIN将占用一个序号。这个报文段自己的序号是v，等于B前面已经传送过的数据的最后一个字节的序号加1。然后B进程进入CLOSE-WAIT(关闭等待)状态。TCP服务器进程这时应通知高层应用进程，因而从A到B的这个方向的连接就释放了，这时的TCP连接处于半关闭(half-close)状态， 即A已经没有数据要发送了，但是B若发送数据，A仍要接收，也就是说从B到A这个方向的连接并没有关闭，这个状态可能会持续一些时间。A收到来到B的确认后就进入FIN-WAIT-2(终止等待2)状态,等待B发出的连接释放报文段。
+
+(3)若B已经没有要向A发送的数据，其应用进程就会通知TCP释放连接，这时B发出的连接释放报文段必须使FIN = 1。现假定B的序号为w(在半关闭状态B可能要发送一些数据)。B还必须重复上次发送过的确认号ack = u +１。这时Ｂ就进入了LAST-ACK(最后确认)状态，等待A的确认。
+
+(4)A在收到B的连接释放报文段后，必须对此发出确认。在确认报文段中把ACK置1，确认号ack = ｗ + 1，而自己的序号是seq = u + 1(根据TCP标准，前面发送过的FIN报文段要消耗一个序号)，然后进入到TIME-WAIT(时间等待)状态。
+
+**此时的TCP还没有完全的释放掉。必须经过时间等待计时器(TIME-WAIT timer)设置的时间2MSL后，A才进入到CLOSED状态。**
+
+> MSL叫做最长报文段寿命，它是任何报文段被丢弃前在网络内的最长时间。
+
+2MSL也就是这个时间的两倍，RFC建议设置为2分钟，但是2分钟可能太长了，因此TCP允许不同的实现使用更小的MSL值。
+
+因此从A进入到TIME-WAIT状态后，要经过4分钟才能进入CLOSED状态，此案开始建立下一个新的连接。当A撤销相应的传输控制块TCP后，就结束了TCP连接。
+
+使用tcpdump来验证TCP的四次挥手
+
+退出ssh连接的主机，使用使用tcpdump来验证TCP的四次挥手
+
+    
+    15:14:58.836149 IP6 localhost.44911 > localhost.ssh: Flags [P.], seq 1823848744:1823848808, ack 3857143125, win 305, options [nop,nop,TS val 1735551 ecr 1735551], length 64
+    15:14:58.836201 IP6 localhost.44911 > localhost.ssh: Flags [F.], seq 1823848808, ack 3857143125, win 305, options [nop,nop,TS val 1735551 ecr 1735551], length 0
+    15:14:58.837850 IP6 localhost.ssh > localhost.44911: Flags [.], ack 1823848809, win 318, options [nop,nop,TS val 1735554 ecr 1735551], length 0
+    15:14:58.842130 IP6 localhost.ssh > localhost.44911: Flags [F.], seq 3857143125, ack 1823848809, win 318, options [nop,nop,TS val 1735559 ecr 1735551], length 0
+    15:14:58.842150 IP6 localhost.44911 > localhost.ssh: Flags [.], ack 3857143126, win 305, options [nop,nop,TS val 1735559 ecr 1735559], length 0
+
+**seq start:end意思是初始序列号：结束序列号，end = start + length, 但是接受包的结束序号应该是end - 1。**
+比如start = 1，length = 3，那么真正的结束序号是1+3-1 = 3,因为开始序号也算在内的！
+
+seq 1823848744:1823848808意思是初始序列号：结束序列号，其实后面那个就是前面那个加上包长度length = 64，实际上结束序列号是没有使用的，真正使用的序号是开始序号到结束序号-1，也就是1823848807
+
+第一次挥手中客户端发送FIN即[F.] seq u = 1823848808，也就是上次发送的数据的最后一个字节的序号加1
+
+第二次挥手中服务器发送ACK即[.] ack 1823848809 = u + 1
+
+第三次挥手中服务器发送FIN即[F.] seq v = 3857143125， ack 1823848809 = u + 1
+
+第四次挥手中客户端发送ACK即[.] ack 3857143126 = v + 1
+
+
+1.默认情况下(不改变socket选项)，当你调用close函数时，如果发送缓冲中还有数据，TCP会继续把数据发送完。
+
+2.发送了**FIN只是表示这端不能继续发送数据(应用层不能再调用send发送)**，但是还可以接收数据。
+
+3.应用层如何知道对方关闭？
+
+在最简单的阻塞模型中，当调用recv时，如果返回0，则表示对方关闭，
+
+在这个时候通常的做法就是也调用close，那么TCP层就发送FIN，继续完成四次握手；
+
+**如果不调用close，那么对方就会处于FIN_WAIT_2状态，而本端则会处于CLOSE_WAIT状态；**
+
+4.在很多时候，TCP连接的断开都会由TCP层自动进行，例如你CTRL+C终止你的程序，TCP连接依然会正常关闭。
+
+## tcpdump 使用
+
+### 针对特定网口抓包(-i选项)
+
+> tcpdump -i eth0
+
+### 指定抓包端口
+
+> tcpdump -i eth0 port 22
+
+### 抓取特定目标ip和端口的包
+
+> tcpdump -i eth0 dst 10.70.121.92 and port 22
+
+### 增加抓包时间戳(-tttt选项)
+
+> tcpdump -n -tttt -i eth0
