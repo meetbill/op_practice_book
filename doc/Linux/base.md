@@ -1410,7 +1410,7 @@ $ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 修改/etc/sysconfig/clock文件，修改为：
 
 ```
-ZONE=”Asia/Shanghai”
+ZONE="Asia/Shanghai"
 UTC=false
 ARC=false
 ```
