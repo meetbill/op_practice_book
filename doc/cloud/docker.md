@@ -183,19 +183,25 @@ docker客户机	192.168.1.136
 #### 1. 搭建仓库 registry
 
 docker pull regsity
+
 ### 2. 基于私有仓库镜像运行容器
 > docker run -d --name registry --restart always -p 5000:5000 -v  /data/registry:/var/lib/registry registry
+
 #### 3. 访问私有仓库
 >curl -X GET http://192.168.1.52:5000/v2/_catalog
 {"repositories":[]}   #私有仓库为空，没有提交新镜像到仓库中
+
 #### 4. 为基础镜像打个标签
 
 根据 images 建立 tag,xxxxxxx为某镜像id或name
 
 docker tag xxxxxxx 192.168.1.52:5000/zabbix
+
 #### 5. 改Docker配置文件制定私有仓库url
 
 > echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
+> systemctl restart docker
+
 #### 6. 提交镜像到本地私有仓库中
 
 docker push 192.168.1.52:5000/zabbix
@@ -213,6 +219,8 @@ root@localhost ~
 #### 1. 修改Docker配置文件
 
 > echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
+> systemctl restart docker
+
 #### 2. 从私有仓库中下载已有的镜像
 
 > docker pull 192.168.1.52:5000/centos

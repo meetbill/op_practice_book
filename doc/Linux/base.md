@@ -1430,6 +1430,7 @@ UTC 是协调世界时间（Universal Time Coordinated），又叫世界标准�
 ```
 $ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 ```
+
 修改/etc/sysconfig/clock文件，修改为：
 
 ```
@@ -1439,6 +1440,7 @@ ARC=false
 ```
 校对时间
 ```
+
 $ntpdate cn.ntp.org.cn
 ```
 设置硬件时间和系统时间一致并校准
