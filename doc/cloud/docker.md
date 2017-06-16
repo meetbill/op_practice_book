@@ -22,6 +22,20 @@
 * [Docker 使用](#docker-使用)
     * [Docker 三大核心概念](#docker-三大核心概念)
     * [Docker 镜像使用](#docker-镜像使用)
+    * [私有仓库](#私有仓库)
+        * [一、环境准备](#一环境准备)
+            * [1. ip](#1-ip)
+        * [二、搭建](#二搭建)
+            * [1. 搭建仓库 registry](#1-搭建仓库-registry)
+        * [2. 基于私有仓库镜像运行容器](#2-基于私有仓库镜像运行容器)
+            * [3. 访问私有仓库](#3-访问私有仓库)
+            * [4. 为基础镜像打个标签](#4-为基础镜像打个标签)
+            * [5. 改Docker配置文件制定私有仓库url](#5-改docker配置文件制定私有仓库url)
+            * [6. 提交镜像到本地私有仓库中](#6-提交镜像到本地私有仓库中)
+            * [7. 查看私有仓库是否存在对应的镜像](#7-查看私有仓库是否存在对应的镜像)
+        * [三、在docker客户机验证](#三在docker客户机验证)
+            * [1. 修改Docker配置文件](#1-修改docker配置文件)
+            * [2. 从私有仓库中下载已有的镜像](#2-从私有仓库中下载已有的镜像)
 
 <!-- vim-markdown-toc -->
 
@@ -154,3 +168,53 @@ Docker 用容器来运行应用。容器是从镜像创建出来的实例（好�
 > * 管理和使用本地 Docker 主机镜像
 > * 拖取公共镜像源中的镜像
 > * 创建镜像
+
+## 私有仓库
+### 一、环境准备
+
+#### 1. ip
+
+role	ip
+docker仓库机	192.168.1.52
+docker客户机	192.168.1.136
+
+### 二、搭建
+
+#### 1. 搭建仓库 registry
+
+docker pull regsity
+### 2. 基于私有仓库镜像运行容器
+> docker run -d --name registry --restart always -p 5000:5000 -v  /data/registry:/var/lib/registry registry
+#### 3. 访问私有仓库
+>curl -X GET http://192.168.1.52:5000/v2/_catalog
+{"repositories":[]}   #私有仓库为空，没有提交新镜像到仓库中
+#### 4. 为基础镜像打个标签
+
+根据 images 建立 tag,xxxxxxx为某镜像id或name
+
+docker tag xxxxxxx 192.168.1.52:5000/zabbix
+#### 5. 改Docker配置文件制定私有仓库url
+
+> echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
+#### 6. 提交镜像到本地私有仓库中
+
+docker push 192.168.1.52:5000/zabbix
+
+#### 7. 查看私有仓库是否存在对应的镜像
+
+root@localhost ~
+> curl -X GET http://192.168.1.52:5000/v2/_catalog
+{"repositories":["zabbix"]}
+> curl -X GET http://192.168.1.52:5000/v2/zabbix/tags/list
+{"name":"zabbix","tags":["latest"]}
+
+### 三、在docker客户机验证
+
+#### 1. 修改Docker配置文件
+
+> echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
+#### 2. 从私有仓库中下载已有的镜像
+
+> docker pull 192.168.1.52:5000/centos
+
+至此，私有仓库已OK
