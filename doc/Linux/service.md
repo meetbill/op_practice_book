@@ -15,11 +15,9 @@
 * [rsync](#rsync)
     * [rsync 基本介绍](#rsync-基本介绍)
     * [rsync 工作场景](#rsync-工作场景)
-    * [rsync 选项](#rsync-选项)
+    * [使用方法](#使用方法)
+        * [rsync 选项](#rsync-选项)
         * [常用选项](#常用选项)
-    * [rsync 访问方式](#rsync-访问方式)
-        * [远程 Shell 方式](#远程-shell-方式)
-        * [rsync C/S 方式](#rsync-cs-方式)
     * [一些命令](#一些命令)
         * [常用命令](#常用命令)
         * [ssh 端口非默认 22 同步](#ssh-端口非默认-22-同步)
@@ -214,7 +212,15 @@ __注：__
 > * 把所有客户服务器数据同步到备份服务器，生产场景集群架构服务器备份方案。
 > * rsync 结合 inotify 的功能做实时的数据同步。
 
-## rsync 选项
+## 使用方法
+
+rsync 可以使用 ssh 和 C/S 方式进行传输文件，以下使用 ssh 方式
+
+```
+rsync [OPTION]... SRC [SRC]... [USER@]HOST:DEST # 执行“推”操作
+or   rsync [OPTION]... [USER@]HOST:SRC [DEST]   # 执行“拉”操作
+```
+### rsync 选项
 
 ```
 Usage: rsync [OPTION]... SRC [SRC]... DEST
@@ -258,81 +264,9 @@ __注：__ 在指定复制源时，路径是否有最后的 “/” 有不同的
 * `––include=PATTERN` : 指定需要传输的文件匹配模式
 * `––include-from=FILE` : 从 FILE 中读取包含规则
 * `--numeric-ids` : 不映射 uid/gid 到 user/group 的名字
-* `-S, --sparse` : 对稀疏文件进行特殊处理以节省 DST 的空间
+* `-S, --sparse` : 对稀疏文件进行特殊处理以节省 DST 的空间(有空洞文件时使用)
 * `--delete` : 删除 DST 中 SRC 没有的文件，也就是所谓的镜像 [mirror] 备份
 
-## rsync 访问方式
-
-### 远程 Shell 方式
-
-```
-rsync [OPTION]... SRC [SRC]... [USER@]HOST:DEST # 执行“推”操作
-or   rsync [OPTION]... [USER@]HOST:SRC [DEST]   # 执行“拉”操作
-```
-
-### rsync C/S 方式
-
-```
-rsync [OPTION]... SRC [SRC]... [USER@]HOST::DEST                    # 执行“推”操作
-or   rsync [OPTION]... SRC [SRC]... rsync://[USER@]HOST[:PORT]/DEST # 执行“推”操作
-or   rsync [OPTION]... [USER@]HOST::SRC [DEST]                      # 执行“拉”操作
-or   rsync [OPTION]... rsync://[USER@]HOST[:PORT]/SRC [DEST]        # 执行“拉”操作
-```
-
-C/S 方式需要配置服务端，下面是一个配置文件示例：
-
-```
-# /etc/rsyncd.conf
-
-uid = root
-gid = root
-use chroot = yes
-
-[bak-data]
-    path = /data/
-    comment = data backup
-    numeric ids = yes
-    read only = yes
-    list = no
-    auth users = data
-    filter = merge /etc/.data-filter  # 过滤规则
-    secrets file = /etc/rsync-secret
-    hosts allow = 192.168.80.0/24 172.16.0.10
-
-[bak-home]
-    path = /home/
-    comment = home backup
-    numeric ids = yes
-    read only = yes
-    list = no
-    auth users = home,test
-    exclude = .svn .git
-    secrets file = /etc/rsync-secret
-    hosts allow = 192.168.80.0/24 172.16.0.10
-```
-
-密码文件和 filter 文件内容如下：
-
-```
-# cat /etc/rsync-secret
-data:123321
-home:123456
-test:654321
-# chmod 600 /etc/rsync-secret
-# cat /etc/.data-filter     # 关于 filter 的规则文件需要多测试才能彻底明白
-+ mysql56/***
-- *
-# 以上规则表示匹配所有 mysql56 目录下的内容，其它都不同步
-```
-
-关于 filter 的匹配规则可以参考 [man 手册](http://www.samba.org/ftp/rsync/rsyncd.conf.html)：
-
-      filter
-      The daemon has its own filter chain that determines what files it will let the client access. This chain is not sent to the client and is independent of any filters the client may have specified. Files excluded by the daemon filter chain (daemon-excluded files) are treated as non-existent if the client tries to pull them, are skipped with an error message if the client tries to push them (triggering exit code 23), and are never deleted from the module. You can use daemon filters to prevent clients from downloading or tampering with private administrative files, such as files you may add to support uid/gid name translations.
-
-      The daemon filter chain is built from the "filter", "include from", "include", "exclude from", and "exclude" parameters, in that order of priority. Anchored patterns are anchored at the root of the module. To prevent access to an entire subtree, for example, "/secret", you must exclude everything in the subtree; the easiest way to do this is with a triple-star pattern like "/secret/***".
-
-      The "filter" parameter takes a space-separated list of daemon filter rules, though it is smart enough to know not to split a token at an internal space in a rule (e.g. "- /foo - /bar" is parsed as two rules). You may specify one or more merge-file rules using the normal syntax. Only one "filter" parameter can apply to a given module in the config file, so put all the rules you want in a single parameter. Note that per-directory merge-file rules do not provide as much protection as global rules, but they can be used to make --delete work better during a client download operation if the per-dir merge files are included in the transfer and the client requests that they be used.
 
 ## 一些命令
 
@@ -343,6 +277,32 @@ test:654321
 ```
 
 __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能。
+
+```
+[tips]
+稀疏文件（Sparse File）
+
+在UNIX文件操作中，文件位移量可以大于文件的当前长度，在这种情况下，对该文件的下一次写将延长该文件，并在文件中构成一个空洞。位于文件中但没有写过的字节都被设为0。
+
+稀疏文件与其他普通文件基本相同，区别在于文件中的部分数据是全0，且这部分数据不占用磁盘空间。
+下面是稀疏文件的创建与查看方法
+[root@Linux ceshi]# dd if=/dev/zero of=sparse-file bs=1 count=1 seek=1024k
+[root@Linux ceshi]#  ls -l sparse-file
+-rw-r--r-- 1 root root 1048577 6月  19 10:20 sparse-file
+[root@Linux ceshi]# du -sh sparse-file
+4.0K    sparse-file
+[root@Linux ceshi]# cat sparse-file  >> meetbill_file
+[root@Linux ceshi]# du -sh meetbill_file 
+1.1M    meetbill_file
+[root@Linux ceshi]# ll 
+总用量 1032
+-rw-r--r-- 1 root root 1048577 6月  19 10:21 meetbill_file
+-rw-r--r-- 1 root root 1048577 6月  19 10:20 sparse-file
+[root@Linux ceshi]# ll -h
+总用量 1.1M
+-rw-r--r-- 1 root root 1.1M 6月  19 10:21 meetbill_file
+-rw-r--r-- 1 root root 1.1M 6月  19 10:20 sparse-file
+```
 
 ### ssh 端口非默认 22 同步
 
