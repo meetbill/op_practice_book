@@ -422,12 +422,14 @@ $bash start.sh
 (2) 将 init 文件放在项目中
 
 > * 将`uwsgi.ini_tpl`重命名为 uwsgi.ini 放到 django 目录中，与 manage.py 放在同一个目录
-> * 将 wsgi.py 放到 django 目录中，与 manage.py 放在同一个目录
 
 (3) 修改配置文件
 
-> * 修改项目中的 uwsgi.ini 文件，设置项目根目录`chdir = /root/mysite` , 如果设置了 `virtualenv` 需要设置`home= 虚拟目录`
-> * 修改项目中的 wsgi.py 文件，将`mysite.settings` 中 mysite 替换为实际项目名称
+修改项目中的 uwsgi.ini 文件，
+
+> * 设置项目根目录`chdir = /root/mysite` 
+> * 修改 `mysite.wsgi` 为 `项目名称.wsgi`
+> * 如果由 `virtualenv` 时，需要设置`home= 虚拟目录`,否则设置为空
 
 (4) 启动服务
 
