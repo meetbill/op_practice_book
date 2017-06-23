@@ -21,15 +21,15 @@ env
     * [detailed](#detailed)
     * [django admin 密码重置](#django-admin-密码重置)
 * [django 输出到固定日志](#django-输出到固定日志)
-    * [将log封装成一个单独的app](#将log封装成一个单独的app)
-    * [编写log程序](#编写log程序)
-    * [在本项目其他应用中的view.py中调用BLog](#在本项目其他应用中的viewpy中调用blog)
+    * [将 log 封装成一个单独的 app](#将-log-封装成一个单独的-app)
+    * [编写 log 程序](#编写-log-程序)
+    * [在本项目其他应用中的 view.py 中调用 BLog](#在本项目其他应用中的-viewpy-中调用-blog)
     * [测试](#测试)
 * [django FAQ](#django-faq)
 * [uWSGI](#uwsgi)
-    * [开发环境生成uWSGI可执行文件](#开发环境生成uwsgi可执行文件)
+    * [开发环境生成 uWSGI 可执行文件](#开发环境生成-uwsgi-可执行文件)
         * [环境](#环境)
-        * [开发环境生产uWSGI可执行文件](#开发环境生产uwsgi可执行文件)
+        * [开发环境生产 uWSGI 可执行文件](#开发环境生产-uwsgi-可执行文件)
         * [测试](#测试-1)
     * [uWSGI 配合 django 使用](#uwsgi-配合-django-使用)
         * [下载工具包](#下载工具包)
@@ -40,20 +40,20 @@ env
 # django 开始
 django
 
-Django 里是模型（Model）、模板(Template)和视图（Views）， Django 也被称为 MTV框架 。在 MTV 开发模式中：
+Django 里是模型（Model）、模板 (Template) 和视图（Views）， Django 也被称为 MTV 框架 。在 MTV 开发模式中：
 * M 代表模型（Model），即数据存取层。 该层处理与数据相关的所有事务：如何存取、如何验证有效
-* T 代表模板(Template)，即表现层。 该层处理与表现相关的决定：如何在页面或其他类型文档中进行显示。
+* T 代表模板 (Template)，即表现层。 该层处理与表现相关的决定：如何在页面或其他类型文档中进行显示。
 * V 代表视图（View），即业务逻辑层。 该层包含存取模型及调取恰当模板的相关逻辑。可以把它看作模型与模板之间的桥梁。
 
 ![Screenshot](../../images/django/django.png)
 
-我个人理解：可以把Template看作是含有变量的字符串，View调用模板时，就是将变量传给Template的字符串，并将页面显示出来，具体如何显示不是咱们要关心的事，咱们只需要将变量传递给template即可
+我个人理解：可以把 Template 看作是含有变量的字符串，View 调用模板时，就是将变量传给 Template 的字符串，并将页面显示出来，具体如何显示不是咱们要关心的事，咱们只需要将变量传递给 template 即可
 
 # 使用 bootstrap
 django
 ## settings
 
-神奇的 Python 内部变量 __file__ ,该变量被自动设置为代码所在的Python 模块文件名.
+神奇的 Python 内部变量 __file__ , 该变量被自动设置为代码所在的 Python 模块文件名。
 ```
 import os.path
 TEMPLATE_DIRS = (
@@ -81,13 +81,13 @@ TEMPLATE_DIRS = (
 )
 ```
 ## bootstrap
-Bootstrap的使用一般有两种方法。一种是引用在线的Bootstrap的样式，一种是将Bootstrap下载到本地进行引用。
-使用本地的Bootstrap
+Bootstrap 的使用一般有两种方法。一种是引用在线的 Bootstrap 的样式，一种是将 Bootstrap 下载到本地进行引用。
+使用本地的 Bootstrap
 
-下载Bootstrap到本地进行解压，解压完成，你将得到一个Bootstrap目录，结构如下：
+下载 Bootstrap 到本地进行解压，解压完成，你将得到一个 Bootstrap 目录，结构如下：
 
 ```
-[root@Linux bootstrap-3.3.5-dist]# tree 
+[root@Linux bootstrap-3.3.5-dist]# tree
 .
 ├── css
 │   ├── bootstrap.css
@@ -133,7 +133,7 @@ Bootstrap的使用一般有两种方法。一种是引用在线的Bootstrap的�
 
 ## flow chart
 ```
- +---------+      +---------+       +------------+                                
+ +---------+      +---------+       +------------+
  | url.py  |----->| view.py |------>| templates  |
  | (Login) |      | (Login) |       | login.html |
  +---------+      +---------+       +------------+
@@ -148,7 +148,7 @@ url.py
   url('^login/$','strap.view.LogIn'),         //login
   url('^index/$','strap.view.account_auth'),  //authentication
   url('^showDashboard/$','strap.view.show'),  //Go to the home page
-    
+
 ```
 view.py
 ```
@@ -192,11 +192,11 @@ templates
     <head>
       <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-      
+
       <title>Admin</title>
       <meta name="description" content="">
       <meta name="author" content="">
-      
+
       <!-- http://davidbcalhoun.com/2010/viewport-metatag -->
       <meta name="HandheldFriendly" content="True">
       <meta name="MobileOptimized" content="320">
@@ -212,7 +212,7 @@ templates
       <link rel="apple-touch-icon-precomposed" sizes="72x72" href="img/favicons/apple-touch-icon-ipad.png">
       <!-- For iPhone 3G, iPod Touch and Android -->
       <link rel="apple-touch-icon-precomposed" href="img/favicons/apple-touch-icon.png">
-      
+
       <!-- iOS web-app metas -->
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -240,7 +240,7 @@ templates
                   <div class="section-title">
                      <h3>Login</h3>
                   </div>
-                  
+
                   <div class="forgot-content">
                       <form method ="post" id="target" action="/index/">
                           <div class="textbox-wrap">
@@ -297,7 +297,7 @@ python manage.py shell
 
 
 然后获取你的用户名，并且重设密码：
-from django.contrib.auth.models import User 
+from django.contrib.auth.models import User
 user = User.objects.get(username='admin')
 user.set_password('new_password')
 user.save()
@@ -307,7 +307,7 @@ user.save()
 
 # django 输出到固定日志
 
-## 将log封装成一个单独的app
+## 将 log 封装成一个单独的 app
 ```
 [root@Linux mysite]# django-admin.py startapp log
 [root@Linux mysite]# cd log
@@ -315,11 +315,11 @@ user.save()
 __init__.py  models.py  tests.py  views.py
 ```
 
-## 编写log程序
+## 编写 log 程序
 ```
 curl -o BLog.py https://raw.githubusercontent.com/BillWang139967/MyPythonLib/master/log_utils/BLog/BLog.py
 ```
-## 在本项目其他应用中的view.py中调用BLog
+## 在本项目其他应用中的 view.py 中调用 BLog
 ```
 from django.shortcuts import render,render_to_response
 
@@ -328,10 +328,10 @@ from log.BLog import Log
 debug=True
 # 日志文件
 logpath = "/tmp/test.log"
-# 设置日志文件为5Mb时进行轮转，并且最多只保留个日志
+# 设置日志文件为 5Mb 时进行轮转，并且最多只保留个日志
 logger = Log(logpath,level="debug",is_console=debug, mbs=5, count=5)
 
-    
+
 def face(request):
     logstr="########"
     logger.error(logstr)
@@ -341,19 +341,19 @@ def face(request):
 ```
 ## 测试
 
-当在view.py中设置了终端显示时
+当在 view.py 中设置了终端显示时
 
 ![Screenshot](./../../images/django/BLog.jpg)
 
-注:如果修改前django项目是运行的，那么当我们在程序中加入导入模块的程序时，需要重启下django应用，如果我们修改的程序不涉及导入模块部分，则不需要重启应用
+注：如果修改前 django 项目是运行的，那么当我们在程序中加入导入模块的程序时，需要重启下 django 应用，如果我们修改的程序不涉及导入模块部分，则不需要重启应用
 
 # django FAQ
 django
 (1)Django 表单提交出现 CSRF verification failed. Request aborted
 ```
-  由于我们创建一个POST表单（它具有修改数据的作用），所以我们需要小心跨站点请求伪造。
-  谢天谢地，你不必太过担心，因为Django已经拥有一个用来防御它的非常容易使用的系统。
-  简而言之，所有针对内部URL的POST表单都应该使用{% csrf_token %}模板标签。
+  由于我们创建一个 POST 表单（它具有修改数据的作用），所以我们需要小心跨站点请求伪造。
+  谢天谢地，你不必太过担心，因为 Django 已经拥有一个用来防御它的非常容易使用的系统。
+  简而言之，所有针对内部 URL 的 POST 表单都应该使用{% csrf_token %}模板标签。
   [templates-form]
   {% csrf_token %}
 
@@ -363,30 +363,30 @@ django
 ```
 
 # uWSGI
-## 开发环境生成uWSGI可执行文件
+## 开发环境生成 uWSGI 可执行文件
 
 ### 环境
 ```
 CentOS 7.3
 ```
-### 开发环境生产uWSGI可执行文件
+### 开发环境生产 uWSGI 可执行文件
 
 ```
 $yum install python-devel
 $yum install gcc
 $curl http://uwsgi.it/install | bash -s default /tmp/uwsgi
 ```
-这将会把uWSGI二进制安装到 /tmp/uwsgi
+这将会把 uWSGI 二进制安装到 /tmp/uwsgi
 
 ### 测试
-在你的机器上写一个test.py
+在你的机器上写一个 test.py
 ```
 # test.py
 def application(env, start_response):
 start_response('200 OK', [('Content-Type','text/html')])
     return "Hello World"
 ```
-然后执行shell命令：
+然后执行 shell 命令：
 ```
 uwsgi --http :8001 --wsgi-file test.py
 ```
@@ -394,7 +394,7 @@ uwsgi --http :8001 --wsgi-file test.py
 ```
 http://IP:8001/
 ```
-看在网页上是否有Hello World
+看在网页上是否有 Hello World
 
 ## uWSGI 配合 django 使用
 
@@ -404,12 +404,12 @@ http://IP:8001/
 $curl -o uwsgi.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/web/django/uwsgi.tar.gz
 
 ```
-注意:此包适用于 Centos7
+注意：此包适用于 Centos7
 
 ### 使用工具包
 
 ```
-$tar -zxvf uwsgi.tar.gz 
+$tar -zxvf uwsgi.tar.gz
 $cd uwsgi
 $bash start.sh
 ```
@@ -417,19 +417,19 @@ $bash start.sh
 
 (1) 配置项目路径
 
-修改 `/etc/init.d/uwsgid.service` 文件,CONFIGFILE=/root/mysite/$NAME.ini 修改为项目路径
+修改 `/etc/init.d/uwsgid.service` 文件，CONFIGFILE=/root/mysite/$NAME.ini 修改为项目路径
 
-(2)将init文件放在项目中
+(2) 将 init 文件放在项目中
 
-将`uwsgi.ini_tpl`重命名为 uwsgi.ini 放到django 目录中，与 manage.py 放在同一个目录
+> * 将`uwsgi.ini_tpl`重命名为 uwsgi.ini 放到 django 目录中，与 manage.py 放在同一个目录
+> * 将 wsgi.py 放到 django 目录中，与 manage.py 放在同一个目录
 
-(3)修改配置文件
+(3) 修改配置文件
 
-修改项目中的uwsgi.ini文件，设置项目根目录`chdir = /root/mysite`
+> * 修改项目中的 uwsgi.ini 文件，设置项目根目录`chdir = /root/mysite` , 如果设置了 `virtualenv` 需要设置`home= 虚拟目录`
+> * 修改项目中的 wsgi.py 文件，将`mysite.settings` 中 mysite 替换为实际项目名称
 
-如果设置了 `virtualenv` 需要设置`home=虚拟目录`
-
-(4)启动服务
+(4) 启动服务
 
 ```
 /etc/init.d/uwsgid.service start
