@@ -9,22 +9,33 @@ env
 ```
 
 ##【目录】
-----
 
+
+<!-- vim-markdown-toc GFM -->
 * [django 开始](#django-开始)
 * [使用 bootstrap](#使用-bootstrap)
-	* [settings](#settings)
-	* [bootstrap](#bootstrap)
+    * [settings](#settings)
+    * [bootstrap](#bootstrap)
 * [django 登陆](#django-登陆)
-	* [flow chart](#flow-chart)
-	* [detailed](#detailed)
-	* [django admin 密码重置](#django-admin-密码重置)
+    * [flow chart](#flow-chart)
+    * [detailed](#detailed)
+    * [django admin 密码重置](#django-admin-密码重置)
 * [django 输出到固定日志](#django-输出到固定日志)
-	* [将log封装成一个单独的app](#将log封装成一个单独的app)
-	* [编写log程序](#编写log程序)
-	* [在本项目其他应用中的view.py中调用BLog](#在本项目其他应用中的viewpy中调用blog)
-	* [测试](#测试)
+    * [将log封装成一个单独的app](#将log封装成一个单独的app)
+    * [编写log程序](#编写log程序)
+    * [在本项目其他应用中的view.py中调用BLog](#在本项目其他应用中的viewpy中调用blog)
+    * [测试](#测试)
 * [django FAQ](#django-faq)
+* [uWSGI](#uwsgi)
+    * [开发环境生成uWSGI可执行文件](#开发环境生成uwsgi可执行文件)
+        * [环境](#环境)
+        * [开发环境生产uWSGI可执行文件](#开发环境生产uwsgi可执行文件)
+        * [测试](#测试-1)
+    * [uWSGI 配合 django 使用](#uwsgi-配合-django-使用)
+        * [下载工具包](#下载工具包)
+        * [使用工具包](#使用工具包)
+
+<!-- vim-markdown-toc -->
 
 # django 开始
 django
@@ -350,3 +361,77 @@ django
   return render_to_response(’polls/detail.html’, {’poll’: p},
                     context_instance=RequestContext(request))
 ```
+
+# uWSGI
+## 开发环境生成uWSGI可执行文件
+
+### 环境
+```
+CentOS 7.3
+```
+### 开发环境生产uWSGI可执行文件
+
+```
+$yum install python-devel
+$yum install gcc
+$curl http://uwsgi.it/install | bash -s default /tmp/uwsgi
+```
+这将会把uWSGI二进制安装到 /tmp/uwsgi
+
+### 测试
+在你的机器上写一个test.py
+```
+# test.py
+def application(env, start_response):
+start_response('200 OK', [('Content-Type','text/html')])
+    return "Hello World"
+```
+然后执行shell命令：
+```
+uwsgi --http :8001 --wsgi-file test.py
+```
+访问网页：
+```
+http://IP:8001/
+```
+看在网页上是否有Hello World
+
+## uWSGI 配合 django 使用
+
+### 下载工具包
+
+```
+$curl -o uwsgi.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/web/django/uwsgi.tar.gz
+
+```
+注意:此包适用于 Centos7
+
+### 使用工具包
+
+```
+$tar -zxvf uwsgi.tar.gz 
+$cd uwsgi
+$bash start.sh
+```
+**配置**
+
+(1) 配置项目路径
+
+修改 `/etc/init.d/uwsgid.service` 文件,CONFIGFILE=/root/mysite/$NAME.ini 修改为项目路径
+
+(2)将init文件放在项目中
+
+将`uwsgi.ini_tpl`重命名为 uwsgi.ini 放到django 目录中，与 manage.py 放在同一个目录
+
+(3)修改配置文件
+
+修改项目中的uwsgi.ini文件，设置项目根目录`chdir = /root/mysite`
+
+如果设置了 `virtualenv` 需要设置`home=虚拟目录`
+
+(4)启动服务
+
+```
+/etc/init.d/uwsgid.service start
+```
+
