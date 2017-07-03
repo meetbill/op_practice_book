@@ -55,6 +55,9 @@
         * [SWAP 文件系统](#swap-文件系统)
     * [网络](#网络)
         * [网络 \(LAN / WiFi\)](#网络-lan--wifi)
+        * [route 设置](#route-设置)
+            * [基本使用](#基本使用)
+            * [在linux下设置永久路由的方法](#在linux下设置永久路由的方法)
         * [Microsoft windows 网络 \(samba\)](#microsoft-windows-网络-samba)
         * [IPTABLES \(firewall\)](#iptables-firewall)
 * [ssh](#ssh)
@@ -268,13 +271,14 @@ centos 6.x
 外部命令：bash根据PATH环境变量定义的路径，自左而右地在每个路径搜寻以给定命令命名的文件，第一次找到即为要执行的命令；
 - Note: 在第一次通过PATH搜寻到命令后，会将其存入hash缓存中，下次使用不再搜寻PATH，从hash中查找；
 
-~~~shell
+```
 [root@sslinux ~]# hash
 hits command
  1 /usr/sbin/ifconfig
  1 /usr/bin/vim
  1 /usr/bin/ls
-~~~
+
+```
 
 Tab键补全：
 若用户给出的字符在命令搜索路径中有且仅有一条命令与之相匹配，则Tab键直接补全；
@@ -332,7 +336,6 @@ mkdir: created directory `./tmp/b/shell'
 9 directories, 0 files
 ~~~
 
-[返回目录](#目录)
 
 ## 命令的执行状态结果
 表示命令是否成功执行；
@@ -1126,6 +1129,82 @@ sslinux
 |\# echo "1" > /proc/sys/net/ipv4/ip\_forward|激活IP转发|
 |\# tcpdump tcp port 80|显示所有 HTTP回环|
 |\# whois www\.example\.com|在 Whois 数据库中查找|
+
+### route 设置
+
+#### 基本使用
+
+添加到主机的路由(就是一个IP一个IP添加）
+
+```
+ route add -host 146.148.149.202 dev eno16777984
+ route add -host 146.148.149.202 gw 146.148.149.193
+```
+
+添加到网络的路由（批量）
+
+```
+route add -net 146.148.149.0 netmask 255.255.255.0 dev eno16777984
+route add -net 146.148.149.0 netmask 255.255.255.0 gw 146.148.149.193
+```
+
+简洁写法
+
+```
+route add -net 146.148.150.0/24 dev eno16777984
+route add -net 146.148.150.0/24 gw 146.148.150.193
+```
+ 
+添加默认网关
+
+```
+route add default gw 146.148.149.193
+```
+
+删除主机路由:
+
+```
+route del -host 146.148.149.202 dev eno16777984
+```
+
+删除网络路由:
+
+```
+ route del -net 146.148.149.0 netmask 255.255.255.0
+ route del -net 146.148.150.0/24
+```
+ 
+删除默认路由
+
+```
+route del default gw 146.148.149.193
+```
+#### 在linux下设置永久路由的方法
+
+服务器启动时自动设置路由，第一想到的可能时 `rc.local`
+
+按照linux启动的顺序，rc.local里面的内容是在linux所有服务都启动完毕，最后才被执行的，也就是说，这里面的内容是在NFS之后才被执行的，那也就是说在NFS启动的时候，服务器上的静态路由是没有被添加的，所以NFS挂载不能成功。
+
+/etc/sysconfig/static-routes
+```
+any net 192.168.3.0/24 gw 192.168.3.254 
+any net 10.250.228.128 netmask 255.255.255.192 gw 10.250.228.129 
+```
+使用static-routes的方法是最好的。无论重启系统和service network restart 都会生效 
+
+static-routes文件又是什么呢，这个是network脚本执行时调用的一个文件，大致的程序如下
+
+```
+if [ -f /etc/sysconfig/static-routes  ]; then 
+    grep "^any" /etc/sysconfig/static-routes | while read ignore args ; do 
+        /sbin/route add -$args 
+    done 
+fi
+``` 
+从这段脚本可以看到，这个就是添加静态路由的方法，static-routes的写法是
+
+any net 192.168.0.0/16 gw 网关ip
+
   
 ### Microsoft windows 网络 \(samba\)  
 | 命令 | 说明 |

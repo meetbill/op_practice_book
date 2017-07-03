@@ -1,63 +1,57 @@
 # shell基础及实例
 
+<!-- vim-markdown-toc GFM -->
 * [01shell编程环境](#01shell编程环境)
 * [02bash变量类型](#02bash变量类型)
 * [03bash的配置文件](#03bash的配置文件)
 * [04bash中的算术运算符](#04bash中的算术运算符)
 * [05条件测试](#05条件测试)
-	* [Bash的测试类型：](#bash的测试类型)
-	* [文件测试：](#文件测试)
+    * [Bash的测试类型：](#bash的测试类型)
+    * [文件测试：](#文件测试)
 * [06bash脚本编程之用户交互](#06bash脚本编程之用户交互)
 * [07流程控制](#07流程控制)
-	* [if语句](#if语句)
-	* [for循环](#for循环)
-		* [EXAMPLE：添加10个用户，用户名为：user1-user10：密码同用户名；](#example添加10个用户用户名为user1-user10密码同用户名)
-		* [Example：判断某路径下所有文件的类型：](#example判断某路径下所有文件的类型)
-		* [Example：使用for循环统计关于tcp端口监听状态；](#example使用for循环统计关于tcp端口监听状态)
-		* [Example: 通过ping命令探测192.168.0.1-254范围内的所有主机的在线状态；](#example-通过ping命令探测19216801-254范围内的所有主机的在线状态)
-	* [while循环](#while循环)
-		* [Example：用while求100以内所有正整数之和：](#example用while求100以内所有正整数之和)
-		* [Example：用while添加10个用户，user1-user10；](#example用while添加10个用户user1-user10)
-		* [Example：使用while循环ping指定网络内的所有主机；](#example使用while循环ping指定网络内的所有主机)
-		* [Example：使用for循环打印九九乘法表；](#example使用for循环打印九九乘法表)
-		* [Example：使用while循环打印九九乘法表；](#example使用while循环打印九九乘法表)
-		* [Example：利用RANDOM生成10个随机数字，输出这10个数字，并显示其中的最大者和最小者；](#example利用random生成10个随机数字输出这10个数字并显示其中的最大者和最小者)
-	* [until循环](#until循环)
-		* [Example：用until求100以内所有正整数之和：](#example用until求100以内所有正整数之和)
-		* [Example：用until循环打印九九乘法表；](#example用until循环打印九九乘法表)
-	* [循环控制语句](#循环控制语句)
-		* [Example:求100以内所有偶数之和：要求循环遍历100以内的所有正整数；](#example求100以内所有偶数之和要求循环遍历100以内的所有正整数)
-	* [创建死循环](#创建死循环)
-		* [Example：每隔3秒钟到系统上获取已经登录的用户信息；如果用户输入的用户名登录了，则记录于日志中，并退出；](#example每隔3秒钟到系统上获取已经登录的用户信息如果用户输入的用户名登录了则记录于日志中并退出)
-		* [Example：使用until实现上述功能：](#example使用until实现上述功能)
-	* [while循环的特殊用法：（遍历文件的每一行）](#while循环的特殊用法遍历文件的每一行)
-		* [Example:依次读取/etc/passwd文件中的每一行，找出其ID号为偶数的所有用户，显示其用户名、ID号及默认shell；](#example依次读取etcpasswd文件中的每一行找出其id号为偶数的所有用户显示其用户名id号及默认shell)
-	* [for循环的特殊格式：](#for循环的特殊格式)
-		* [Example：求100以内所有正整数之和：](#example求100以内所有正整数之和)
-		* [Example：打印九九乘法表；](#example打印九九乘法表)
-		* [Example: 菜单](#example-菜单)
-	* [case语句](#case语句)
-		* [Example：使用case语句改写前一个练习：](#example使用case语句改写前一个练习)
+    * [if语句](#if语句)
+    * [for循环](#for循环)
+        * [EXAMPLE：添加10个用户，用户名为：user1-user10：密码同用户名；](#example添加10个用户用户名为user1-user10密码同用户名)
+        * [Example：判断某路径下所有文件的类型：](#example判断某路径下所有文件的类型)
+        * [Example：使用for循环统计关于tcp端口监听状态；](#example使用for循环统计关于tcp端口监听状态)
+        * [Example: 通过ping命令探测192.168.0.1-254范围内的所有主机的在线状态；](#example-通过ping命令探测19216801-254范围内的所有主机的在线状态)
+    * [while循环](#while循环)
+        * [Example：用while求100以内所有正整数之和：](#example用while求100以内所有正整数之和)
+        * [Example：用while添加10个用户，user1-user10；](#example用while添加10个用户user1-user10)
+        * [Example：使用while循环ping指定网络内的所有主机；](#example使用while循环ping指定网络内的所有主机)
+        * [Example：利用RANDOM生成10个随机数字，输出这10个数字，并显示其中的最大者和最小者；](#example利用random生成10个随机数字输出这10个数字并显示其中的最大者和最小者)
+    * [创建死循环](#创建死循环)
+        * [Example：每隔3秒钟到系统上获取已经登录的用户信息；如果用户输入的用户名登录了，则记录于日志中，并退出；](#example每隔3秒钟到系统上获取已经登录的用户信息如果用户输入的用户名登录了则记录于日志中并退出)
+    * [while循环的特殊用法：（遍历文件的每一行）](#while循环的特殊用法遍历文件的每一行)
+        * [Example:依次读取/etc/passwd文件中的每一行，找出其ID号为偶数的所有用户，显示其用户名、ID号及默认shell；](#example依次读取etcpasswd文件中的每一行找出其id号为偶数的所有用户显示其用户名id号及默认shell)
+    * [for循环的特殊格式：](#for循环的特殊格式)
+        * [Example：求100以内所有正整数之和：](#example求100以内所有正整数之和)
+        * [Example: 菜单](#example-菜单)
+    * [case语句](#case语句)
+        * [Example：使用case语句改写前一个练习：](#example使用case语句改写前一个练习)
 * [08函数](#08函数)
-		* [Example: 通过函数，创建10个用户；](#example-通过函数创建10个用户)
-		* [Example：编写一个服务启动关闭脚本：](#example编写一个服务启动关闭脚本)
-	* [函数返回值：](#函数返回值)
-		* [Example:求N的阶乘：](#example求n的阶乘)
-		* [Example:求n阶斐波拉契数列：](#example求n阶斐波拉契数列)
+        * [Example: 通过函数，创建10个用户；](#example-通过函数创建10个用户)
+        * [Example：编写一个服务启动关闭脚本：](#example编写一个服务启动关闭脚本)
+    * [函数返回值：](#函数返回值)
+        * [Example:求N的阶乘：](#example求n的阶乘)
 * [09数组](#09数组)
-	* [数组：](#数组)
-		* [Example:生成10个随机数保存于数组中，并找出其最大值和最小值：](#example生成10个随机数保存于数组中并找出其最大值和最小值)
-		* [Example：写一个脚本：定义一个数组，数组中的元素是/var/log目录下所有以.log结尾的文件；要统计其下标为偶数的文件中的行数之和；](#example写一个脚本定义一个数组数组中的元素是varlog目录下所有以log结尾的文件要统计其下标为偶数的文件中的行数之和)
-	* [引用数组中的元素：](#引用数组中的元素)
+    * [数组：](#数组)
+        * [Example:生成10个随机数保存于数组中，并找出其最大值和最小值：](#example生成10个随机数保存于数组中并找出其最大值和最小值)
+        * [Example：写一个脚本：定义一个数组，数组中的元素是/var/log目录下所有以.log结尾的文件；要统计其下标为偶数的文件中的行数之和；](#example写一个脚本定义一个数组数组中的元素是varlog目录下所有以log结尾的文件要统计其下标为偶数的文件中的行数之和)
+    * [引用数组中的元素：](#引用数组中的元素)
 * [10bash的字符串处理工具](#10bash的字符串处理工具)
-	* [字符串切片：](#字符串切片)
-	* [基于模式取子串：](#基于模式取子串)
-		* [Example：url=http://www.google.com:80,分别取出协议和端口；](#exampleurlhttpwwwgooglecom80分别取出协议和端口)
-	* [查找替换：](#查找替换)
-	* [查找并删除：](#查找并删除)
-	* [字符大小写转换：](#字符大小写转换)
-	* [变量赋值：](#变量赋值)
+    * [字符串切片：](#字符串切片)
+    * [基于模式取子串：](#基于模式取子串)
+        * [Example：url=http://www.google.com:80,分别取出协议和端口；](#exampleurlhttpwwwgooglecom80分别取出协议和端口)
+    * [查找替换：](#查找替换)
+    * [查找并删除：](#查找并删除)
+    * [字符大小写转换：](#字符大小写转换)
+    * [变量赋值：](#变量赋值)
 * [11脚本的配置文件](#11脚本的配置文件)
+    * [步骤：](#步骤)
+
+<!-- vim-markdown-toc -->
 
 ## 01shell编程环境
 - 编程基础知识：
@@ -106,9 +100,7 @@
 
         首行特定格式：
 
-            #!/bin/bash   --> shebang
-
-            魔数：magic number，程序的执行入口，告知本程序由哪一个解释器解释执行；
+            `#!/bin/bash`
 
     6、运行脚本的两种方式：
 
@@ -116,16 +108,15 @@
 
         b、 直接运行解释器，将脚本作为解释器程序的参数运行；
 
-    - Example:
-
-~~~shell
+Example:
+```
     [root@localhost test1]# vim test.sh
     [root@localhost test1]# bash test.sh
     hello,girl
     [root@localhost test1]# chmod +x test.sh
     [root@localhost test1]# ./test.sh
     hello,girl
-~~~
+```
 
 - Bash编程：
 
@@ -150,6 +141,7 @@
     短路或运算：双目运算符前面的结果为1，则结果一定为1，后面的不执行；
 
 ## 02bash变量类型
+
 变量类型决定了变量的数据存储格式、存储空间大小以及变量能参与的运算种类；
 
 - 强弱类型语言的区别：
@@ -257,13 +249,9 @@
 
     使用“su - UserName”或“su -l UserName”切换的用户
 
-
-~~~shell
     作用于全局：/etc/profile，/etc/profile.d/*.sh
 
     作用于个人：~/.bash_profile
-
-~~~
 
 - 功用：
 
@@ -283,13 +271,12 @@
 
 - 非交互式Shell：
 
-         su UserName 
-         图形界面下打开的终端
-         执行脚本
-~~~shell
+    su UserName 
+    图形界面下打开的终端
+    执行脚本
+
     作用于全局：/etc/bashrc
     作用于个人：~/.bashrc
-~~~
 
 - 功用：
 
@@ -308,7 +295,6 @@
 
 	(2) 使用source或点命令(　．)进程；
 
-[返回目录](#目录)
 
 ## 04bash中的算术运算符
 +，-，*，/，%，**
@@ -340,13 +326,12 @@
         let var--
 
 - Example:
-~~~shell
+```
 #!/bin/bash
 spaceline1=$(grep "^[[:space:]]*$" $1 | wc -l)
 spaceline2=$(grep "^[[:space:]]*$" $2 | wc -l)
 echo "The sum of space line:$[$spaceline1+$spaceline2]"
-~~~
-[返回目录](#目录)
+```
 
 ## 05条件测试
 判断某需求是否满足，需要有测试机制来实现；
@@ -381,24 +366,22 @@ echo "The sum of space line:$[$spaceline1+$spaceline2]"
 
 - 字符串测试：
 
-~~~shell
 
-     == : 是否等于；
+ == : 是否等于；
 
-     >: 是否大于；
+ >: 是否大于；
 
-     <: 是否小于；
+ <: 是否小于；
 
-     != ： 是否不等于；
+ != ： 是否不等于；
 
-     =~ ：左侧字符串是否能够被右侧的PATTERN所匹配；
+ =~ ：左侧字符串是否能够被右侧的PATTERN所匹配；
 
-     - Note：此表达式一般用于[[ ]]中；
+ - Note：此表达式一般用于[[ ]]中；
 
-     -z “STRING” : 测试字符串是否为空，空则为真，不空则为假；
+ -z “STRING” : 测试字符串是否为空，空则为真，不空则为假；
 
-     -n “STRING” ：测试字符串是否不空，不空则为真，空则为假；
-~~~
+ -n “STRING” ：测试字符串是否不空，不空则为真，空则为假；
 
 Note：在字符串比较时用到的操作数都应该使用引号；
 
@@ -520,7 +503,6 @@ UUID=3d04d82b-c52b-4184-8d64-1826db6e2eac /boot xfs defaults 0 0
 # [ -f /bin/cat -a -x /bin/cat ] && cat /etc/fstab 
 #如果文件存在且有执行权限，就用它查看文件内容；
 ```
-[返回目录](#目录)
 
 ## 06bash脚本编程之用户交互
 
@@ -556,7 +538,6 @@ else
  exit 2
 fi
 ```
-[返回目录](#目录)
 
 ## 07流程控制
 
@@ -630,7 +611,7 @@ fi
 
 - Exmaple:用户键入文件路径，脚本来判断文件类型；
 
-~~~shell
+```
 #!/bin/bash
 #
 #if语句多分支语句；
@@ -655,9 +636,11 @@ elif [ -L $filename ];then #判断是否为链接文件；
 else
  echo "Other type."
 fi
-~~~
+```
 
 ### for循环
+
+
 循环体：要执行的代码，可能要执行n遍；
 
  循环需具备进入循环的条件和退出循环的条件；
@@ -675,7 +658,7 @@ fi
 
 #### EXAMPLE：添加10个用户，用户名为：user1-user10：密码同用户名；
 
-~~~shell
+```
 #!/bin/bash
 #
 #for循环，使用列表；
@@ -697,7 +680,8 @@ for i in {1..10};do
 		fi
 	fi
 done
-~~~
+
+```
 
 - 列表生成方式：
 
@@ -723,7 +707,7 @@ done
 
 #### Example：判断某路径下所有文件的类型：
 
-~~~shell
+```
 #!/bin/bash
 #
 #for循环使用命令返回列表；
@@ -739,11 +723,11 @@ for file in $(ls /var);do #使用命令生成列表；
      echo "Other type"
  fi
 done
-~~~
+```
 
 #### Example：使用for循环统计关于tcp端口监听状态；
 
-~~~shell
+```
 #!/bin/bash
 #
 #使用for循环过滤netstat命令中关于tcp的信息；
@@ -765,11 +749,11 @@ done
 echo "ESTABLISHED:$estab"
 echo "LISTEN:$listen"
 echo "Unknow:$other"
-~~~
+```
 
 #### Example: 通过ping命令探测192.168.0.1-254范围内的所有主机的在线状态；
 
-~~~shell
+```
 #!/bin/bash
 #
 #通过ping命令探测192.168.0.1-254范围内的所有主机的在线状态；
@@ -790,7 +774,7 @@ done
 
 echo "Up hosts:$uphosts."
 echo "Down hosts:$downhosts."
-~~~
+```
 
 ### while循环
 语法：
@@ -810,7 +794,7 @@ CONDITION：循环控制条件；进入循环之前，先做一次判断；
 
 #### Example：用while求100以内所有正整数之和：
 
-~~~shell
+```
 #!/bin/bash
 #使用while求100以内正整数之和；
 declare -i sum=0
@@ -821,11 +805,10 @@ while [ $i -le 100 ];do
 done
 echo $i
 echo "Summary:$sum."
-~~~
-
+```
 #### Example：用while添加10个用户，user1-user10；
 
-~~~shell
+```
 #!/bin/bash
 #
 #使用while循环添加10个用户；
@@ -841,11 +824,12 @@ while [ $i -le 10 ];do
  let i++
 done
 echo "Add $users users."
-~~~
+
+```
 
 #### Example：使用while循环ping指定网络内的所有主机；
 
-~~~shell
+```
 #!/bin/bash
 #
 #使用while循环ping指定网段内的所有主机；
@@ -867,45 +851,11 @@ done
 
 echo "Up hosts:$uphosts."
 echo "Down hosts:$downhosts."
-~~~
-
-#### Example：使用for循环打印九九乘法表；
-
-~~~shell
-#!/bin/bash
-#使用for循环打印九九乘法表；
-
-for j in {1..9};do
- for i in $(seq 1 $j);do
-     echo -e -n "${i}X${j}=$[$i*$j]\t"
- done
- echo
-done
-~~~
-
-#### Example：使用while循环打印九九乘法表；
-
-~~~shell
-#!/bin/bash
-#
-declare -i i=1
-declare -i j=1
-
-while [ $j -le 9 ];do
- while [ $i -le $j ];do
-     echo -e -n "${i}X${j}=$[$i*$j]\t"
-     let i++
- done
-
- echo
- let i=1
- let j++
-done
-~~~
+```
 
 #### Example：利用RANDOM生成10个随机数字，输出这10个数字，并显示其中的最大者和最小者；
 
-~~~shell
+```
 #!/bin/bash
 #
 #利用RANDOM生成10个随机数，输出，并求最大值和最小值；
@@ -934,118 +884,7 @@ done
 echo "MAX:$max."
 echo "MIN:$min."
 
-~~~
-
-### until循环
 ```
-until CONDITION；do
-    循环体
-done
-#进入条件：false
-#退出条件：true
-
-```
-
-```
-while CONDITION；do
-    循环体
-done
-#进入条件：CONDITION为true；
-#退出条件：CONDITION为false；
-```
-
-#### Example：用until求100以内所有正整数之和：
-
-~~~shell
-#!/bin/bash
-#
-#利用until循环求100以内所有正整数之和；
-declare -i i=1
-declare -i sum=0
-
-until [ $i -gt 100 ];do
-	let sum+=$i
-	let i++
-done
-echo "100以内所有正整数之和为："
-echo "Sum:$sum"
-
-~~~
-
-#### Example：用until循环打印九九乘法表；
-
-~~~shell
-#!/bin/bash
-#
-#使用until循环打印九九乘法表；
-
-declare -i j=1
-declare -i i=1
-
-until [ $j -gt 9 ];do
-	until [ $i -gt $j ];do
-		echo -n -e "${i}X${j}=$[$i*$j]\t"
-		let i++
-	done
-	echo
-	let i=1
-	let j++
-done
-
-~~~
-
-### 循环控制语句
-循环控制语句，用于循环体中；
-- 1.continue [N] : 提前结束第N层的本轮循环，而直接进入下一轮判断；
-
-```
-while CONDITION1；do
-    COMMAND1
-    …..
-    if CONDITION2;then
-	continue
-    fi
-    COMMANDn
-    ….
-done
-```
-
-- 2.break [N] : 提前结束循环；
-
-```
-while CONDITION1;do
-    CMD1
-    ….
-    if CONDITION2;then
-        break
-    fi
-    CMDn
-    …
-done
-
-```
-
-#### Example:求100以内所有偶数之和：要求循环遍历100以内的所有正整数；
-
-~~~shell
-#!/bin/bash
-#
-#求100以内所有偶数之和，使用continue跳过奇数；
-declare -i i=0
-declare -i sum=0
-
-until [ $i -gt 100 ];do
-	let i++
-	if [ $[$i%2] -eq 1 ];then
-		continue
-	fi
-	let sum+=$i
-done
-
-echo "Even sum:$sum"
-
-~~~
-
 ### 创建死循环
 
 ```
@@ -1063,7 +902,7 @@ done
 
 #### Example：每隔3秒钟到系统上获取已经登录的用户信息；如果用户输入的用户名登录了，则记录于日志中，并退出；
 
-~~~shell
+```
 #!/bin/bash
 #
 #用while造成死循环，在系统上每隔3秒判断一次用户输入的用户名是否登录；
@@ -1078,20 +917,7 @@ done
 
 echo "$username logggen on." >> /tmp/user.log
 
-~~~
-
-#### Example：使用until实现上述功能：
-
-~~~shell
-#!/bin/bash
-#
-#用until造成死循环，循环判断用户输入的用户名是否登录；
-read -p "Enter a user name:" username
-until who | grep "^$username" &> /dev/null;do
-	sleep 3
-done
-echo "$username logged on." >> /tmp/user.log
-~~~
+```
 
 ### while循环的特殊用法：（遍历文件的每一行）
 ```
@@ -1103,7 +929,7 @@ echo "$username logged on." >> /tmp/user.log
 
 #### Example:依次读取/etc/passwd文件中的每一行，找出其ID号为偶数的所有用户，显示其用户名、ID号及默认shell；
 
-~~~shell
+```
 #!/bin/bash
 #while循环的特殊用法，读取指定文件的每一行并赋值给变量；
 
@@ -1115,7 +941,7 @@ while read line;do
 	fi
 done < /etc/passwd
 
-~~~
+```
 
 ### for循环的特殊格式：
 ```
@@ -1131,7 +957,7 @@ done < /etc/passwd
 
 #### Example：求100以内所有正整数之和：
 
-~~~shell
+```
 #!/bin/bash
 #
 #for循环，类似C语言格式，求100以内正整数之和；
@@ -1144,23 +970,7 @@ done
 
 echo "Sum:$sum."
 
-~~~
-
-#### Example：打印九九乘法表；
-
-~~~shell
-#!/bin/bash
-#
-#用类似于C语言风格的for循环打印九九乘法表；
-
-for((j=1;j<=9;j++));do
-	for((i=1;i<=j;i++));do
-		echo -e -n "${i}X${j}=$[$i*$j]\t"
-	done
-	echo
-done
-
-~~~
+```
 
 #### Example: 菜单
 (1)	显示一个如下菜单：
@@ -1174,7 +984,7 @@ done
 
 (3)	显示用户选择的内容；
 
-~~~shell
+```
 #!/bin/bash
 #
 #根据用户的选择，给用户显示相应的硬件信息；
@@ -1203,8 +1013,7 @@ else
 	exit 0
 fi
 
-~~~
-
+```
 
 ### case语句
 ```
@@ -1230,7 +1039,8 @@ case支持glob风格的通配符：
 	    a|b: a或b
 
 #### Example：使用case语句改写前一个练习：
-~~~shell
+
+```
 #!/bin/bash
 #
 cat << EOF
@@ -1261,9 +1071,8 @@ disk)
 	;;
 esac
 
-~~~
+```
 
-[返回目录](#目录)
 
 ## 08函数
 	函数的作用：
@@ -1301,7 +1110,7 @@ f_name() {
 
 #### Example: 通过函数，创建10个用户；
 
-~~~shell
+```
 #!/bin/bash
 #
 #通过调用函数添加10个用户；
@@ -1320,7 +1129,8 @@ for i in {1..10};do
 	username=myuser$i
 	adduser
 done
-~~~
+
+```
 
 #### Example：编写一个服务启动关闭脚本：
 
@@ -1402,7 +1212,7 @@ esac
 
 	在函数体当中，可使用$1,$2,….调用这些参数；还可以使用$@,$*,$#等特殊变量；
 
-~~~shell
+```
 #!/bin/bash
 #
 #使用带参数的函数添加10个用户；
@@ -1430,7 +1240,7 @@ while true;do		#死循环，直到输入的值为quit是退出；
 		adduser $username
 	fi
 done
-~~~
+```
 
 - 变量作用域：
 
@@ -1451,8 +1261,7 @@ done
 N！=N（N-1）(N-2)….1
 	N(N-1)!=N(N-1)(N-2)!
 ```
-
-~~~shell
+```
 #!/bin/bash
 #
 #利用函数递归求N的阶乘；
@@ -1465,29 +1274,8 @@ fact() {
 	fi
 }
 fact 5
-~~~
 
-#### Example:求n阶斐波拉契数列：
-~~~shell
-#!/bin/bash
-#
-#函数递归：求n阶斐波拉契数列的第n项；
-
-fab() {
-	if [ $1 -eq 1 ];then
-		echo 1
-	elif [ $1 -eq 2 ];then
-		echo 1
-	else
-		echo $[$(fab $[$1-1])+$(fab $[$1-2])]
-	fi
-}
-
-fab 7
-~~~
-
-[返回目录](#目录)
-
+```
 
 ## 09数组
 ### 数组：
@@ -1543,7 +1331,7 @@ fab 7
 
 #### Example:生成10个随机数保存于数组中，并找出其最大值和最小值：
 
-~~~shell
+```
 #!/bin/bash
 #
 #生成10个随机数保存于数组中；
@@ -1565,11 +1353,12 @@ done
 
 echo "Max:$max"
 echo "Min:$min"
-~~~
+
+```
 
 #### Example：写一个脚本：定义一个数组，数组中的元素是/var/log目录下所有以.log结尾的文件；要统计其下标为偶数的文件中的行数之和；
 
-~~~shell
+```
 #!/bin/bash
 #
 #定义一个数组，数组中的元素是/var/log目录下所有以.log结尾的文件；
@@ -1586,7 +1375,8 @@ for i in $(seq 0 $[${#files[*]}-1]);do
 done 
 
 echo "Lines:$lines."
-~~~
+
+```
 
 ### 引用数组中的元素：
 
@@ -1603,12 +1393,10 @@ echo "Lines:$lines."
 - 删除数组中的某元素：unset ARRAY[INDEX]
 
 - 关联数组：
-~~~shell
 	declare –A ARRAY_NAME
 	ARRAY_NAME=([index_name1]=’val1’ [index_name2]=’val2’ ….)
-~~~
 
-~~~shell
+```
 [root@bill scripts]# declare -a array
 [root@bill scripts]# #声明一个数组，不是必要的
 [root@bill scripts]# array=(0 1 2)
@@ -1617,23 +1405,26 @@ echo "Lines:$lines."
 [root@bill scripts]# echo $array
 5
 [root@bill scripts]#
-~~~
 
-~~~shell
+```
+
+```
 [root@bill scripts]# #以空白作为分隔符拆分字符串为数组
 [root@bill scripts]# str="1 2 3"
 [root@bill scripts]# array=($str)
 [root@bill scripts]# echo $array
 1
 [root@bill scripts]#
-~~~
 
-~~~shell
+```
+
+```
 [root@bill scripts]# #使用其他分隔符拆分字符串为数组，需指定IFS
 [root@bill scripts]# IFS=: array=($PATH)
 [root@bill scripts]# echo $array
 /usr/local/sbin
-~~~
+
+```
 
 - 引用数组元素：
 	$array  ${array}  ${array[0]}  #第0个元素
@@ -1662,7 +1453,6 @@ echo "Lines:$lines."
 		echo $i;
 	done
 
-[返回目录](#目录)
 
 
 ## 10bash的字符串处理工具
@@ -1683,14 +1473,16 @@ echo "Lines:$lines."
 
 	功能：自左而右，查找var变量所存储的字符串中出现的word，删除字符串开头至最后一次由word指定的字符之间的所有内容；
 
-~~~shell
-#bash基于模式取子串；
+**bash基于模式取子串**
+
+```
 [root@bill scripts]# file="/var/log/messages"
 [root@bill scripts]# echo ${file#*/}
 var/log/messages
 [root@bill scripts]# echo ${file##*/}
 messages
-~~~	
+
+```
 
 - ${var%word*}：其中word可以是指定的任意字符；
 
@@ -1699,25 +1491,24 @@ messages
 - ${var%%word*}：其中word可以是指定的任意字符；
 
 	功能：自右而左，查找var变量所存储的字符串中出现的word,，只不过删除字符串最右侧的字符向左至最后一次出现word字符之间的所有字符；
-
-~~~shell
+```
 [root@bill scripts]# file="/var/log/messages" #从右至左，匹配‘/ ’
 [root@bill scripts]# echo ${file%/*}
 /var/log
 [root@bill scripts]# echo ${file%%/*}    # 双%匹配并删除后为空；
-
 [root@bill scripts]#
-~~~
+```
 
 #### Example：url=http://www.google.com:80,分别取出协议和端口；
-~~~shell
+
+```
 [root@bill scripts]# url=http://www.google.com:80
 [root@bill scripts]# echo ${url##*:}    #取端口号
 80
 [root@bill scripts]# echo ${url%%:*}   #取协议
 http
 [root@bill scripts]#
-~~~
+```
 
 ### 查找替换：
 	${var/pattern/substi}：查找var所表示的字符串中，第一次被pattern所匹配到的字符串，以substi替换之；
@@ -1728,7 +1519,7 @@ http
 
 	${var/%pattern/substi}：查找var所表示的字符串中，行尾被pattern所匹配到的字符串，以substi替换之；
 
-~~~shell
+```
 [root@bill scripts]# var=$(head -n 1 /etc/passwd)
 [root@bill scripts]# echo $var
 root x 0 0 root /root /bin/bash
@@ -1736,9 +1527,9 @@ root x 0 0 root /root /bin/bash
 ROOT x 0 0 root /root /bin/bash
 [root@bill scripts]# echo ${var//root/ROOT}  #替换所有匹配到的root为ROOT
 ROOT x 0 0 ROOT /ROOT /bin/bash
-~~~
 
-~~~shell
+```
+```
 [root@bill scripts]# useradd bash -s /bin/bash
 [root@bill scripts]# cat /etc/passwd | grep "^bash.*bash$"
 bash:x:1029:1029::/home/bash:/bin/bash
@@ -1749,7 +1540,7 @@ bash x 1029 1029  /home/bash /bin/bash
 BASH x 1029 1029  /home/bash /bin/bash
 [root@bill scripts]# echo ${line/%bash/BASH}	#替换行尾的bash为BASH
 bash x 1029 1029  /home/bash /bin/BASH
-~~~
+```
 
 ### 查找并删除：
 	${var/pattern}：查找var所表示的字符串中，删除第一次被pattern所匹配到的字符串
@@ -1761,7 +1552,7 @@ bash x 1029 1029  /home/bash /bin/BASH
 	${var/%pattern}：查找var所表示的字符串中，删除行尾被pattern所匹配到的字符串；
 
 - Example：
-~~~shell
+```
 [root@bill scripts]# line=$(tail -n 1 /etc/passwd)
 [root@bill scripts]# echo $line
 bash x 1029 1029  /home/bash /bin/bash
@@ -1773,7 +1564,8 @@ bash x 1029 1029  /home/bash /bin/bash
  x 1029 1029  /home/bash /bin/bash
 [root@bill scripts]# echo ${line/%bash}   #查找并删除匹配到的行尾bash
 bash x 1029 1029  /home/bash /bin/
-~~~
+
+```
 
 ### 字符大小写转换：
 	${var^^}：把var中的所有小写字母转换为大写；
@@ -1782,7 +1574,7 @@ bash x 1029 1029  /home/bash /bin/
 
 - Example：
 
-~~~shell
+```
 [root@bill scripts]# line=$(tail -n 1 /etc/fstab)		#将文件最后一行的值赋值给变量
 [root@bill scripts]# echo ${line^^}		#全部转换为大写后输出
 /DEV/MAPPER/CENTOS-SWAP SWAP                    SWAP    DEFAULTS        0 0
@@ -1791,7 +1583,8 @@ bash x 1029 1029  /home/bash /bin/
 /DEV/MAPPER/CENTOS-SWAP SWAP                    SWAP    DEFAULTS        0 0
 [root@bill scripts]# echo ${line,,}		#全部转换为大写后输出；
 /dev/mapper/centos-swap swap                    swap    defaults        0 0
-~~~
+
+```
 
 ### 变量赋值：
 
@@ -1801,7 +1594,7 @@ bash x 1029 1029  /home/bash /bin/
 
 - Example：
 
-~~~shell
+```
 [root@bill scripts]# echo $test		#变量值为空；
 
 [root@bill scripts]# echo ${test:-helloworld}	#  :- 仅返回设定值，不修改；
@@ -1812,17 +1605,14 @@ helloworld
 helloworld
 [root@bill scripts]# echo $test			# 变量值已修改；
 helloworld
-~~~
-
-[返回目录](#目录)
-
+```
 
 ## 11脚本的配置文件
 ###步骤：
 -	(1) 定义文本文件，每行定义“name=value”
 -	(2) 在脚本中source此文件即可
 
-~~~shell
+```
 [root@bill scripts]# touch /tmp/config.test #创建配置文件；
 [root@bill scripts]# echo "name=bill" >> /tmp/config.test #在配置文件中定义变量；
 [root@bill scripts]# vim script_configureFile.sh		#编写脚本，导入配置文件；如内容所示；
@@ -1834,5 +1624,4 @@ bill
 source /tmp/config.test		#导入配置文件，脚本自身并未定义变量；
 
 echo $name				#引用的是配置文件中的变量name
-~~~
-[返回目录](#目录)
+```
