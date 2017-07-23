@@ -1192,7 +1192,7 @@ any net 10.250.228.128 netmask 255.255.255.192 gw 10.250.228.129
 ```
 使用static-routes的方法是最好的。无论重启系统和service network restart 都会生效 
 
-static-routes文件又是什么呢，这个是network脚本执行时调用的一个文件，大致的程序如下
+static-routes文件又是什么呢，这个是network脚本(/etc/init.d/network)调用的，大致的程序如下
 
 ```
 if [ -f /etc/sysconfig/static-routes  ]; then 
