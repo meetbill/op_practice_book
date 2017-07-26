@@ -1,14 +1,24 @@
 
+<!-- vim-markdown-toc GFM -->
 * [什么是KVM](#什么是kvm)
 * [安装KVM](#安装kvm)
-	* [系统要求](#系统要求)
-	* [安装 kvm 软件](#安装-kvm-软件)
-		* [确保正确加载 KVM 模块](#确保正确加载-kvm-模块)
-		* [检查 kvm 是否正确安装](#检查-kvm-是否正确安装)
-	* [配置网络](#配置网络)
-		* [默认网络 virbro](#默认网络-virbro)
-		* [桥接网络](#桥接网络)
-	* [使用 virt-manager 安装建立虚拟机](#使用-virt-manager-安装建立虚拟机)
+    * [系统要求](#系统要求)
+    * [安装 kvm 软件](#安装-kvm-软件)
+        * [确保正确加载 KVM 模块](#确保正确加载-kvm-模块)
+        * [检查 kvm 是否正确安装](#检查-kvm-是否正确安装)
+    * [配置网络](#配置网络)
+        * [默认网络 virbro](#默认网络-virbro)
+        * [桥接网络](#桥接网络)
+    * [配置 VNC](#配置-vnc)
+* [创建虚拟机](#创建虚拟机)
+    * [上传ISO](#上传iso)
+    * [创建kvm虚拟机的磁盘文件](#创建kvm虚拟机的磁盘文件)
+    * [启动虚拟机](#启动虚拟机)
+    * [连接虚拟机](#连接虚拟机)
+* [管理 KVM](#管理-kvm)
+    * [管理kvm上的虚拟机](#管理kvm上的虚拟机)
+
+<!-- vim-markdown-toc -->
 
 # 什么是KVM 
 
@@ -130,6 +140,84 @@ ONBOOT=yes
 BOOTPROTO=static
 BRIDGE=br1
 ```
+## 配置 VNC
 
-## 使用 virt-manager 安装建立虚拟机
+**(1)修改VNC服务端的配置文件**
+```
+[root@LINUX ~]# vim /etc/libvirt/qemu.conf  
+vnc_listen = "0.0.0.0"   第十二行，把vnc_listen前面的#号去掉。
+```
+**(2)重启libvirtd和messagebus服务**
+```
+[root@LINUX ~]# /etc/init.d/libvirtd restart
+Stopping libvirtd daemon:                                  [  OK  ]
+Starting libvirtd daemon: libvirtd: initialization failed  [FAILED]
+解决办法：
+[root@LINUX ~]# echo "export LC_ALL=en_US.UTF-8"  >>  /etc/profile
+[root@LINUX ~]# source /etc/profile
+[root@LINUX ~]# /etc/init.d/libvirtd restart
+[root@LINUX ~]# /etc/init.d/messagebus restart
+```
+# 创建虚拟机
+
 virt-manager 是基于 libvirt 的图像化虚拟机管理软件，操作类似vmware，不做详细介绍。
+
+* (1)Virt-manager 图形化模式安装
+* (2)Virt-install   命令模式安装【本文使用此方式】
+* (3)Virsh        XML模板安装
+
+## 上传ISO
+
+```
+[root@LINUX ~]# mkdir -p /home/iso
+[root@LINUX ~]# mkdir -p /home/kvm
+将iso拷贝到/home/iso目录
+```
+## 创建kvm虚拟机的磁盘文件
+
+本例创建的磁盘文件为10G，实际使用中应注意下/home的空间，可以设置为100G
+
+```
+[root@LINUX ~]# cd /home/kvm/
+[root@LINUX ~]# qemu-img create -f qcow2 -o preallocation=metadata kvm_mode.img 10G        
+```
+## 启动虚拟机
+
+bridge网络模式(有独立IP时使用这种方式)
+
+```
+[root@LINUX ~]# chmod -R 777 /etc/libvirt
+[root@LINUX ~]# chmod -R 777 /home/kvm
+[root@LINUX ~]#virt-install --name=kvm_test --ram 4096 --vcpus=4 \
+       -f /home/kvm/kvm_mode.img --cdrom /home/iso/sucunOs_anydisk.iso \
+       --graphics vnc,listen=0.0.0.0,port=7788, --network bridge=br0 \
+       --force --autostart
+```
+Net模式(没有独立IP时使用这种方式)
+
+```
+[root@LINUX ~]# chmod -R 777 /etc/libvirt
+[root@LINUX ~]# chmod -R 777 /home/kvm
+[root@LINUX ~]#virt-install --name=kvm_test --ram 4096 --vcpus=4 \
+       -f /home/kvm/kvm_mode.img --cdrom /home/iso/sucunOs_anydisk.iso \
+       --graphics vnc,listen=0.0.0.0,port=7788,--network network=default \ 
+       --force --autostart
+```
+## 连接虚拟机
+
+用VNC连接，进行创建kvm虚拟机（VNC连上之后，跟安装linux Centos 6.5系统一样，重新装一次）
+
+```
+点击continue是如果出现闪退的情况，请修改Option->Expert->ColorLevel 的值为full
+```
+
+# 管理 KVM
+
+## 管理kvm上的虚拟机
+
+* Virsh list           #显示本地活动虚拟机
+* virsh list  --all    #显示本地所有的虚拟机（活动的+不活动的）
+* virsh start x        #启动名字为x的非活动虚拟机
+* virsh shutdown x     #正常关闭虚拟机
+* virsh dominfo x      #显示虚拟机的基本信息
+* virsh autostart x    #将x虚拟机设置为自动启动

@@ -1,37 +1,17 @@
-## 目录
+# 运维实践指南
 
-<!-- vim-markdown-toc GFM -->
-* [阅读本书](#阅读本书)
-* [相关内容](#相关内容)
-    * [本书相关wiki](#本书相关wiki)
-    * [本书相关程序](#本书相关程序)
-    * [其他](#其他)
-* [参加步骤](#参加步骤)
-* [小额捐款](#小额捐款)
-
-<!-- vim-markdown-toc -->
-
-# 阅读本书
+## 阅读本书
 
 > * [网上阅读(推荐)](https://billwang139967.gitbooks.io/op_practice_book/content/)
 > * [下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
 
-# 相关内容
+## 相关内容
 
-## 本书相关wiki
+> * [wiki](https://github.com/BillWang139967/op_practice_book/wiki)
+> * [相关程序下载](https://github.com/BillWang139967/op_practice_code)
+> * [点击进行反馈](https://github.com/BillWang139967/op_practice_book/issues)
 
-[wiki](https://github.com/BillWang139967/op_practice_book/wiki)
-
-## 本书相关程序
-
-[相关程序下载](https://github.com/BillWang139967/op_practice_code)
-
-## 其他
-
-> * 中文排版使用的 vim(https://github.com/BillWang139967/Vim) Pangu 插件一键排版
-> * 文档目录使用的 vim(https://github.com/BillWang139967/Vim) GenTocGFM 插件一键生成目录，只需第一次生成目录，后续文档在保存时会自动更新目录
-
-# 参加步骤
+## 参加步骤
 
 * 在 GitHub 上 `fork` 到自己的仓库，然后 `clone` 到本地，并设置用户信息。
 ```
@@ -56,9 +36,9 @@ $ git rebase upstream/master
 $ git push -f origin master
 ```
 
-# 小额捐款
+## 小额捐款
 
-如果你觉得op_practice_book对你有帮助, 可以对作者进行小额捐款(支付宝)
+如果觉得 `op_practice_book` 对您有帮助, 可以请笔者喝杯咖啡(支付宝)
 
 ![Screenshot](images/5.jpg)
 

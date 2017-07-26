@@ -4,3 +4,4 @@
 > * 阿里云
 > * KVM
 > * docker
+> * openstack

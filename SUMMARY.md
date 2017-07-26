@@ -31,6 +31,7 @@
     * [阿里云](doc/cloud/aliyun.md)
     * [KVM](doc/cloud/kvm.md)
     * [docker](doc/cloud/docker.md)
+    * [openstack](doc/cloud/openstack.md)
 * [集群应用篇](doc/HA/README.md)
     * [负载均衡](doc/HA/lb.md)
     * [LVS](doc/HA/lvs.md)
