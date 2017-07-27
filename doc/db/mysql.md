@@ -1,35 +1,38 @@
 # Mysql
 
+<!-- vim-markdown-toc GFM -->
 * [数据操作](#数据操作)
-	* [MySQL 引擎](#mysql-引擎)
-	* [查看下是否支持 InnoDB](#查看下是否支持-innodb)
+    * [MySQL 引擎](#mysql-引擎)
+    * [查看下是否支持 InnoDB](#查看下是否支持-innodb)
 * [安装完 MySQL 后必须调整的 10 项配置](#安装完-mysql-后必须调整的-10-项配置)
-	* [写在开始前](#写在开始前)
-	* [基本配置](#基本配置)
-	* [InnoDB配置](#innodb配置)
-	* [其他设置](#其他设置)
-	* [总结](#总结)
+    * [写在开始前](#写在开始前)
+    * [基本配置](#基本配置)
+    * [InnoDB配置](#innodb配置)
+    * [其他设置](#其他设置)
+    * [总结](#总结)
 * [mysql 日志](#mysql-日志)
-	* [慢日志(5.1.73)](#慢日志5173)
-		* [配置](#配置)
-		* [查看变量](#查看变量)
-		* [测试](#测试)
-		* [日志查询](#日志查询)
-	* [清理 MySQL binlog](#清理-mysql-binlog)
-		* [概要](#概要)
-		* [相关基本参数](#相关基本参数)
-		* [清理方法](#清理方法)
-			* [手动清理](#手动清理)
-			* [自动清理](#自动清理)
+    * [慢日志(5.1.73)](#慢日志(5.1.73))
+        * [配置](#配置)
+        * [查看变量](#查看变量)
+        * [测试](#测试)
+        * [日志查询](#日志查询)
+    * [清理 MySQL binlog](#清理-mysql-binlog)
+        * [概要](#概要)
+        * [相关基本参数](#相关基本参数)
+        * [清理方法](#清理方法)
+            * [手动清理](#手动清理)
+            * [自动清理](#自动清理)
 * [mysql主从](#mysql主从)
-	* [清除主从关系](#清除主从关系)
+    * [清除主从关系](#清除主从关系)
 * [数据库管理](#数据库管理)
-	* [用户管理](#用户管理)
-		* [创建用户](#创建用户)
-		* [为用户授权](#为用户授权)
-		* [修改用户密码](#修改用户密码)
+    * [用户管理](#用户管理)
+        * [创建用户](#创建用户)
+        * [为用户授权](#为用户授权)
+        * [修改用户密码](#修改用户密码)
 * [常见问题](#常见问题)
-	* [MySQL 忘记密码](#mysql-忘记密码)
+    * [MySQL 忘记密码](#mysql-忘记密码)
+
+<!-- vim-markdown-toc -->
 
 # 数据操作
 ## MySQL 引擎
@@ -633,6 +636,14 @@ mysql>
 
 ## 清除主从关系
 
+一般情况下清除主从关系只需要做以下操作即可
+
+* 登陆 slave 数据库后执行 `stop slave`
+* 登陆 slave 数据库后执行 `RESET SLAVE`
+* 重启 slave 的 mysql 服务
+
+阅读下方内容了解更多清除主从关系的相关操作
+
 **RESET MASTER**
 
 删除所有index file 中记录的所有binlog 文件，将日志索引文件清空，创建一个新的日志文件，这个命令通常仅仅用于第一次用于搭建主从关系的时的主库，
@@ -643,12 +654,13 @@ reset master 不同于purge binary log的两处地方
 
 > * reset master 将删除日志索引文件中记录的所有binlog文件，创建一个新的日志文件 起始值从000001 开始，然而purge binary log 命令并不会修改记录binlog的顺序的数值
 > * reset master 不能用于有任何slave 正在运行的主从关系的主库。因为在slave 运行时刻 reset master 命令不被支持，reset master 将master 的binlog从000001 开始记录,slave 记录的master log 则是reset master 时主库的最新的binlog,从库会报错无法找的指定的binlog文件。
-
   
 **RESET SLAVE**
 
 ```
-reset slave 将使slave 忘记主从复制关系的位置信息。该语句将被用于干净的启动, 它删除master.info文件和relay-log.info 文件以及所有的relay log 文件并重新启用一个新的relaylog文件。使用reset slave之前必须使用stop slave 命令将复制进程停止。
+使用reset slave之前必须使用stop slave 命令将复制进程停止。
+
+reset slave 将使slave 忘记主从复制关系的位置信息。该语句将被用于干净的启动, 它删除master.info文件和relay-log.info 文件以及所有的relay log 文件并重新启用一个新的relaylog文件。
 
 在 5.1.73(后面的版本貌似也是) 的版本中 reset slave 并不会清理存储于内存中的复制信息比如  master host, master port, master user, or master password,也就是说如果没有使用change master 命令做重新定向，执行start slave 还是会指向旧的master 上面。当从库执行reset slave之后,将mysqld 重启后复制参数将被重置。
   
