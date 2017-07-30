@@ -1,5 +1,7 @@
 # 运维实践指南
 
+![Screenshot](./images/ops.png)
+
 ## 阅读本书
 
 > * [网上阅读(推荐)](https://billwang139967.gitbooks.io/op_practice_book/content/)
