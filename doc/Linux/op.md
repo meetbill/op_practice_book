@@ -1,11 +1,23 @@
-# 常用运维工具
+# 常用问题处理及运维工具
 
+
+<!-- vim-markdown-toc GFM -->
+* [Yum 安装安装包时提示"Peer's Certificate has expired"](#yum-安装安装包时提示"peer's-certificate-has-expired")
 * [排查 java CPU 性能问题](#排查-java-cpu-性能问题)
-	* [用法](#用法)
-	* [示例](#示例)
-	* [贡献者](#贡献者)
+    * [用法](#用法)
+    * [示例](#示例)
+    * [贡献者](#贡献者)
 
-# 排查 java CPU 性能问题
+<!-- vim-markdown-toc -->
+## Yum 安装安装包时提示"Peer's Certificate has expired"
+
+https的证书是有开始时间和失效时间的。因此本地时间要在这个证书的有效时间内。不过最好的方式，还是能够把时间进行同步。
+
+```
+# ntpdate pool.ntp.org
+```
+
+## 排查 java CPU 性能问题
 
 [show-busy-java-threads.sh](https://github.com/BillWang139967/op_practice_code/blob/master/Linux/op/show-busy-java-threads.sh)
 ```
@@ -27,7 +39,7 @@ PS，如何操作可以参见[@bluedavy](http://weibo.com/bluedavy)的《分布�
 
 查问题时，会要多次这样操作以确定问题，上面过程**太繁琐太慢了**。
 
-## 用法
+### 用法
 
 ```bash
 show-busy-java-threads.sh
@@ -45,7 +57,7 @@ show-busy-java-threads.sh -c <要显示的线程栈数> -p <指定的Java Proces
 sudo show-busy-java-threads.sh
 ```
 
-## 示例
+### 示例
 
 ```bash
 $ show-busy-java-threads.sh
@@ -89,7 +101,7 @@ $ show-busy-java-threads.sh
 
 分析`shared.monitor.schedule.AppMonitorDataAvgScheduler.run`实现逻辑和调用方式，以优化实现解决问题。
 
-## 贡献者
+### 贡献者
 
 - [oldratlee](https://github.com/oldratlee)
 - [silentforce](https://github.com/silentforce)改进此脚本，增加对环境变量`JAVA_HOME`的判断。 #15
