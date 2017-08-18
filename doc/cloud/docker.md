@@ -4,15 +4,15 @@
 * [centos7 安装 docker](#centos7-安装-docker)
     * [一 准备](#一-准备)
         * [1. centos7 x86-64](#1-centos7-x86-64)
-        * [2. 查看版本：](#2-查看版本)
+        * [2. 查看版本](#2-查看版本)
     * [二 安装 docker](#二-安装-docker)
         * [本地源安装](#本地源安装)
         * [网络源安装](#网络源安装)
-            * [1. 更新系统：](#1-更新系统)
-            * [2. 添加 docker 版本仓库：](#2-添加-docker-版本仓库)
+            * [1. 更新系统](#1-更新系统)
+            * [2. 添加 docker 版本仓库](#2-添加-docker-版本仓库)
             * [3. 安装 docker](#3-安装-docker)
             * [4. 设置 docker 开机自启动](#4-设置-docker-开机自启动)
-            * [5. 启动 Docker daemon：](#5-启动-docker-daemon)
+            * [5. 启动 Docker daemon](#5-启动-docker-daemon)
             * [6. 验证 docker 安装是否成功](#6-验证-docker-安装是否成功)
             * [7. 创建 docker 组](#7-创建-docker-组)
     * [三 卸载 docker](#三-卸载-docker)
@@ -31,11 +31,11 @@
         * [2. 基于私有仓库镜像运行容器](#2-基于私有仓库镜像运行容器)
             * [3. 访问私有仓库](#3-访问私有仓库)
             * [4. 为基础镜像打个标签](#4-为基础镜像打个标签)
-            * [5. 改Docker配置文件制定私有仓库url](#5-改docker配置文件制定私有仓库url)
+            * [5. 改 Docker 配置文件制定私有仓库 url](#5-改-docker-配置文件制定私有仓库-url)
             * [6. 提交镜像到本地私有仓库中](#6-提交镜像到本地私有仓库中)
             * [7. 查看私有仓库是否存在对应的镜像](#7-查看私有仓库是否存在对应的镜像)
-        * [三、在docker客户机验证](#三在docker客户机验证)
-            * [1. 修改Docker配置文件](#1-修改docker配置文件)
+        * [三、在 docker 客户机验证](#三在-docker-客户机验证)
+            * [1. 修改 Docker 配置文件](#1-修改-docker-配置文件)
             * [2. 从私有仓库中下载已有的镜像](#2-从私有仓库中下载已有的镜像)
     * [dockerfile 最佳实践](#dockerfile-最佳实践)
 
@@ -44,7 +44,7 @@
 # centos7 安装 docker
 ## 一 准备
 ### 1. centos7 x86-64
-### 2. 查看版本：
+### 2. 查看版本
 ```
 #uname -r
 3.10.0-123.el7.x86_64
@@ -56,18 +56,18 @@ Centos 7.3 离线安装 docker-ce(1703)
 
 ```
 [root@meetbill ~]#curl -o docker_install.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/cloud/docker/docker_install.tar.gz
-[root@meetbill ~]#tar -zxvf docker_install.tar.gz 
+[root@meetbill ~]#tar -zxvf docker_install.tar.gz
 [root@meetbill ~]#cd docker_install
 [root@meetbill ~]#sh install.sh
 [root@meetbill ~]#systemctl start docker
 
 ```
 ### 网络源安装
-#### 1. 更新系统：
+#### 1. 更新系统
 ```
 #yum update -y
 ```
-#### 2. 添加 docker 版本仓库：
+#### 2. 添加 docker 版本仓库
 ```
 cat >/etc/yum.repos.d/docker.repo <<-'EOF'
 [dockerrepo]
@@ -97,7 +97,7 @@ docker 在 17 年 3 月份后，Docker 分成了企业版（EE）和社区版（
 ```
 #systemctl enable docker.service
 ```
-#### 5. 启动 Docker daemon：
+#### 5. 启动 Docker daemon
 ```
 #systemctl start docker
 ```
@@ -183,8 +183,8 @@ Docker 用容器来运行应用。容器是从镜像创建出来的实例（好�
 #### 1. ip
 
 role	ip
-docker仓库机	192.168.1.52
-docker客户机	192.168.1.136
+docker 仓库机	192.168.1.52
+docker 客户机	192.168.1.136
 
 ### 二、搭建
 
@@ -201,11 +201,11 @@ docker pull regsity
 
 #### 4. 为基础镜像打个标签
 
-根据 images 建立 tag,xxxxxxx为某镜像id或name
+根据 images 建立 tag,xxxxxxx 为某镜像 id 或 name
 
 docker tag xxxxxxx 192.168.1.52:5000/zabbix
 
-#### 5. 改Docker配置文件制定私有仓库url
+#### 5. 改 Docker 配置文件制定私有仓库 url
 
 > echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
 > systemctl restart docker
@@ -222,9 +222,9 @@ root@localhost ~
 > curl -X GET http://192.168.1.52:5000/v2/zabbix/tags/list
 {"name":"zabbix","tags":["latest"]}
 
-### 三、在docker客户机验证
+### 三、在 docker 客户机验证
 
-#### 1. 修改Docker配置文件
+#### 1. 修改 Docker 配置文件
 
 > echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
 > systemctl restart docker
@@ -233,7 +233,7 @@ root@localhost ~
 
 > docker pull 192.168.1.52:5000/centos
 
-至此，私有仓库已OK
+至此，私有仓库已 OK
 
 ## dockerfile 最佳实践
 
@@ -271,11 +271,11 @@ root@localhost ~
 **7、不要在 `Dockerfile` 中修改文件的权限**
 
 因为 `docker` 镜像是分层的，任何修改都会新增一个层，修改文件或者目录权限也是如此。如果修改大文件或者目录的权限，会把这些文件复制一份，这样很容易导致镜像很大。<br>
-解决方案也很简单，要么在添加到 `Dockerfile` 之前就把文件的权限和用户设置好，要么在容器启动脚本(**entrypoint**)中做些修改。
+解决方案也很简单，要么在添加到 `Dockerfile` 之前就把文件的权限和用户设置好，要么在容器启动脚本 (**entrypoint**) 中做些修改。
 
 **8、合理使用 ADD 命令**
 
 > * DD 命令和 COPY 命令在很大程度上功能是一样的，但是 COPY 语义更加直接。但是唯一例外的是 ADD 命令自带解压功能，如果需要拷贝并解压一个文件到镜像中，我们可以使用 ADD 命令，除此之外，推荐使用 COPY。<br>
 > * 如果是使用 ADD 命令来获取网络资源，是不推荐的。网络资源应该使用 RUN wget 或者 curl 命令来获取。
 
-总之，优先使用COPY
+总之，优先使用 COPY

@@ -13,7 +13,7 @@
     * [实际应用](#实际应用)
         * [每天凌晨备份 Postgres 数据库](#每天凌晨备份-postgres-数据库)
         * [将 S3 当作同步盘](#将-s3-当作同步盘)
-* [2 Amazon_IAM（身份及访问管理）](#2-amazon_iam身份及访问管理)
+* [2 Amazon IAM（身份及访问管理）](#2-amazon-iam身份及访问管理)
     * [存储桶策略示例](#存储桶策略示例)
         * [创建对某个存储桶有所有权限实例](#创建对某个存储桶有所有权限实例)
 * [3 EC2](#3-ec2)
@@ -213,7 +213,7 @@ crontab 设置：
 参考：[AWS S3 官方中文文档](http://docs.aws.amazon.com/zh_cn/cli/latest/userguide/using-s3-commands.html)
 
 
-# 2 Amazon_IAM（身份及访问管理）
+# 2 Amazon IAM（身份及访问管理）
 
 IAM enables you to control who can do what in your AWS account.
 

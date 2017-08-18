@@ -8,8 +8,8 @@
     * [安装](#安装)
     * [使用](#使用)
 * [keepalived 配置相关](#keepalived-配置相关)
-    * [global_defs 区域](#global_defs-区域)
-    * [vrrp_script 区域](#vrrp_script-区域)
+    * [global defs 区域](#global-defs-区域)
+    * [vrrp script 区域](#vrrp-script-区域)
     * [VRRPD 配置](#vrrpd-配置)
         * [VRRP Sync Groups](#vrrp-sync-groups)
         * [VRRP 实例 (instance) 配置](#vrrp-实例-instance-配置)
@@ -75,12 +75,12 @@ LVS 可以不依赖 keepalived 而进行分发请求，但是想让负载调度�
 
 keepalived 只有一个配置文件 /etc/keepalived/keepalived.conf，里面主要包括以下几个配置区域，分别是 global\_defs、static\_ipaddress、static\_routes、vrrp_script、vrrp\_instance 和 virtual\_server。
 
-## global_defs 区域
+## global defs 区域
 
 主要是配置故障发生时的通知对象以及机器标识
 
 ```
-global_defs {
+global_de_s {
     notification_email {
         a@abc.com
         b@abc.com
@@ -106,7 +106,7 @@ global_defs {
 
 * router_id 标识本节点的字条串，通常为 hostname，但不一定非得是 hostname。故障发生时，邮件通知会用到。
 
-## vrrp_script 区域
+## vrrp script 区域
 
 用来做健康检查的，当时检查失败时会将`vrrp_instance`的`priority`减少相应的值。
 

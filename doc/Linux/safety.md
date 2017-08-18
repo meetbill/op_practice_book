@@ -9,7 +9,7 @@
     * [安装及配置篇](#安装及配置篇)
         * [环境](#环境)
         * [查看系统时间](#查看系统时间)
-        * [安装 google_authenticator](#安装-google_authenticator)
+        * [安装 google authenticator](#安装-google-authenticator)
         * [为 SSH 服务器用 Google 认证器](#为-ssh-服务器用-google-认证器)
         * [生成验证密钥](#生成验证密钥)
     * [使用](#使用)
@@ -76,7 +76,7 @@ Sun Aug 14 23:18:41 EDT 2011
 [root@centos ~]# rm -rf /etc/localtime
 [root@centos ~]# ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 ```
-### 安装 google_authenticator
+### 安装 google authenticator
 
 安装 EPEL 源并安装 google_authenticator
 
