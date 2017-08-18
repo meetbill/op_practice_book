@@ -20,12 +20,12 @@ reboot and select proper boot device or insert boot media in selected boot devic
 ```
 **可能原因**
 
-先排查硬件原因---> 再排查软件原因
+先排查硬件原因 ---> 再排查软件原因
 
 **硬件原因**
 
-> * raid 卡(可以开机时查看 raid卡 能否识别到硬盘)
-> * 硬盘(硬盘状态灯是否正常)
+> * raid 卡（可以开机时查看 raid 卡 能否识别到硬盘）
+> * 硬盘（硬盘状态灯是否正常）
 
 **软件原因**
 
@@ -35,8 +35,8 @@ reboot and select proper boot device or insert boot media in selected boot devic
 
 #### 重做引导项方法
 
-> * 插入光盘进入救援模式(选择完英文等，选择 continue 进入救援模式)
+> * 插入光盘进入救援模式（选择完英文等，选择 continue 进入救援模式）
 > * chroot /mnt/sysimage
-> * /sbin/grub-install /dev/sda(sda是系统所在的设备)
+> * /sbin/grub-install /dev/sda(sda 是系统所在的设备）
 > * 多系统加引导项的话可以添加到 /boot/grub/grub.conf
 > * 重启服务器

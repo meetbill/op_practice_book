@@ -8,19 +8,19 @@
     * [基本操作](#基本操作)
         * [创建以及管理 Bucket](#创建以及管理-bucket)
         * [操作文件](#操作文件)
-        * [同步本地文件、目录](#同步本地文件、目录)
+        * [同步本地文件、目录](#同步本地文件目录)
         * [权限控制](#权限控制)
     * [实际应用](#实际应用)
         * [每天凌晨备份 Postgres 数据库](#每天凌晨备份-postgres-数据库)
         * [将 S3 当作同步盘](#将-s3-当作同步盘)
-* [2 Amazon_IAM(身份及访问管理)](#2-amazon_iam(身份及访问管理))
+* [2 Amazon_IAM（身份及访问管理）](#2-amazon_iam身份及访问管理)
     * [存储桶策略示例](#存储桶策略示例)
         * [创建对某个存储桶有所有权限实例](#创建对某个存储桶有所有权限实例)
 * [3 EC2](#3-ec2)
-    * [重启、停止与终止之间的区别](#重启、停止与终止之间的区别)
+    * [重启、停止与终止之间的区别](#重启停止与终止之间的区别)
     * [存储](#存储)
 * [4 aws vpc](#4-aws-vpc)
-    * [VPC中几个概念](#vpc中几个概念)
+    * [VPC 中几个概念](#vpc-中几个概念)
     * [VPC 规划](#vpc-规划)
 * [6 AWS CLI](#6-aws-cli)
     * [安装](#安装)
@@ -29,7 +29,7 @@
         * [环境变量](#环境变量)
     * [命令行参数](#命令行参数)
     * [使用](#使用)
-    * [saws工具](#saws工具)
+    * [saws 工具](#saws-工具)
         * [s3](#s3)
 
 <!-- vim-markdown-toc -->
@@ -185,8 +185,8 @@ AWS CLI 还提供了一个本地文件同步命令 ``sync``：
 
 Amazon S3 提供的访问策略
 
-> * 基于资源的策略-------存储桶策略和访问控制列表 (ACL – 注:每个存储桶和对象都有关联的 ACL)
-> * 基于用户策略------使用 IAM 管理, IAM用户必须拥有两种权限：一种权限来自其父账户，另一种权限来自要访问的资源的拥有者AWS 账户。
+> * 基于资源的策略 ------- 存储桶策略和访问控制列表 (ACL – 注：每个存储桶和对象都有关联的 ACL)
+> * 基于用户策略 ------ 使用 IAM 管理，IAM 用户必须拥有两种权限：一种权限来自其父账户，另一种权限来自要访问的资源的拥有者 AWS 账户。
 
 
 ## 实际应用
@@ -213,14 +213,14 @@ crontab 设置：
 参考：[AWS S3 官方中文文档](http://docs.aws.amazon.com/zh_cn/cli/latest/userguide/using-s3-commands.html)
 
 
-# 2 Amazon_IAM(身份及访问管理)
+# 2 Amazon_IAM（身份及访问管理）
 
 IAM enables you to control who can do what in your AWS account.
 
-- 
+-
 ## 存储桶策略示例
 
-创建存储桶后需要创建个IAM用户和关联下权限
+创建存储桶后需要创建个 IAM 用户和关联下权限
 
 ### 创建对某个存储桶有所有权限实例
 
@@ -245,7 +245,7 @@ IAM enables you to control who can do what in your AWS account.
    ]
 }
 ```
-注:Amazon 资源名称 (ARN) 和 AWS 服务命名空间
+注：Amazon 资源名称 (ARN) 和 AWS 服务命名空间
 
 arn:partition:service:region:account-id:resource
 
@@ -256,10 +256,10 @@ partition: 资源所处的分区。对于标准 AWS 区域，分区是 aws。如
 
 ## 重启、停止与终止之间的区别
 
-性能 | 重启| 停止/启动（仅限 Amazon EBS 支持的实例）|终止
+性能 | 重启| 停止 / 启动（仅限 Amazon EBS 支持的实例）|终止
 -----|------|------|------
 主机|实例保持在同一主机上运行|实例在新主机上运行|无
-私有和公有 IP 地址|这些地址保持不变|EC2-Classic：实例获得新的私有和公有 IP 地址EC2-VPC：实例保留其私有 IP 地址。实例获取新的公有 IP 地址，除非它具有弹性 IP 地址 (EIP)（该地址在停止/启动过程中不更改）。|无
+私有和公有 IP 地址|这些地址保持不变|EC2-Classic：实例获得新的私有和公有 IP 地址 EC2-VPC：实例保留其私有 IP 地址。实例获取新的公有 IP 地址，除非它具有弹性 IP 地址 (EIP)（该地址在停止 / 启动过程中不更改）。|无
 弹性 IP 地址 (EIP)|EIP 保持与实例关联|EC2-Classic：EIP 不再与实例关联，EC2-VPC：EIP 保持与实例关联|EIP 不再与实例关联
 实例存储卷|数据保留|数据将擦除|数据将擦除
 根设备卷|卷将保留|卷将保留|默认情况下将删除卷
@@ -267,7 +267,7 @@ partition: 资源所处的分区。对于标准 AWS 区域，分区是 aws。如
 
 ## 存储
 > * Amazon EBS
-> * Amazon EC2 实例存储卷(停止实例时，会删除数据，只有部分实例有)
+> * Amazon EC2 实例存储卷（停止实例时，会删除数据，只有部分实例有）
 > * Amazon S3
 
 ![Screenshot](../../images/aws/architecture_storage.png)
@@ -275,17 +275,17 @@ partition: 资源所处的分区。对于标准 AWS 区域，分区是 aws。如
 
 # 4 aws vpc
 
-## VPC中几个概念
+## VPC 中几个概念
 
 ***VPC***
 
-* VPC即virtual private cloud，是个虚拟的局域网
-* AWS云中的一个私有的、隔离的部分
+* VPC 即 virtual private cloud，是个虚拟的局域网
+* AWS 云中的一个私有的、隔离的部分
 * 可自定义的虚拟网络拓扑
 
 ***子网***
 
-VPC是为了将你的所有服务与外界隔离开来，但是范围比较大，如果你的局域网内部还需要进一步的网络划分，那么需要设置子网。子网位于VPC内部。
+VPC 是为了将你的所有服务与外界隔离开来，但是范围比较大，如果你的局域网内部还需要进一步的网络划分，那么需要设置子网。子网位于 VPC 内部。
 
 ***路由器***
 
@@ -293,36 +293,36 @@ VPC是为了将你的所有服务与外界隔离开来，但是范围比较大�
 
 ***路由表***
 
-路由表创建在VPC上，创建时需要选择一个对应的VPC
+路由表创建在 VPC 上，创建时需要选择一个对应的 VPC
 
-在VPC内创建的所有路由表都会包含一条到达该VPC的路由项，而且不能删除。可以在此基础上再添加新路由项，如Internet网关。
+在 VPC 内创建的所有路由表都会包含一条到达该 VPC 的路由项，而且不能删除。可以在此基础上再添加新路由项，如 Internet 网关。
 
-主要功能是将消息从VPC内发到VPC外，不是子网间使用的
+主要功能是将消息从 VPC 内发到 VPC 外，不是子网间使用的
 
-***Internet网关***
+***Internet 网关***
 
-如果要上网，Internet网关是必须的，创建好后还要将其关联到路由表。点击做导航“路由表”，在右面的列表选中一项，在下方的路由选项卡中可以点击“编辑”添加Internet网关
+如果要上网，Internet 网关是必须的，创建好后还要将其关联到路由表。点击做导航“路由表”，在右面的列表选中一项，在下方的路由选项卡中可以点击“编辑”添加 Internet 网关
 
 ***安全组***
 
-安全组是入站规则与出站规则的集合。安全组同样是建立在VPC上的，创建时需要指定VPC
+安全组是入站规则与出站规则的集合。安全组同样是建立在 VPC 上的，创建时需要指定 VPC
 
-***VPC的地区***
+***VPC 的地区***
 
 * 区域
     * 相互隔离的地区区域
-* 可用区(AZ)
+* 可用区 (AZ)
     * 数据中心
 
-AWS有10个区域、每个区域有多个可用区
+AWS 有 10 个区域、每个区域有多个可用区
 
 ## VPC 规划
 
 * 考虑将来的扩展
-* VPC可以从/16到/28
-* CIDR不可修改
+* VPC 可以从 /16 到 /28
+* CIDR 不可修改
 * 考虑将来是否需要与公司网络建立链接
-* 重复的IP地址空间 = 未来的痛苦
+* 重复的 IP 地址空间 = 未来的痛苦
 
 # 6 AWS CLI
 
@@ -414,15 +414,15 @@ aws ec2 describe-instances --profile default
 aws s3api put-object --body /root/start.sh --bucket bucket-name --key "start.sh"  --profile s3
 ```
 
-## saws工具
+## saws 工具
 
 ### s3
 
 ***上传文件***
 
-前提:aws的配置中的访问密钥对s3 的某bucket-name有权限
+前提：aws 的配置中的访问密钥对 s3 的某 bucket-name 有权限
 
-输入saws后输入
+输入 saws 后输入
 
 ```
 saws>aws s3api put-object --body /root/start.sh --bucket bucket-name --key "start.sh"
@@ -434,9 +434,9 @@ saws>aws s3api put-object --body /root/start.sh --bucket bucket-name --key "star
 
 ***下载文件***
 
-前提:aws的配置中的访问密钥对s3 的某bucket-name有权限
+前提：aws 的配置中的访问密钥对 s3 的某 bucket-name 有权限
 
-输入saws后输入
+输入 saws 后输入
 
 ```
 saws>aws s3api get-object --bucket bucket-name --key "start.sh" /root/start.sh2"

@@ -264,7 +264,7 @@ __注：__ 在指定复制源时，路径是否有最后的 “/” 有不同的
 * `––include=PATTERN` : 指定需要传输的文件匹配模式
 * `––include-from=FILE` : 从 FILE 中读取包含规则
 * `--numeric-ids` : 不映射 uid/gid 到 user/group 的名字
-* `-S, --sparse` : 对稀疏文件进行特殊处理以节省 DST 的空间(有空洞文件时使用)
+* `-S, --sparse` : 对稀疏文件进行特殊处理以节省 DST 的空间（有空洞文件时使用）
 * `--delete` : 删除 DST 中 SRC 没有的文件，也就是所谓的镜像 [mirror] 备份
 
 
@@ -282,26 +282,26 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
 [tips]
 稀疏文件（Sparse File）
 
-在UNIX文件操作中，文件位移量可以大于文件的当前长度，在这种情况下，对该文件的下一次写将延长该文件，并在文件中构成一个空洞。位于文件中但没有写过的字节都被设为0。
+在 UNIX 文件操作中，文件位移量可以大于文件的当前长度，在这种情况下，对该文件的下一次写将延长该文件，并在文件中构成一个空洞。位于文件中但没有写过的字节都被设为 0。
 
-稀疏文件与其他普通文件基本相同，区别在于文件中的部分数据是全0，且这部分数据不占用磁盘空间。
+稀疏文件与其他普通文件基本相同，区别在于文件中的部分数据是全 0，且这部分数据不占用磁盘空间。
 下面是稀疏文件的创建与查看方法
 [root@Linux ceshi]# dd if=/dev/zero of=sparse-file bs=1 count=1 seek=1024k
 [root@Linux ceshi]#  ls -l sparse-file
--rw-r--r-- 1 root root 1048577 6月  19 10:20 sparse-file
+-rw-r--r-- 1 root root 1048577 6 月  19 10:20 sparse-file
 [root@Linux ceshi]# du -sh sparse-file
 4.0K    sparse-file
 [root@Linux ceshi]# cat sparse-file  >> meetbill_file
-[root@Linux ceshi]# du -sh meetbill_file 
+[root@Linux ceshi]# du -sh meetbill_file
 1.1M    meetbill_file
-[root@Linux ceshi]# ll 
+[root@Linux ceshi]# ll
 总用量 1032
--rw-r--r-- 1 root root 1048577 6月  19 10:21 meetbill_file
--rw-r--r-- 1 root root 1048577 6月  19 10:20 sparse-file
+-rw-r--r-- 1 root root 1048577 6 月  19 10:21 meetbill_file
+-rw-r--r-- 1 root root 1048577 6 月  19 10:20 sparse-file
 [root@Linux ceshi]# ll -h
 总用量 1.1M
--rw-r--r-- 1 root root 1.1M 6月  19 10:21 meetbill_file
--rw-r--r-- 1 root root 1.1M 6月  19 10:20 sparse-file
+-rw-r--r-- 1 root root 1.1M 6 月  19 10:21 meetbill_file
+-rw-r--r-- 1 root root 1.1M 6 月  19 10:20 sparse-file
 ```
 
 ### ssh 端口非默认 22 同步
