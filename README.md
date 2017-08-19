@@ -4,8 +4,8 @@
 
 ## 阅读本书
 
-> * [网上阅读(推荐)](https://billwang139967.gitbooks.io/op_practice_book/content/)
-> * [下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
+> * [网上阅读（推荐）](https://billwang139967.gitbooks.io/op_practice_book/content/)
+> * [下载本书 (pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
 
 ## 相关内容
 
@@ -40,7 +40,7 @@ $ git push -f origin master
 
 ## 小额捐款
 
-如果觉得 `op_practice_book` 对您有帮助, 可以请笔者喝杯咖啡(支付宝)
+如果觉得 `op_practice_book` 对您有帮助，可以请笔者喝杯咖啡（支付宝）
 
 ![Screenshot](images/5.jpg)
 

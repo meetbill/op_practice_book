@@ -13,9 +13,12 @@
         * [为 SSH 服务器用 Google 认证器](#为-ssh-服务器用-google-认证器)
         * [生成验证密钥](#生成验证密钥)
     * [使用](#使用)
-        * [环境](#环境-1)
         * [在安卓设备上运行 Google 认证器](#在安卓设备上运行-google-认证器)
-        * [终端设置 google 二次身份验证登陆](#终端设置-google-二次身份验证登陆)
+        * [终端使用二次身份验证登陆](#终端使用二次身份验证登陆)
+    * [常见问题及注意点](#常见问题及注意点)
+        * [登陆失败](#登陆失败)
+        * [是否可以不同的用户使用不用密钥](#是否可以不同的用户使用不用密钥)
+        * [是否可以使用ssh密钥直接登陆](#是否可以使用ssh密钥直接登陆)
     * [原理](#原理)
         * [前世今生](#前世今生)
         * [TOTP 中的特殊问题](#totp-中的特殊问题)
@@ -56,6 +59,8 @@
 
 # 运维操作审计
 
+[添加运维操作审计工具](https://github.com/BillWang139967/shell_menu)
+
 # 双因子认证
 
 海上生明月，天涯共此时！
@@ -81,31 +86,38 @@ Sun Aug 14 23:18:41 EDT 2011
 安装 EPEL 源并安装 google_authenticator
 
 ```
-#curl -o epel-release-6-8.noarch.rpm "https://raw.githubusercontent.com/BillWang139967/BillWang139967.github.io/master/doc/safety/epel-release-6-8.noarch.rpm"
-#rpm -ivh epel-release-6-8.noarch.rpm
+#yum -y install epel-release
 #yum install google-authenticator
 ```
 ### 为 SSH 服务器用 Google 认证器
 
-***配置 /etc/pam.d/sshd***
+**配置 /etc/pam.d/sshd**
 
 在"auth       include      password-auth"行前添加如下内容
 ```
 auth       required pam_google_authenticator.so
 ```
 即先 google 方式认证再 linux 密码认证
-***修改 SSH 服务配置 /etc/ssh/sshd_config***
+
+**修改 SSH 服务配置 /etc/ssh/sshd_config**
 
 ChallengeResponseAuthentication no->yes
 
 ```
 sed -i 's#^ChallengeResponseAuthentication no#ChallengeResponseAuthentication yes#' /etc/ssh/sshd_config
 ```
-***重启 SSH 服务***
+**重启 SSH 服务**
 
 ```
 #service sshd restart
 ```
+**关掉 selinux**
+
+```
+# setenforce 0
+# 修改 /etc/selinux/config 文件 将 SELINUX=enforcing 改为 SELINUX=disabled
+```
+
 ### 生成验证密钥
 在 Linux 主机上登陆需要认证的用户运行 Google 认证器（我这是使用 root 用户演示的）
 ```
@@ -135,12 +147,6 @@ Your emergency scratch codes are: 一些生成的 5 个应急码，每个应急�
 ```
 ## 使用
 
-### 环境
-
-> * 密钥（一次性输入即可）
-> * 安卓手机
-> * linux or windows
-
 ### 在安卓设备上运行 Google 认证器
 
 ***安装 google 身份验证器***
@@ -151,7 +157,7 @@ Your emergency scratch codes are: 一些生成的 5 个应急码，每个应急�
 
 选择"Enter provided key"选项，使用键盘输入账户名称和验证密钥
 
-### 终端设置 google 二次身份验证登陆
+### 终端使用二次身份验证登陆
 
 ***windows xshell***
 
@@ -174,6 +180,23 @@ GSSAPIAuthentication yes -->no
 #sed -i 's#GSSAPIAuthentication yes#GSSAPIAuthentication no#' /etc/ssh/ssh_config
 
 ```
+## 常见问题及注意点
+
+### 登陆失败
+
+如果 SELinux 是打开状态，则会登陆失败，日志 /var/log/secret 中会有如下日志
+
+```
+Jan  3 23:42:50 hostname sshd(pam_google_authenticator)[1654]: Failed to update secret file "/home/username/.google_authenticator"
+Jan  3 23:42:50 hostname  sshd[1652]: error: PAM: Cannot make/remove an entry for the specified session for username from 192.168.0.5
+```
+### 是否可以不同的用户使用不用密钥
+
+可以，只需要在不同的用户执行`google-authenticator`即可
+
+### 是否可以使用ssh密钥直接登陆
+
+可以,根据以上方法操作，只限制密码登陆时需要二次认证
 
 ## 原理
 

@@ -22,7 +22,7 @@
     * [Client 操作与修复](#client-操作与修复)
         * [关于修复](#关于修复)
     * [Chunker 的空间](#chunker-的空间)
-    * [快照 `snapshot`](#快照-snapshot)
+    * [快照 snapshot](#快照-snapshot)
     * [mfsappendchunks](#mfsappendchunks)
     * [回收站机制](#回收站机制)
 * [MFS 集群的维护](#mfs-集群的维护)
@@ -360,7 +360,7 @@ see: /data/jingbo.li/mfs/bin/mfsmount -h for help
 
 * * *
 
-## 快照 `snapshot`
+## 快照 snapshot
 可以快照任何一个文件或目录，语法：`mfsmakesnapshot src dst` , 但是 src 和 dst 必须都属于 mfs 体系，即不能 mfs 体系中的文件快照到其他文件系统。
 
 * * *

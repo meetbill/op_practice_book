@@ -2,19 +2,31 @@
 
 
 <!-- vim-markdown-toc GFM -->
-* [Yum 安装安装包时提示"Peer's Certificate has expired"](#yum-安装安装包时提示"peer's-certificate-has-expired")
+* [Yum 安装安装包时提示证书过期](#yum-安装安装包时提示证书过期)
+* [系统日志中的时间不准确](#系统日志中的时间不准确)
 * [排查 java CPU 性能问题](#排查-java-cpu-性能问题)
     * [用法](#用法)
     * [示例](#示例)
     * [贡献者](#贡献者)
 
 <!-- vim-markdown-toc -->
-## Yum 安装安装包时提示"Peer's Certificate has expired"
+## Yum 安装安装包时提示证书过期
+
+yum 安装安装包时提示"Peer's Certificate has expired"
 
 https的证书是有开始时间和失效时间的。因此本地时间要在这个证书的有效时间内。不过最好的方式，还是能够把时间进行同步。
 
 ```
 # ntpdate pool.ntp.org
+```
+
+##  系统日志中的时间不准确
+
+重启下 rsyslog 服务
+
+```
+/etc/init.d/rsyslog restart
+
 ```
 
 ## 排查 java CPU 性能问题
