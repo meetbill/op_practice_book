@@ -18,7 +18,7 @@
     * [常见问题及注意点](#常见问题及注意点)
         * [登陆失败](#登陆失败)
         * [是否可以不同的用户使用不用密钥](#是否可以不同的用户使用不用密钥)
-        * [是否可以使用ssh密钥直接登陆](#是否可以使用ssh密钥直接登陆)
+        * [是否可以使用 ssh 密钥直接登陆](#是否可以使用-ssh-密钥直接登陆)
     * [原理](#原理)
         * [前世今生](#前世今生)
         * [TOTP 中的特殊问题](#totp-中的特殊问题)
@@ -38,14 +38,14 @@
         * [清除 iptables 规则](#清除-iptables-规则)
         * [保存 iptables 规则](#保存-iptables-规则)
     * [其他内容](#其他内容)
+    * [使用 ip6tables 禁用 ipv6](#使用-ip6tables-禁用-ipv6)
+        * [测试](#测试)
 
 <!-- vim-markdown-toc -->
 
 # 禁止 ping
 
-禁止系统响应任何从外部 / 内部来的 ping 请求攻击者一般首先通过 ping 命令检测此主机或者 IP 是否处于活动状态
-，如果能够 ping 通某个主机或者 IP，那么攻击者就认为此系统处于活动状态，继而进行攻击或破坏。如果没有人能 ping 通机器并收到响应，那么就可以大大增强服务器的安全
-性，linux 下可以执行如下设置，禁止 ping 请求：
+禁止系统响应任何从外部 / 内部来的 ping 请求攻击者一般首先通过 ping 命令检测此主机或者 IP 是否处于活动状态 ，如果能够 ping 通某个主机或者 IP，那么攻击者就认为此系统处于活动状态，继而进行攻击或破坏。如果没有人能 ping 通机器并收到响应，那么就可以大大增强服务器的安全性，linux 下可以执行如下设置，禁止 ping 请求：
 ```
 [root@localhost ~]#echo "1"> /proc/sys/net/ipv4/icmp_echo_ignore_all
 ```
@@ -129,13 +129,19 @@ sed -i 's#^ChallengeResponseAuthentication no#ChallengeResponseAuthentication ye
 Do you want me to update your "/root/.google_authenticator" file (y/n):y
 应急码的保存路径
 
-Do you want to disallow multiple uses of the same authentication token? This restricts you to one login about every 30s, but it increases your chances to notice or even prevent man-in-the-middle attacks (y/n)
+Do you want to disallow multiple uses of the same authentication token? 
+This restricts you to one login about every 30s, 
+but it increases your chances to notice or even prevent man-in-the-middle attacks (y/n)
 是否禁止一个口令多用，自然也是答 y
 
-By default, tokens are good for 30 seconds and in order to compensate for possible time-skew between the client and the server, we allow an extra token before and after the current time. If you experience problems with poor time synchronization, you can increase the window from its default size of 1:30min to about 4min. Do you want to do so (y/n)
-问是否打开时间容错以防止客户端与服务器时间相差太大导致认证失败。这个可以根据实际情况来。如果一些 Android 平板电脑不怎么连网的，可以答 y 以防止时间错误导致认证失败。
+By default, tokens are good for 30 seconds and in order to compensate for possible time-skew between the client and the server, 
+we allow an extra token before and after the current time. If you experience problems with poor time synchronization, you can increase the window from its default size of 1:30min to about 4min. Do you want to do so (y/n)
+问是否打开时间容错以防止客户端与服务器时间相差太大导致认证失败。
+这个可以根据实际情况来。如果一些 Android 平板电脑不怎么连网的，可以答 y 以防止时间错误导致认证失败。
 
-If the computer that you are logging into isn't hardened against brute-force login attempts, you can enable rate-limiting for the authentication module. By default, this limits attackers to no more than 3 login attempts every 30s.Do you want to enable rate-limiting (y/n)
+If the computer that you are logging into isn't hardened against brute-force login attempts, 
+you can enable rate-limiting for the authentication module. 
+By default, this limits attackers to no more than 3 login attempts every 30s.Do you want to enable rate-limiting (y/n)
 选择是否打开尝试次数限制（防止暴力攻击），自然答 y
 ```
 这里需要记住的是
@@ -194,9 +200,9 @@ Jan  3 23:42:50 hostname  sshd[1652]: error: PAM: Cannot make/remove an entry fo
 
 可以，只需要在不同的用户执行`google-authenticator`即可
 
-### 是否可以使用ssh密钥直接登陆
+### 是否可以使用 ssh 密钥直接登陆
 
-可以,根据以上方法操作，只限制密码登陆时需要二次认证
+可以，根据以上方法操作，只限制密码登陆时需要二次认证
 
 ## 原理
 
@@ -258,13 +264,12 @@ iptables 是与 Linux 内核集成的 IP 信息包过滤系统，该系统有利
 
 以上表示将从源地址 10.1.2.11 访问本机 80 端口的包丢弃（以 tcp-reset 方式拒绝和接受）。
 
--s 表示源地址（--src,--source），其后面可以是一个 IP 地址（10.1.2.11）、一个 IP 网段（10.0.0.0/8）、几个 IP 或网段（192.168.1.11/32,10.0.0.0/8，添加完成之后其实是两条规则）。
--d 表示目的地址（--dst,--destination），其后面可以是一个 IP 地址（10.1.2.11）、一个 IP 网段（10.0.0.0/8）、几个 IP 或网段（10.1.2.11/32,10.1.3.0/24，添加完成之后其实是两条规则）。
--p 表示协议类型（--protocol），后面可以是 tcp, udp, udplite, icmp, esp, ah, sctp, all，其中 all 表示所有的协议。
---sport 表示源端口（--source-port），后面可以是一个端口（80）、一系列端口（80:90，从 80 到 90 之间的所有端口），一般在 OUTPUT 链使用。
---dport 表示目的端口（--destination-port），后面可以是一个端口（80）、一系列端口（80:90，从 80 到 90 之间的所有端口）。
--j 表示 iptables 规则的目标（--jump），即一个符合目标的数据包来了之后怎么去处理它。常用的有 ACCEPT, DROP, REJECT, REDIRECT, LOG, DNAT, SNAT。
-
+> * -s 表示源地址（--src,--source），其后面可以是一个 IP 地址（10.1.2.11）、一个 IP 网段（10.0.0.0/8）、几个 IP 或网段（192.168.1.11/32,10.0.0.0/8，添加完成之后其实是两条规则）。
+> * -d 表示目的地址（--dst,--destination），其后面可以是一个 IP 地址（10.1.2.11）、一个 IP 网段（10.0.0.0/8）、几个 IP 或网段（10.1.2.11/32,10.1.3.0/24，添加完成之后其实是两条规则）。
+> * -p 表示协议类型（--protocol），后面可以是 tcp, udp, udplite, icmp, esp, ah, sctp, all，其中 all 表示所有的协议。
+> * --sport 表示源端口（--source-port），后面可以是一个端口（80）、一系列端口（80:90，从 80 到 90 之间的所有端口），一般在 OUTPUT 链使用。
+> * --dport 表示目的端口（--destination-port），后面可以是一个端口（80）、一系列端口（80:90，从 80 到 90 之间的所有端口）。
+> * -j 表示 iptables 规则的目标（--jump），即一个符合目标的数据包来了之后怎么去处理它。常用的有 ACCEPT, DROP, REJECT, REDIRECT, LOG, DNAT, SNAT。(“就好象骗子给你打电话，ACCEPT 是接收，drop 就是直接拒收，reject 的话，相当于你还给骗子回个电话。”)
 
 ```
 # iptables -A INPUT -p tcp --dport 80 -j DROP
@@ -274,7 +279,7 @@ iptables 是与 Linux 内核集成的 IP 信息包过滤系统，该系统有利
 
 以上表示将所有访问本机 80 端口（80 和 90 之间的所有端口，80 和 8080 端口）的包丢弃。
 
--m 匹配更多规则（--match），可以指定更多的 iptables 匹配扩展。可以是 tcp, udp, multiport, cpu, time, ttl 等，即你可以指定一个或多个端口，或者本机的一个 CPU 核心，或者某个时间段内的包。
+> * -m 匹配更多规则（--match），可以指定更多的 iptables 匹配扩展。可以是 tcp, udp, multiport, cpu, time, ttl 等，即你可以指定一个或多个端口，或者本机的一个 CPU 核心，或者某个时间段内的包。
 
 ### filter 表 OUTPUT 链
 怎么处理本机向外发的包。
@@ -345,6 +350,7 @@ nat 表有三条链，分别是 PREROUTING, OUTPUT, POSTROUTING。
 注： LVS 的实现中貌似有这么一项，还没有深入去研究 LVS。
 
 ### nat 表为虚拟机做内外网联通
+
 宿主机内网 IP 是 10.67.15.183(eth1)，外网 IP 是 202.102.152.183(eth0)，内网网关是 10.67.15.1，其上面的虚拟机 IP 是 10.67.15.250(eth1)。
 
 目前虚拟机只能连接内网，其路由信息如下：
@@ -395,10 +401,11 @@ default via 10.67.15.183 dev eth1
 # iptables -t nat -nL
 # iptables-save
 ```
--n 代表 --numeric，意思是 IP 和端口都以数字形式打印出来。否则会将 127.0.0.1:80 输出成 localhost:http。端口与服务的对应关系可以在 /etc/services 中查看。
--L 代表 --list，列出 iptables 规则，默认列出 filter 链中的规则，可以用 -t 来指定列出哪个表中的规则。
--t 代表 --tables，指定一个表。
--S 代表 --list-rules，以原命令格式列出规则。
+> * -n 代表 --numeric，意思是 IP 和端口都以数字形式打印出来。否则会将 127.0.0.1:80 输出成 localhost:http。端口与服务的对应关系可以在 /etc/services 中查看。
+> * -L 代表 --list，列出 iptables 规则，默认列出 filter 链中的规则，可以用 -t 来指定列出哪个表中的规则。
+> * -t 代表 --tables，指定一个表。
+> * -S 代表 --list-rules，以原命令格式列出规则。
+
 iptables-save 命令是以原命令格式列出所有规则，可以 -t 指定某个表。
 
 ### 清除 iptables 规则
@@ -411,7 +418,7 @@ iptables-save 命令是以原命令格式列出所有规则，可以 -t 指定�
 # iptables -t nat -F PREROUTING
 ```
 
--F 代表 --flush，清除规则，其后面可以跟着链名，默认是将指定表里所有的链规则都清除。
+> * -F 代表 --flush，清除规则，其后面可以跟着链名，默认是将指定表里所有的链规则都清除。
 
 ### 保存 iptables 规则
 
@@ -424,3 +431,29 @@ iptables-save 命令是以原命令格式列出所有规则，可以 -t 指定�
 ## 其他内容
 iptables 命令中的很多选项前面都可以加"!"，意思是“非”。如"! -s 10.0.0.0/8"表示除这个网段以外的源地址，"! --dport 80"表示除 80 以外的其他端口。
 
+## 使用 ip6tables 禁用 ipv6
+
+目前 ipv6 不禁用会存在安全隐患，那我们就可以通过 ip6tables 禁用 ipv6，我们只要在 ip6tables 的 filter 表上的出入口以及转发做限定就行了。
+
+```
+[root@meetbill ~]# vim /etc/sysconfig/ip6tables
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+
+# 添加这 3 条规则
+
+-A INPUT -j REJECT --reject-with icmp6-adm-prohibited
+-A FORWARD -j REJECT --reject-with icmp6-adm-prohibited
+-A OUTPUT -j REJECT --reject-with icmp6-adm-prohibited
+COMMIT
+[root@meetbill ~]# /etc/init.d/ip6tables restart
+```
+### 测试
+
+```
+# 以下地址可以通过 ifconfig 查看 ipv6 的地址
+[root@meetbill ~]# ping6 -I eth0 fe80::20c:29ff:febc:8aab
+
+```
