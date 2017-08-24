@@ -12,7 +12,6 @@
     * [命令行展开](#命令行展开)
     * [命令的执行状态结果](#命令的执行状态结果)
     * [命令别名](#命令别名)
-        * [User specific aliases and functions](#user-specific-aliases-and-functions)
     * [通配符 glob](#通配符-glob)
     * [bash 快捷键](#bash-快捷键)
         * [编辑命令](#编辑命令)
@@ -60,26 +59,28 @@
             * [在 linux 下设置永久路由的方法](#在-linux-下设置永久路由的方法)
         * [Microsoft windows 网络 \(samba\)](#microsoft-windows-网络-samba)
         * [IPTABLES \(firewall\)](#iptables-firewall)
-* [ssh](#ssh)
-    * [ssh 简介及基本操作](#ssh-简介及基本操作)
-        * [简介](#简介)
-        * [密钥](#密钥)
-        * [基于口令的安全验证通讯原理](#基于口令的安全验证通讯原理)
+* [Linux 简单管理](#linux-简单管理)
+    * [ssh](#ssh)
+        * [ssh 简介及基本操作](#ssh-简介及基本操作)
+            * [简介](#简介)
+            * [密钥](#密钥)
+            * [基于口令的安全验证通讯原理](#基于口令的安全验证通讯原理)
         * [基于密匙的安全验证通讯原理](#基于密匙的安全验证通讯原理)
-    * [SSH forwarding(端口转发):](#ssh-forwarding端口转发)
-        * [SSH 本地转发(正向连接)](#ssh-本地转发正向连接)
-        * [SSH 远程转发(反向连接)](#ssh-远程转发反向连接)
-        * [windows ---xshell](#windows----xshell)
-* [用户管理](#用户管理-1)
-    * [Linux 踢出其他正在 SSH 登陆用户](#linux-踢出其他正在-ssh-登陆用户)
-    * [使用脚本创建用户，同时用户有 sudo 权限](#使用脚本创建用户同时用户有-sudo-权限)
-    * [无交互式修改用户密码](#无交互式修改用户密码)
-* [其他设置](#其他设置)
-    * [时区及时间](#时区及时间)
-        * [UTC 和 GMT](#utc-和-gmt)
-        * [Linux 下调整时区及更新时间](#linux-下调整时区及更新时间)
-    * [登录提示信息](#登录提示信息)
-        * [修改登录前的提示信息](#修改登录前的提示信息)
+        * [SSH 端口转发](#ssh-端口转发)
+            * [SSH 正向连接](#ssh-正向连接)
+            * [SSH 反向连接](#ssh-反向连接)
+        * [windows 下 xshell 使用](#windows-下-xshell-使用)
+    * [用户管理](#用户管理-1)
+        * [Linux 踢出其他正在 SSH 登陆用户](#linux-踢出其他正在-ssh-登陆用户)
+        * [使用脚本创建有 sudo 权限的用户](#使用脚本创建有-sudo-权限的用户)
+        * [无交互式修改用户密码](#无交互式修改用户密码)
+    * [网卡 bond](#网卡-bond)
+    * [其他设置](#其他设置)
+        * [时区及时间](#时区及时间)
+            * [UTC 和 GMT](#utc-和-gmt)
+            * [Linux 下调整时区及更新时间](#linux-下调整时区及更新时间)
+        * [登录提示信息](#登录提示信息)
+            * [修改登录前的提示信息](#修改登录前的提示信息)
         * [修改登录成功后的信息](#修改登录成功后的信息)
 * [CentOS 7 vs CentOS 6 的不同](#centos-7-vs-centos-6-的不同)
     * [运行相关](#运行相关)
@@ -401,7 +402,7 @@ c、通过修改配置文件定义命令别名：
 
 - Example:
 
-~~~shell
+```
 [root@sslinux sslinux]# alias
 alias cp='cp -i'
 alias egrep='egrep --color=auto'
@@ -418,7 +419,7 @@ alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-ti
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
-~~~
+```
 
 ## 通配符 glob
 
@@ -429,11 +430,11 @@ Bash 中用于文件名"通配"
     1) * 任意长度的任意字符；
 
         a * b
-~~~shell
-[root@sslinux sslinux]# ls -ld /etc/au*
-drwxr-x---. 3 root root 41 Sep 3 22:05 /etc/audisp
-drwxr-x---. 3 root root 79 Sep 3 22:09 /etc/audit
-~~~
+        ```
+        [root@sslinux sslinux]# ls -ld /etc/au*
+        drwxr-x---. 3 root root 41 Sep 3 22:05 /etc/audisp
+        drwxr-x---. 3 root root 79 Sep 3 22:09 /etc/audit
+        ```
 
 2)  ? 任意单个字符；
 
@@ -1231,23 +1232,24 @@ any net 192.168.0.0/16 gw 网关 ip
 |\# iptables \-t nat \-A PREROUTING \-d 192\.168\.0\.1 \-p tcp \-m tcp \-\-dport 22 \-j DNAT \-\-to\-destination 10\.0\.0\.2:22|将发往一个主机地址的包转向到其他主机|
 
 
-# ssh
+# Linux 简单管理
+##  ssh
 
-## ssh 简介及基本操作
+### ssh 简介及基本操作
 
-### 简介
+#### 简介
 SSH，全名 secure shell，其目的是用来从终端与远程机器交互，SSH 设计之处初，遵循了如下原则：
 
   * 机器之间通讯的内容必须经过加密。
   * 加密过程中，通过 public key 加密，private 解密。
 
-### 密钥
+#### 密钥
 SSH 通讯的双方各自持有一个公钥私钥对，公钥对对方是可见的，私钥仅持有者可见，你可以通过"ssh-keygen"生成自己的公私钥，默认情况下，公私钥的存放路径如下：
 
   * 公钥：$HOME/.ssh/id_rsa.pub
   * 私钥：$HOME/.ssh/id_rsa
 
-### 基于口令的安全验证通讯原理
+#### 基于口令的安全验证通讯原理
 
   建立通信通道的步骤如下：
 
@@ -1295,7 +1297,7 @@ tips:
 
    ssh-copy-id "-p 端口号 b@B"
 
-## SSH forwarding(端口转发):
+### SSH 端口转发
 
 SSH 还同时提供了一个非常有用的功能，这就是端口转发。它能够将其他 TCP 端口的网络数据通过 SSH 链接来转发，并且自动提供了相应的加密及解密服务。这一过程有时也被叫做“隧道”(tunneling)，这是因为 SSH 为其他 TCP 链接提供了一个安全的通道来进行传输而得名。
 
@@ -1306,7 +1308,7 @@ SSH 端口转发自然需要 SSH 连接，而 SSH 连接是有方向的，从 SS
 > * SSH 连接和应用的连接这两个连接的方向一致，那我们就说它是本地转发。
 > * SSH 连接和应用的连接这两个连接的方向不同，那我们就说它是远程转发。
 
-### SSH 本地转发(正向连接)
+#### SSH 正向连接
 
 正向连接就是 client 连上 server，然后把 server 能访问的机器地址和端口（当然也包括 server 自己）镜像到 client 的端口上。
 
@@ -1336,7 +1338,7 @@ Destination Host 使用默认的 localhost；Destination Port 添上 80;
 Destination Host 设置为 localhost 为要访问的机器，可以设置为登陆后的机器可以访问到的 IP
 ```
 
-### SSH 远程转发(反向连接)
+#### SSH 反向连接
 
 反向连接就是 client 连上 server，然后把 client 能访问的机器地址和端口（也包括 client 自己）镜像到 server 的端口上。
 
@@ -1396,17 +1398,19 @@ B 主机：内网，sshd 端口：2222（默认是 22)
 ```
 比之前的命令添加的一个 -M 5678 参数，负责通过 5678 端口监视连接状态，连接有问题时就会自动重连
 
-### windows ---xshell
+### windows 下 xshell 使用
 
   * 私钥，在 Xshell 里也叫用户密钥
   * 公钥，在 Xshell 里也叫主机密钥
-   利用 xshell 密钥管理服务器远程登录，
-   (1)Xshell 自带有用户密钥生成向导，: 点击菜单栏的工具 ->新建用户密钥生成向导
-   (2) 添加公钥 (Pubic Key) 到远程 Linux 服务器
 
-# 用户管理
+  利用 xshell 密钥管理服务器远程登录，
 
-## Linux 踢出其他正在 SSH 登陆用户
+  (1)Xshell 自带有用户密钥生成向导：点击菜单栏的工具 ->新建用户密钥生成向导
+  (2) 添加公钥 (Pubic Key) 到远程 Linux 服务器
+
+## 用户管理
+
+### Linux 踢出其他正在 SSH 登陆用户
 
 ***查看系统在线用户***
 
@@ -1439,7 +1443,7 @@ root     pts/4        2016-10-30 19:55 (192.168.31.124)
 如果最后查看还是没有干掉，建议加上 -9 强制杀死。
 [root@Linux ~]# pkill -9 -t pts/2
 
-## 使用脚本创建用户，同时用户有 sudo 权限
+### 使用脚本创建有 sudo 权限的用户
 
 ```
 cat >./create_user.sh <<-'EOF'
@@ -1457,20 +1461,37 @@ EOF
 ```
 以上脚本会创建用户 `ceshi` 同时用户的密码为 `ceshi_password` ，并且此用户有 sudo 权限
 
-## 无交互式修改用户密码
+### 无交互式修改用户密码
 
 ```
 echo "123456" | passwd --stdin root
 ```
+## 网卡 bond
 
-# 其他设置
+Linux 多网卡绑定
+
+网卡绑定 mode 共有七种 (0~6) bond0、bond1、bond2、bond3、bond4、bond5、bond6
+
+常用的有三种
+
+> * mode=0：平衡负载模式，有自动备援，但需要”Switch”支援及设定。
+> * mode=1：自动备援模式，其中一条线若断线，其他线路将会自动备援。
+> * mode=6：平衡负载模式，有自动备援，不必”Switch”支援及设定。
+
+需要说明的是如果想做成 mode 0 的负载均衡，仅仅设置这里 options bond0 miimon=100 mode=0 是不够的，与网卡相连的交换机必须做特殊配置（这两个端口应该采取聚合方式），因为做 bonding 的这两块网卡是使用同一个 MAC 地址。从原理分析一下（bond 运行在 mode 0 下）：
+
+mode 0 下 bond 所绑定的网卡的 IP 都被修改成相同的 mac 地址，如果这些网卡都被接在同一个交换机，那么交换机的 arp 表里这个 mac 地址对应的端口就有多 个，那么交换机接受到发往这个 mac 地址的包应该往哪个端口转发呢？正常情况下 mac 地址是全球唯一的，一个 mac 地址对应多个端口肯定使交换机迷惑了。所以 mode0 下的 bond 如果连接到交换机，交换机这几个端口应该采取聚合方式（cisco 称为 ethernetchannel，foundry 称为 portgroup），因为交换机做了聚合后，聚合下的几个端口也被捆绑成一个 mac 地址。我们的解 决办法是，两个网卡接入不同的交换机即可。
+
+mode6 模式下无需配置交换机，因为做 bonding 的这两块网卡是使用不同的 MAC 地址。
+
+## 其他设置
 
 
-## 时区及时间
+### 时区及时间
 
 时区就是时间区域，主要是为了克服时间上的混乱，统一各地时间。地球上共有 24 个时区，东西各 12 个时区（东 12 与西 12 合二为一）。
 
-### UTC 和 GMT
+#### UTC 和 GMT
 
 时区通常写成`+0800`，有时也写成`GMT +0800`，其实这两个是相同的概念。
 
@@ -1478,7 +1499,7 @@ GMT 是格林尼治标准时间（Greenwich Mean Time）。
 
 UTC 是协调世界时间（Universal Time Coordinated），又叫世界标准时间，其实就是`0000`时区的时间。
 
-### Linux 下调整时区及更新时间
+#### Linux 下调整时区及更新时间
 
 修改系统时间
 
@@ -1512,9 +1533,9 @@ echo "0 5 * * *  /usr/sbin/ntpdate cn.ntp.org.cn" >> /var/spool/cron/root
 echo "0 5 * * *  /usr/sbin/ntpdate 133.100.11.8" >> /var/spool/cron/root
 
 ```
-## 登录提示信息
+### 登录提示信息
 
-### 修改登录前的提示信息
+#### 修改登录前的提示信息
 
 **(1) 系统级别的设置方法 /etc/issue**
 

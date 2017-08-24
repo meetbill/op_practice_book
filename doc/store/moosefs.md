@@ -41,8 +41,6 @@
 `MooseFS` 支持 `FUSE` 标准接口，能够无缝实现从本地文件的迁移。
 同时，`MooseFS` 提供比 `NFS` 更好的可运维性。
 
-<!--excerpt-->
-
 ## 功能特性
 
 对于标准的文件操作，`MooseFS` 表现与其它类 Unix 文件系统一致。
@@ -61,8 +59,6 @@
 * 容量动态扩展。只要增加新的机器／磁盘
 * 删除的文件保留一段时间（可配），像是文件系统的回收站。
 * 即使文件在被读写，也可以持续做文件快照。
-
-------
 
 ## 架构原理
 
@@ -106,14 +102,13 @@ MooseFS 包含 4 个组件
 还记得 matocsserventry 结构中的 carry 字段么，这个字段就是分布算法的核心. 每台 chunkserver 会有自己的 carry 值，在选择 chunkserver 会将每台 chunkserver 按照 carry 从大到小做快速排序，优先选择 carry 值大的 chunkserver 来使用。
 
 在描述具体算法前，先介绍三个概念：
->
+
 > * allcnt:mfs 中可用的 chunkserver 的个数
->
 > * availcnt:mfs 中当前可以直接存储数据的 chunkserver 的个数
->
 > * demand: 当前文件的副本数目
 
 先说 allcnt, 可用的 chunkserver 要满足下面几个条件：
+
 > 1. chunkserver 是活着的
 > 2. chunkserver 的总空间大于 0
 > 3. chunkserver 的可用空间（总空间 - 使用空间）大于 1G
@@ -195,7 +190,6 @@ Nov 23 01:04:17 sunwg mfsmaster[13192]: 192.168.0.160,0.389592
 **元数据备份服务器** 只需要和管理节点有同样多的内存和磁盘来存储数据即可。
 
 **数据节点** 只需要保持足够的磁盘容量。
-
 
 ## 安装
 

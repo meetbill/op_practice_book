@@ -43,11 +43,11 @@
         * [Git 数据结构](#git-数据结构)
     * [其他操作](#其他操作)
         * [解决 GitHub commit 次数过多.git 文件过大](#解决-github-commit-次数过多git-文件过大)
-        * [fatal: HTTP request failed](#fatal-http-request-failed)
+        * [HTTP request failed](#http-request-failed)
 * [curl](#curl)
     * [curl 基础](#curl-基础)
-        * [直接获取（GET）一个 url](#直接获取get一个-url)
-        * [post，put 等](#postput-等)
+        * [get](#get)
+        * [post](#post)
         * [form 表单提交](#form-表单提交)
     * [curl 深入](#curl-深入)
         * [显示头信息](#显示头信息)
@@ -507,7 +507,7 @@ Git 的核心数是很简单的，就是一个链表（或者一棵树更准确�
 # git remote add origin <your_github_repo_url>
 # git push -f -u origin master
 ```
-### fatal: HTTP request failed
+### HTTP request failed
 
 
 使用 git clone 失败
@@ -533,7 +533,7 @@ fatal: HTTP request failed
 
 下面开始简单介绍几个命令：
 
-### 直接获取（GET）一个 url
+### get
 
 直接以个 GET 方式请求一个 url，输出返回内容：
 
@@ -560,7 +560,7 @@ curl httpbin.org
 
 <!--more-->
 
-### post，put 等
+### post
 
 使用 `--request` 指定请求类型， `--data` 指定数据，例如：
 
