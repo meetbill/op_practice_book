@@ -1,5 +1,4 @@
-目录
-
+## Keepalived 使用
 
 <!-- vim-markdown-toc GFM -->
 * [Keepalived 介绍及安装](#keepalived-介绍及安装)
@@ -12,7 +11,7 @@
     * [vrrp script 区域](#vrrp-script-区域)
     * [VRRPD 配置](#vrrpd-配置)
         * [VRRP Sync Groups](#vrrp-sync-groups)
-        * [VRRP 实例 (instance) 配置](#vrrp-实例-instance-配置)
+        * [VRRP 实例配置](#vrrp-实例配置)
     * [LVS 配置](#lvs-配置)
 * [keepalived 工作原理](#keepalived-工作原理)
     * [VRRP 工作流程](#vrrp-工作流程)
@@ -164,7 +163,7 @@ vrrp_sync_group VG_1 {
 
 * smtp_alert 表示是否开启邮件通知（用全局区域的邮件设置来发通知）。
 
-### VRRP 实例 (instance) 配置
+### VRRP 实例配置
 
 vrrp_instance 用来定义对外提供服务的 VIP 区域及其相关属性。
 

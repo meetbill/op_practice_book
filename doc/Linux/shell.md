@@ -21,12 +21,11 @@
         * [Example 使用 while 循环 ping 指定网络内的所有主机](#example-使用-while-循环-ping-指定网络内的所有主机)
         * [Example 利用 RANDOM 生成 10 个随机数字，输出这 10 个数字，并显示其中的最大者和最小者](#example-利用-random-生成-10-个随机数字输出这-10-个数字并显示其中的最大者和最小者)
     * [创建死循环](#创建死循环)
-    * [while 循环的特殊用法：（遍历文件的每一行）](#while-循环的特殊用法遍历文件的每一行)
-    * [for 循环的特殊格式：](#for-循环的特殊格式)
+    * [while 循环遍历文件的每一行](#while-循环遍历文件的每一行)
+    * [for 循环的特殊格式](#for-循环的特殊格式)
         * [Example 求 100 以内所有正整数之和](#example-求-100-以内所有正整数之和)
         * [Example 菜单](#example-菜单)
     * [case 语句](#case-语句)
-        * [Example 使用 case 语句改写前一个练习：](#example-使用-case-语句改写前一个练习)
 * [08 函数](#08-函数)
         * [Example 通过函数，创建 10 个用户](#example-通过函数创建-10-个用户)
         * [Example 编写一个服务启动关闭脚本](#example-编写一个服务启动关闭脚本)
@@ -913,7 +912,7 @@ echo "$username logggen on." >> /tmp/user.log
 
 ```
 
-### while 循环的特殊用法：（遍历文件的每一行）
+### while 循环遍历文件的每一行
 ```
 	while read line;do
 		循环体
@@ -937,7 +936,7 @@ done < /etc/passwd
 
 ```
 
-### for 循环的特殊格式：
+### for 循环的特殊格式
 ```
 	for (（控制变量初始化；条件判断表达式；控制变量的修正表达式）)；do
 		循环体
@@ -1032,7 +1031,7 @@ case 支持 glob 风格的通配符：
         []：指定范围内的任意单个字符；
 	    a|b: a 或 b
 
-#### Example 使用 case 语句改写前一个练习：
+** Example 使用 case 语句改写前一个练习 **
 
 ```
 #!/bin/bash

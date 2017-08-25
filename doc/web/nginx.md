@@ -5,13 +5,13 @@
 * [Nginx 配置文件实例](#nginx-配置文件实例)
 * [Nginx 服务器基础配置指令](#nginx-服务器基础配置指令)
     * [nginx.conf 文件的结构](#nginxconf-文件的结构)
-    * [Global(Nginx 运行相关）](#globalnginx-运行相关)
-        * [配置运行 Nginx 服务器用户（组）](#配置运行-nginx-服务器用户组)
+    * [Nginx 运行相关的 Global 部分](#nginx-运行相关的-global-部分)
+        * [配置运行 Nginx 服务器用户](#配置运行-nginx-服务器用户)
         * [配置允许生成的 worker process 数](#配置允许生成的-worker-process-数)
         * [配置 Nginx 进程 PID 存放路径](#配置-nginx-进程-pid-存放路径)
         * [配置错误日志的存放路径](#配置错误日志的存放路径)
         * [配置文件的引入](#配置文件的引入)
-    * [events（与用户的网络连接相关）](#events与用户的网络连接相关)
+    * [与用户的网络连接相关的 events](#与用户的网络连接相关的-events)
         * [设置网络连接的序列化](#设置网络连接的序列化)
         * [设置是否允许同时接收多个网络连接](#设置是否允许同时接收多个网络连接)
         * [事件驱动模型的选择](#事件驱动模型的选择)
@@ -28,7 +28,7 @@
             * [**基于名称的虚拟主机配置**](#基于名称的虚拟主机配置)
             * [配置 https 证书](#配置-https-证书)
             * [**基于 IP 的虚拟主机配置**](#基于-ip-的虚拟主机配置)
-            * [**配置 location 块**（重中之重）](#配置-location-块重中之重)
+            * [**配置 location 块**](#配置-location-块)
             * [配置请求的根目录](#配置请求的根目录)
             * [更改 location 的 URI](#更改-location-的-uri)
             * [设置网站的默认首页](#设置网站的默认首页)
@@ -40,7 +40,7 @@
     * [测试 myServer2 的访问](#测试-myserver2-的访问)
 * [Nginx 服务器架构](#nginx-服务器架构)
     * [模块化结构](#模块化结构)
-        * [什么是模块化开发？](#什么是模块化开发)
+        * [模块化开发](#模块化开发)
         * [Nginx 的模块化结构](#nginx-的模块化结构)
     * [Nginx 的模块清单](#nginx-的模块清单)
     * [Nginx 的 web 请求处理机制](#nginx-的-web-请求处理机制)
@@ -274,9 +274,9 @@ http {
 
 > 所有的所有的所有的指令，都要以`;`结尾
 
-## Global(Nginx 运行相关）
+## Nginx 运行相关的 Global 部分
 
-### 配置运行 Nginx 服务器用户（组）
+### 配置运行 Nginx 服务器用户
 
 user nobody nobody;
 
@@ -314,7 +314,7 @@ include mime.types;
 include fastcgi_params;
 include ../../conf/*.conf;
 
-## events（与用户的网络连接相关）
+## 与用户的网络连接相关的 events
 
 ### 设置网络连接的序列化
 
@@ -430,7 +430,7 @@ https 是在 http 和 TCP 中间加上一层加密层
 ```
 数字证书相当于物理世界中的身份证，
 在网络中传递信息的双方互相不能见面，利用数字证书可确认双方身份，而不是他人冒充的。
-这个数字证书由信任的第三方，即认证中心使用自己的私钥对A的公钥加密，加密后文件就是网络上的身份证了，即数字证书
+这个数字证书由信任的第三方，即认证中心使用自己的私钥对 A 的公钥加密，加密后文件就是网络上的身份证了，即数字证书
 ```
 
 大致可以理解为如下
@@ -536,7 +536,7 @@ http {
 }
 ```
 
-#### **配置 location 块**（重中之重）
+#### **配置 location 块**
 
 > location 块的配置，应该是最常用的了
 
@@ -752,7 +752,7 @@ http://192.168.0.254:8082/server2/location2/
 
 > Nginx 服务器的开发`完全`遵循模块化设计思想
 
-### 什么是模块化开发？
+### 模块化开发
 
 1. 单一职责原则，一个模块只负责一个功能
 2. 将程序分解，自顶向下，逐步求精
@@ -926,18 +926,18 @@ server{
 }
 ```
 
-location保持原样即可，根据自己的配置更改listen port 和dnf 即resolver
+location 保持原样即可，根据自己的配置更改 listen port 和 dnf 即 resolver
 验证：
 在需要访问外网的机器上执行以下操作之一即可：
 
 ```
-1. export http_proxy=http://yourproxyaddress：proxyport(建议)
-2. vim ~/.bashrc  
+1. export http_proxy=http://yourproxyaddress：proxyport（建议）
+2. vim ~/.bashrc
     export http_proxy=http://yourproxyaddress：proxyport
 ```
 
-2 不足 
-nginx不支持CONNECT方法，不像我们平时用的GET或者POST，可以选用apache或squid作为代替方案。
+2 不足
+nginx 不支持 CONNECT 方法，不像我们平时用的 GET 或者 POST，可以选用 apache 或 squid 作为代替方案。
 
 # 其他
 
