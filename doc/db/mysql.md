@@ -32,6 +32,7 @@
 * [mysql 工具](#mysql-工具)
 * [mysql 运维](#mysql-运维)
     * [MySQL 忘记密码](#mysql-忘记密码)
+    * [mysql.sock 位置错误](#mysqlsock-位置错误)
 
 <!-- vim-markdown-toc -->
 
@@ -741,13 +742,13 @@ reset slave 将使 slave 忘记主从复制关系的位置信息。该语句将�
 
 ## MySQL 忘记密码
 
-***现象***
+**现象**
 
 ```
 #mysql -u root -p
 #就会出现：ERROR 1045 (28000): Access denied for user ''@'localhost' (using password: NO)
 ```
-***解决方法***
+**解决方法**
 
 ```
 l 关闭 mysql
@@ -766,4 +767,14 @@ mysql> FLUSH PRIVILEGES;// 记得要这句话，否则如果关闭先前的终�
 mysql> \q
 #/etc/init.d/mysqld restart
 ```
+## mysql.sock 位置错误
 
+日常迁移完数据库的存储路径后，client 登陆失败
+
+**解决方法**
+
+修改 /etc/my.cnf 配置文件
+```
+[client]
+socket = /tmp/mysql.sock
+```

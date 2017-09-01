@@ -4,6 +4,7 @@
 <!-- vim-markdown-toc GFM -->
 * [Yum 安装安装包时提示证书过期](#yum-安装安装包时提示证书过期)
 * [系统日志中的时间不准确](#系统日志中的时间不准确)
+* [lvm 变为 inactive 状态](#lvm-变为-inactive-状态)
 * [排查 java CPU 性能问题](#排查-java-cpu-性能问题)
     * [用法](#用法)
     * [示例](#示例)
@@ -28,6 +29,34 @@ https的证书是有开始时间和失效时间的。因此本地时间要在这
 /etc/init.d/rsyslog restart
 
 ```
+## lvm 变为 inactive 状态
+
+lvscan查看lvm状态
+```
+[root@DB01 log]# lvscan
+ACTIVE       '/dev/OraBack/backupone' [7.00 TB] inherit
+ACTIVE       '/dev/OraBack/backuptwo' [7.00 TB] inherit
+ACTIVE       '/dev/OraBack/backupthree' [1.00 TB] inherit
+inactive     '/dev/OraBack【vg名字】/orcl' [3.00 TB] inherit
+```
+激活VG
+```
+[root@DB01 log]# vgchange -ay OraBack
+4 logical volume(s) in volume group "OraBack" now active
+```
+lvscan查看lvm状态
+```
+[root@DB01 log]# lvscan
+ACTIVE            '/dev/OraBack/backupone' [7.00 TB] inherit
+ACTIVE            '/dev/OraBack/backuptwo' [7.00 TB] inherit
+ACTIVE            '/dev/OraBack/backupthree' [1.00 TB] inherit
+ACTIVE            '/dev/OraBack/orcl' [3.00 TB] inherit
+```
+
+挂载
+
+mount -a
+
 
 ## 排查 java CPU 性能问题
 
