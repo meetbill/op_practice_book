@@ -69,6 +69,7 @@
         * [SSH 端口转发](#ssh-端口转发)
             * [SSH 正向连接](#ssh-正向连接)
             * [SSH 反向连接](#ssh-反向连接)
+            * [SSH 反向连接自动重连](#ssh-反向连接自动重连)
         * [windows 下 xshell 使用](#windows-下-xshell-使用)
     * [用户管理](#用户管理-1)
         * [Linux 踢出其他正在 SSH 登陆用户](#linux-踢出其他正在-ssh-登陆用户)
@@ -1379,15 +1380,37 @@ B 主机：内网，sshd 端口：2222（默认是 22)
 ---- 在外网机器 A 登录内网机器 B（非 root 用户的话，直接 user@localhost 即可）
     #ssh user@localhost -p1234
 ```
-**内网机器 B 自动连接外网机器 A**
+#### SSH 反向连接自动重连
 
-上面的反向连接（Reverse Connection）不稳定，可能随时断开，需要内网主机 B 再次向外网 A 发起连接，这时需要个"朋友"帮你在内网 B 主机执行这条命令。它就是 Autossh。
+上面的反向连接（Reverse Connection）不稳定，可能随时断开，需要内网主机 B 再次向外网 A 发起连接，这时需要个"朋友"帮你在内网 B 主机执行这条命令。可以使用 Autossh 或者 while 进行循环。
 
-(1) 在 B 机器上将 B 机器公钥放到外网机器 A 上
+(1) 在 B 机器上将 B 机器公钥放到外网机器 A 上（实现 B 机器自动登录到 A 机器）
 
-(2) 用 Autossh 保持 ssh 反向隧道一直连接，CentOS 需要使用 epel 源下载
+(2) 用 Autossh 或者 while 循环 保持 ssh 反向隧道一直连接，CentOS 需要使用 epel 源下载
 
 在 CentOS6 和 CentOS7 都可以执行下面的命令安装 epel 仓库
+
+**while**
+
+编写脚本写入如下内容
+
+```
+#!/bin/bash
+# 远程机器的 IP 和端口
+remote_ip=122.122.122.122
+remote_port=2222
+
+while [[ 1==1  ]]
+do
+    ssh  -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -N -R:1234:localhost:22 -p ${remote_port} root@${remote_ip}
+    sleep 3
+done
+```
+执行脚本后，即可以通过登陆 122.122.122.122 机器访问本地 1234 端口进行访问此机器
+
+注;可以将此脚本放在后台中运行，并加到系统自启动程序中
+
+**autossh**
 
 ```
 #yum -y install epel-release
