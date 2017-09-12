@@ -22,15 +22,18 @@
 * [4 aws vpc](#4-aws-vpc)
     * [VPC 中几个概念](#vpc-中几个概念)
     * [VPC 规划](#vpc-规划)
-* [6 AWS CLI](#6-aws-cli)
-    * [安装](#安装)
-    * [配置](#配置)
-        * [配置多用户](#配置多用户)
-        * [环境变量](#环境变量)
-    * [命令行参数](#命令行参数)
-    * [使用](#使用)
+* [5 AWS 客户端](#5-aws-客户端)
+    * [AWS CLI](#aws-cli)
+        * [安装](#安装)
+        * [配置](#配置)
+            * [环境变量](#环境变量)
+        * [命令行参数](#命令行参数)
+        * [使用](#使用)
     * [saws 工具](#saws-工具)
         * [s3](#s3)
+    * [s3cmd](#s3cmd)
+        * [下载及配置](#下载及配置)
+        * [使用 s3cmd](#使用-s3cmd)
 
 <!-- vim-markdown-toc -->
 
@@ -324,13 +327,13 @@ AWS 有 10 个区域、每个区域有多个可用区
 * 考虑将来是否需要与公司网络建立链接
 * 重复的 IP 地址空间 = 未来的痛苦
 
-# 6 AWS CLI
+# 5 AWS 客户端
 
+## AWS CLI
 AWS CLI 是 AWS 提供的命令行工具，使用 Python 开发支持 Python 2.6.5 以上绝大多数
 Python 版本。
 
-
-## 安装
+### 安装
 
 在 Unix/Linux 平台安装 AWS CLI 建议使用 pip：
 
@@ -347,7 +350,7 @@ pip install saws
 ```
 
 
-## 配置
+### 配置
 
 在使用 aws-cli 之前，你首先需要配置好个人身份信息以及偏好区域。
 配置个人身份信息前还需要注册 AWS ISM，并为自己的身份授予对应的权限。
@@ -386,10 +389,7 @@ output=text
 - ``output``：输出格式（json、text 或 table）
 
 
-### 配置多用户
-
-
-### 环境变量
+#### 环境变量
 
 AWS CLI 支持以下变量：
 
@@ -401,12 +401,12 @@ AWS CLI 支持以下变量：
 - ``AWS_CONFIG_FILE``：CLI config 文件的路径。
 
 
-## 命令行参数
+### 命令行参数
 
 
 参考：[AWS 官方文档](http://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html)
 
-## 使用
+### 使用
 
 ```
 aws ec2 describe-instances --profile dev
@@ -415,6 +415,8 @@ aws s3api put-object --body /root/start.sh --bucket bucket-name --key "start.sh"
 ```
 
 ## saws 工具
+
+saws 是 aws-cli 封装包
 
 ### s3
 
@@ -449,3 +451,179 @@ saws>aws s3api get-object --bucket bucket-name --key "start.sh" /root/start.sh2"
     "Metadata": {}
 }
 ```
+
+## s3cmd
+### 下载及配置
+
+在 linux 上 安装 s3 客户端
+
+[下载 s3cmd](https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/cloud/aws/s3cmd-2.0.0.tar.gz)
+
+下载后解压进入到目录中
+
+连接 aws s3 时可以通过`s3cmd --config`进行配置，`连接本地自有的存储可以配置如下`
+
+在当前用户的家目录下创建 .s3cfg 文件、（也是 s3cmd 默认配置文件路径、)，并填入以下内容：
+
+```
+[default]
+access_key = XXXXXXXXXXXXXXXXXXXX
+secret_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+host_base = 10.20.144.2
+host_bucket = 10.20.144.2:80/%(bucket)
+use_https = False
+```
+### 使用 s3cmd
+
+配置完 s3cmd 就可以通过它来使用对象存储了。
+
+对象存储中有两个非常重要的概念，bucket 和 object。object 对应需要存储的文件，而 bucket 作为 object 的存储空间。所以对象存储的操作主要涉及到的就是对 bucket 和 object 的操作。
+
+1. 操作 bucket
+ 
+ * 列举 bucket 的命令格式：
+   ```
+   # s3cmd ls
+   ```
+   
+   以列举当前的 bucket 为例：
+
+   ```
+   # s3cmd ls
+   2015-08-12 03:56  s3://test-bucket_1
+   ```
+
+ * 创建 bucket 的命令格式：
+
+   ```
+   # s3cmd mb s3://BUCKET
+   ```
+
+   以创建名为 test\_bucket\_1 的 bucket 为例：
+
+   ```
+   # s3cmd mb s3://test-bucket_1
+   Bucket 's3://test-bucket_1/' created
+   ```
+
+ * 删除 bucket 的命令格式：
+
+   ```
+   # s3cmd rb s3://BUCKET
+   ```
+
+   以删除我们刚创建的 test\_bucket\_1 为例：
+
+   ```
+   # s3cmd rb s3://test-bucket_1
+   Bucket 's3://test-bucket_1/' removed
+   ```
+
+2. 操作 object
+   
+   需要在 S3 中存储的文件在对象存储中被称为 object。为了说明上传 object 的过程，首先我们来创建一个用来上传的文件 test.txt (也就是一个 object), 并写入 samplecontent 作为文件的内容：
+
+ * 准备文件
+   ```
+   # cat test.txt
+   samplecontent
+   ```
+
+ * 创建 bucket
+   ```
+   # s3cmd mb s3://test-bucket_2
+   Bucket 's3://test-bucket_2/' created
+   ```
+
+ * 上传 object
+
+   ```
+   s3cmd put FILE [FILE...] s3://BUCKET[/PREFIX]
+   ```
+
+   以上传刚创建的 test.txt 文件到 test\_bucket\_2 bucket 为例：
+
+   ```
+   # s3cmd put test.txt s3://test-bucket_2
+   WARNING: Module python-magic is not available. Guessing MIME types based on file extensions.
+   test.txt -> s3://test-bucket_2/test.txt  [1 of 1]
+   14 of 14   100% in    0s    20.59 kB/s
+   14 of 14   100% in   90s     0.16 B/s  done
+   ```
+
+ * 列出 bucket 中 object 
+
+   ```
+   # s3cmd ls [s3://BUCKET[/PREFIX]]
+   ```
+
+   以列出当前 bucket 中的 object:
+
+   ```
+   # s3cmd ls s3://test-bucket_2
+   2015-08-12 04:22        14   s3://test-bucket_2/test.txt
+   ```
+
+ * 下载 bucket 中 object
+
+   ```
+   # s3cmd get s3://BUCKET/OBJECT LOCAL_FILE
+   ```
+
+   下载当前 bucket 中的文件 test.txt，并本地命名 localtest.txt：
+
+   ```
+   # s3cmd get s3://test-bucket-2/test.txt  localtest.txt
+   s3://test-bucket-2/test.txt -> localtest.txt  [1 of 1]
+   s3://test-bucket-2/test.txt -> localtest.txt  [1 of 1]
+   348 of 348   100% in    0s    10.58 kB/s  done
+   ```
+
+ * 删除 bucket 中 object
+
+   ```
+   # s3cmd del s3://BUCKET/FILENAME
+   ```
+
+   删除当前 bucket 中的 test.txt 对象：
+
+   ```
+   # s3cmd del s3://test-bucket-2/test.txt
+   File s3://test-bucket-2/test.txt delete
+   ```
+
+ * 拷贝 bucket 中 object
+
+   ```
+   # s3cmd cp s3://BUCKET1/OBJECT1 s3://BUCKET2[/OBJECT2]
+   ```
+
+   拷贝对象，从一个 bucket 到另一个 bucket：
+
+   ```
+   # s3cmd cp s3://test-bucket-2/test1.txt s3://test-bucket-1/test1.txt
+   WARNING: Retrying failed request: /test1.txt ()
+   WARNING: Waiting 3 sec...
+   File s3://test-bucket-2/test1.txt copied to s3://test-bucket-1/test1.tx
+   ```
+
+ * 获取 object 信息
+
+   ```
+   # s3cmd info s3://BUCKET/OBJECT
+   ```
+
+   获取当前 object 的信息：
+
+   ```
+   # s3cmd info s3://test-bucket-2/test1.txt
+   s3://test-bucket-2/test1.txt (object):
+   File size: 348
+   Last mod:  Fri, 14 Aug 2015 02:02:37 GMT
+   MIME type: text/plain
+   MD5 sum:   4b49d7dd076b0b71e0eda307388fac57
+   SSE:       NONE
+   ```
+
+其余使用请参见 s3cmd usage: [s3cmd 使用手册](http://s3tools.org/usage "s3cmd 使用手册")
+
