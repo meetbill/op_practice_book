@@ -472,6 +472,8 @@ secret_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 host_base = 10.20.144.2
 host_bucket = 10.20.144.2:80/%(bucket)
 use_https = False
+# 签名是 V2 的话设置为 True
+signature_v2 = True
 ```
 ### 使用 s3cmd
 
@@ -481,7 +483,7 @@ use_https = False
 
 1. 操作 bucket
  
- * 列举 bucket 的命令格式：
+ * **列举 bucket**
    ```
    # s3cmd ls
    ```
@@ -493,7 +495,7 @@ use_https = False
    2015-08-12 03:56  s3://test-bucket_1
    ```
 
- * 创建 bucket 的命令格式：
+ * **创建 bucket**
 
    ```
    # s3cmd mb s3://BUCKET
@@ -506,7 +508,7 @@ use_https = False
    Bucket 's3://test-bucket_1/' created
    ```
 
- * 删除 bucket 的命令格式：
+ * **删除 bucket**
 
    ```
    # s3cmd rb s3://BUCKET
@@ -523,19 +525,19 @@ use_https = False
    
    需要在 S3 中存储的文件在对象存储中被称为 object。为了说明上传 object 的过程，首先我们来创建一个用来上传的文件 test.txt (也就是一个 object), 并写入 samplecontent 作为文件的内容：
 
- * 准备文件
+ * **准备文件**
    ```
    # cat test.txt
    samplecontent
    ```
 
- * 创建 bucket
+ * **创建 bucket**
    ```
    # s3cmd mb s3://test-bucket_2
    Bucket 's3://test-bucket_2/' created
    ```
 
- * 上传 object
+ * **上传 object**
 
    ```
    s3cmd put FILE [FILE...] s3://BUCKET[/PREFIX]
@@ -551,7 +553,7 @@ use_https = False
    14 of 14   100% in   90s     0.16 B/s  done
    ```
 
- * 列出 bucket 中 object 
+ * **列出 bucket 中 object**
 
    ```
    # s3cmd ls [s3://BUCKET[/PREFIX]]
@@ -564,7 +566,7 @@ use_https = False
    2015-08-12 04:22        14   s3://test-bucket_2/test.txt
    ```
 
- * 下载 bucket 中 object
+ * **下载 bucket 中 object**
 
    ```
    # s3cmd get s3://BUCKET/OBJECT LOCAL_FILE
@@ -579,7 +581,7 @@ use_https = False
    348 of 348   100% in    0s    10.58 kB/s  done
    ```
 
- * 删除 bucket 中 object
+ * **删除 bucket 中 object**
 
    ```
    # s3cmd del s3://BUCKET/FILENAME
@@ -592,7 +594,7 @@ use_https = False
    File s3://test-bucket-2/test.txt delete
    ```
 
- * 拷贝 bucket 中 object
+ * **拷贝 bucket 中 object**
 
    ```
    # s3cmd cp s3://BUCKET1/OBJECT1 s3://BUCKET2[/OBJECT2]
@@ -607,7 +609,7 @@ use_https = False
    File s3://test-bucket-2/test1.txt copied to s3://test-bucket-1/test1.tx
    ```
 
- * 获取 object 信息
+ * **获取 object 信息**
 
    ```
    # s3cmd info s3://BUCKET/OBJECT
