@@ -15,6 +15,7 @@
             * [5. 启动 Docker daemon](#5-启动-docker-daemon)
             * [6. 验证 docker 安装是否成功](#6-验证-docker-安装是否成功)
             * [7. 创建 docker 组](#7-创建-docker-组)
+            * [8. 其他配置](#8-其他配置)
     * [三 卸载 docker](#三-卸载-docker)
         * [1. 列出安装的 docker](#1-列出安装的-docker)
         * [2. 删除安装包](#2-删除安装包)
@@ -136,7 +137,26 @@ For more examples and ideas, visit:
 ```
 sudo usermod -aG docker your_username
 ```
+#### 8. 其他配置
 
+设置 ipv4 转发(centos 上需要配置)，实践中发现 Ubuntu 和 Suse 上无需配置
+
+查看
+```
+[root@meetbill ~]#sysctl net.ipv4.ip_forward
+```
+临时更改
+```
+[root@meetbill ~]#sysctl -w net.ipv4.ip_forward=1
+
+```
+永久更改
+```
+[root@meetbill ~]#echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+[root@meetbill ~]#sysctl -p
+[root@meetbill ~]#sysctl net.ipv4.ip_forward
+
+```
 ## 三 卸载 docker
 ### 1. 列出安装的 docker
 ```
