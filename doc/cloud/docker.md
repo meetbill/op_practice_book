@@ -193,9 +193,14 @@ Docker 用容器来运行应用。容器是从镜像创建出来的实例（好�
 
 ### 导入导出镜像
 
-导出 #docker save -o centos.tar imagesid
+导出 #docker save -o zabbix.tar meetbill/zabbix
 
-导入 #docker load -i centos.tar
+导入 #docker load -i zabbix.tar
+
+```
+注意:导出镜像时使用 imagesid 导出后，如下，导入镜像时 REPOSITORY 和 TAG 会为 <none>(我个人认为是一个 imagesid 可对应多组 REPOSITORY 和 TAG 的原因)
+#docker save -o zabbix.tar imagesid
+```
 
 ## 私有仓库
 ### 一、环境准备
