@@ -72,11 +72,32 @@
 + `git checkout --track origin/<origin-branch-name>` : 跟踪远程分支（创建跟踪远程分支，Git 在 `git push` 的时候不需要指定 `origin` 和 `branch-name` ，其实当我们 `clone` 一个 repo 到本地的时候，`master` 分支就是 origin/master 的跟踪分支，所以提交的时候直接 `git push`)。
 + `git push origin :<origin-branch-name>` : 删除远程分支
 
+实践---主分支 Master/ 开发分支 Develop
+```
+主分支只用来分布重大版本，日常开发应该在另一条分支上完成。我们把开发用的分支，叫做 Develop。
+
+# Git 创建 Develop 分支
+git checkout -b develop master
+
+# 将 Develop 分支发布到 Master 分支
+
+# 切换到 Master 分支
+git checkout master
+
+# 对 Develop 分支进行合并
+git merge --no-ff develop
+上一条命令的 --no-ff 参数是什么意思。默认情况下，Git 执行"快进式合并"（fast-farward merge），会直接将 Master 分支指向 Develop 分支。
+
+# 删除本地分支
+git branch -d develop
+```
+
 **标签**
 
-+ `git tag -a <tagname> -m <message>` : 创建一个标签
++ `git tag -a <tagname> -m <message>` : 创建一个标签（用 -a 指定标签名，-m 指定说明文字） 如 `git tag -a v1.0 -m "version 1.0 released mitaka"`
 + `git tag` : 显示已有的标签
 + `git show tagname`: 显示某个标签的详细信息
++ `git push origin v1.0` push 到远端仓库 如`git push -u ${PWD##*/} master v1.0`
 + `git checkout -b <tag-name>` : 基于某个 tag 创建一个新的分支
 
 **Git shortcuts/aliases**
