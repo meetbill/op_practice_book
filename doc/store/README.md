@@ -1,7 +1,7 @@
 # 存储篇
 
-> * DAS/SAN/NAS 及磁盘常规操作
-> * RAID
+> * 磁盘及 RAID
+> * DAS/SAN/NAS
 > * gfs
 > * Glusterfs
 > * ceph
