@@ -1,14 +1,20 @@
-# Nginx
+# nginx
 
 <!-- vim-markdown-toc GFM -->
 * [安装](#安装)
-* [Nginx 配置文件实例](#nginx-配置文件实例)
-* [Nginx 服务器基础配置指令](#nginx-服务器基础配置指令)
+* [nginx 服务架构](#nginx-服务架构)
+    * [模块化结构](#模块化结构)
+        * [模块化开发](#模块化开发)
+        * [nginx 的模块化结构](#nginx-的模块化结构)
+    * [nginx 的模块清单](#nginx-的模块清单)
+    * [nginx 的 web 请求处理机制](#nginx-的-web-请求处理机制)
+* [nginx 配置文件实例](#nginx-配置文件实例)
+* [nginx 服务器基础配置指令](#nginx-服务器基础配置指令)
     * [nginx.conf 文件的结构](#nginxconf-文件的结构)
-    * [Nginx 运行相关的 Global 部分](#nginx-运行相关的-global-部分)
-        * [配置运行 Nginx 服务器用户](#配置运行-nginx-服务器用户)
+    * [nginx 运行相关的 Global 部分](#nginx-运行相关的-global-部分)
+        * [配置运行 nginx 服务器用户](#配置运行-nginx-服务器用户)
         * [配置允许生成的 worker process 数](#配置允许生成的-worker-process-数)
-        * [配置 Nginx 进程 PID 存放路径](#配置-nginx-进程-pid-存放路径)
+        * [配置 nginx 进程 PID 存放路径](#配置-nginx-进程-pid-存放路径)
         * [配置错误日志的存放路径](#配置错误日志的存放路径)
         * [配置文件的引入](#配置文件的引入)
     * [与用户的网络连接相关的 events](#与用户的网络连接相关的-events)
@@ -25,38 +31,32 @@
             * [单连接请求数上限](#单连接请求数上限)
         * [server](#server)
             * [配置网络监听](#配置网络监听)
-            * [**基于名称的虚拟主机配置**](#基于名称的虚拟主机配置)
+            * [基于名称的虚拟主机配置](#基于名称的虚拟主机配置)
             * [配置 https 证书](#配置-https-证书)
-            * [**基于 IP 的虚拟主机配置**](#基于-ip-的虚拟主机配置)
-            * [**配置 location 块**](#配置-location-块)
-            * [配置请求的根目录](#配置请求的根目录)
-            * [更改 location 的 URI](#更改-location-的-uri)
+            * [基于 IP 的虚拟主机配置](#基于-ip-的虚拟主机配置)
+            * [配置 location 块](#配置-location-块)
+            * [[root] 配置请求的根目录](#root-配置请求的根目录)
+            * [[alias] 更改 location 的 URI](#alias-更改-location-的-uri)
             * [设置网站的默认首页](#设置网站的默认首页)
             * [设置网站的错误页面](#设置网站的错误页面)
-            * [基于 IP 配置 Nginx 的访问权限](#基于-ip-配置-nginx-的访问权限)
-            * [基于密码配置 Nginx 的访问权限](#基于密码配置-nginx-的访问权限)
-* [Nginx 服务器基础配置实例](#nginx-服务器基础配置实例)
-    * [测试 myServer1 的访问](#测试-myserver1-的访问)
-    * [测试 myServer2 的访问](#测试-myserver2-的访问)
-* [Nginx 服务器架构](#nginx-服务器架构)
-    * [模块化结构](#模块化结构)
-        * [模块化开发](#模块化开发)
-        * [Nginx 的模块化结构](#nginx-的模块化结构)
-    * [Nginx 的模块清单](#nginx-的模块清单)
-    * [Nginx 的 web 请求处理机制](#nginx-的-web-请求处理机制)
-    * [Nginx 的事件驱动模型](#nginx-的事件驱动模型)
+            * [基于 IP 配置 nginx 的访问权限](#基于-ip-配置-nginx-的访问权限)
+            * [基于密码配置 nginx 的访问权限](#基于密码配置-nginx-的访问权限)
 * [应用](#应用)
     * [架设简单文件服务器](#架设简单文件服务器)
     * [nginx 正向代理](#nginx-正向代理)
+    * [nginx 服务器基础配置实例](#nginx-服务器基础配置实例)
+        * [测试 myServer1 的访问](#测试-myserver1-的访问)
+        * [测试 myServer2 的访问](#测试-myserver2-的访问)
+    * [使用缓存](#使用缓存)
 * [其他](#其他)
 
 <!-- vim-markdown-toc -->
 # 安装
 
-安装 Nginx 之前，确保系统已经安装 gcc、openssl-devel、pcre-devel 和 zlib-devel 软件库
+安装 nginx 之前，确保系统已经安装 gcc、openssl-devel、pcre-devel 和 zlib-devel 软件库
 
 * gcc、openssl-devel、zlib-devel 可以通过光盘直接选择安装
-* pcre-devel 安装 pcre 库是为了使 Nginx 支持 HTTP Rewrite 模块
+* pcre-devel 安装 pcre 库是为了使 nginx 支持 HTTP Rewrite 模块
 
 ```
 #wget http://nginx.org/download/nginx-1.8.0.tar.gz
@@ -65,16 +65,141 @@
 #./configure --prefix=/opt/X_nginx/nginx
 #make && sudo make install
 ```
-# Nginx 配置文件实例
+# nginx 服务架构
+
+## 模块化结构
+
+> nginx 服务器的开发`完全`遵循模块化设计思想
+
+### 模块化开发
+
+1. 单一职责原则，一个模块只负责一个功能
+2. 将程序分解，自顶向下，逐步求精
+3. 高内聚，低耦合
+
+### nginx 的模块化结构
+
++ 核心模块：nginx 最基本最核心的服务，如进程管理、权限控制、日志记录；
++ 标准 HTTP 模块：nginx 服务器的标准 HTTP 功能；
++ 可选 HTTP 模块：处理特殊的 HTTP 请求
++ 邮件服务模块：邮件服务
++ 第三方模块：作为扩展，完成特殊功能
+
+## nginx 的模块清单
+
++ 核心模块
+    - ngx_core
+    - ngx_errlog
+    - ngx_conf
+    - ngx_events
+    - ngx_event_core
+    - ngx_epll
+    - ngx_regex
+
++ 标准 HTTP 模块
+    - ngx_http
+    - ngx_http_core             #配置端口，URI 分析，服务器相应错误处理，别名控制 (alias) 等
+    - ngx_http_log              #自定义 access 日志
+    - ngx_http_upstream         #定义一组服务器，可以接受来自 proxy, Fastcgi,Memcache 的重定向；主要用作负载均衡
+    - ngx_http_static
+    - ngx_http_autoindex        #自动生成目录列表
+    - ngx_http_index            #处理以`/`结尾的请求，如果没有找到 index 页，则看是否开启了`random_index`；如开启，则用之，否则用 autoindex
+    - ngx_http_auth_basic       #基于 http 的身份认证 (auth_basic)
+    - ngx_http_access           #基于 IP 地址的访问控制 (deny,allow)
+    - ngx_http_limit_conn       #限制来自客户端的连接的响应和处理速率
+    - ngx_http_limit_req        #限制来自客户端的请求的响应和处理速率
+    - ngx_http_geo
+    - ngx_http_map              #创建任意的键值对变量
+    - ngx_http_split_clients
+    - ngx_http_referer          #过滤 HTTP 头中 Referer 为空的对象
+    - ngx_http_rewrite          #通过正则表达式重定向请求
+    - ngx_http_proxy
+    - ngx_http_fastcgi          #支持 fastcgi
+    - ngx_http_uwsgi
+    - ngx_http_scgi
+    - ngx_http_memcached
+    - ngx_http_empty_gif        #从内存创建一个 1×1 的透明 gif 图片，可以快速调用
+    - ngx_http_browser          #解析 http 请求头部的 User-Agent 值
+    - ngx_http_charset          #指定网页编码
+    - ngx_http_upstream_ip_hash
+    - ngx_http_upstream_least_conn
+    - ngx_http_upstream_keepalive
+    - ngx_http_write_filter
+    - ngx_http_header_filter
+    - ngx_http_chunked_filter
+    - ngx_http_range_header
+    - ngx_http_gzip_filter
+    - ngx_http_postpone_filter
+    - ngx_http_ssi_filter
+    - ngx_http_charset_filter
+    - ngx_http_userid_filter
+    - ngx_http_headers_filter   #设置 http 响应头
+    - ngx_http_copy_filter
+    - ngx_http_range_body_filter
+    - ngx_http_not_modified_filter
+
++ 可选 HTTP 模块
+    - ngx_http_addition         #在响应请求的页面开始或者结尾添加文本信息
+    - ngx_http_degradation      #在低内存的情况下允许服务器返回 444 或者 204 错误
+    - ngx_http_perl
+    - ngx_http_flv              #支持将 Flash 多媒体信息按照流文件传输，可以根据客户端指定的开始位置返回 Flash
+    - ngx_http_geoip            #支持解析基于 GeoIP 数据库的客户端请求
+    - ngx_google_perftools
+    - ngx_http_gzip             #gzip 压缩请求的响应
+    - ngx_http_gzip_static      #搜索并使用预压缩的以.gz 为后缀的文件代替一般文件响应客户端请求
+    - ngx_http_image_filter     #支持改变 png，jpeg，gif 图片的尺寸和旋转方向
+    - ngx_http_mp4              #支持.mp4,.m4v,.m4a 等多媒体信息按照流文件传输，常与 ngx_http_flv 一起使用
+    - ngx_http_random_index     #当收到 / 结尾的请求时，在指定目录下随机选择一个文件作为 index
+    - ngx_http_secure_link      #支持对请求链接的有效性检查
+    - ngx_http_ssl              #支持 https
+    - ngx_http_stub_status
+    - ngx_http_sub_module       #使用指定的字符串替换响应中的信息
+    - ngx_http_dav              #支持 HTTP 和 WebDAV 协议中的 PUT/DELETE/MKCOL/COPY/MOVE 方法
+    - ngx_http_xslt             #将 XML 响应信息使用 XSLT 进行转换
+
++ 邮件服务模块
+    - ngx_mail_core
+    - ngx_mail_pop3
+    - ngx_mail_imap
+    - ngx_mail_smtp
+    - ngx_mail_auth_http
+    - ngx_mail_proxy
+    - ngx_mail_ssl
+
++ 第三方模块
+    - echo-nginx-module         #支持在 nginx 配置文件中使用 echo/sleep/time/exec 等类 Shell 命令
+    - memc-nginx-module
+    - rds-json-nginx-module     #使 nginx 支持 json 数据的处理
+    - lua-nginx-module
+
+## nginx 的 web 请求处理机制
+
+作为服务器软件，必须具备并行处理多个客户端的请求的能力， 工作方式主要以下 3 种：
+
++ 多进程 (Apache)
+    - 优点：设计和实现简单；子进程独立
+    - 缺点：生成一个子进程要内存复制，在资源和时间上造成额外开销
++ 多线程 (IIS)
+    - 优点：开销小
+    - 缺点：开发者自己要对内存进行管理；线程之间会相互影响
++ 异步方式 (nginx)
+
+经常说道异步非阻塞这个概念， 包含两层含义：
+
+通信模式：
+    + 同步：发送方发送完请求后，等待并接受对方的回应后，再发送下个请求
+    + 异步：发送方发送完请求后，不必等待，直接发送下个请求
+
+# nginx 配置文件实例
 
 ```
-#定义 Nginx 运行的用户和用户组
+#定义 nginx 运行的用户和用户组
 user www www;
 
 #nginx 进程数，建议设置为等于 CPU 总核心数。
 worker_processes 8;
 
-#Nginx 默认没有开启利用多核 CPU, 通过增加 worker_cpu_affinity 配置参数来充分利用多核 CPU 以下是 8 核的配置参数
+#nginx 默认没有开启利用多核 CPU, 通过增加 worker_cpu_affinity 配置参数来充分利用多核 CPU 以下是 8 核的配置参数
 worker_cpu_affinity 00000001 00000010 00000100 00001000 00010000 00100000 01000000 10000000;
 
 #全局错误日志定义类型，[ debug | info | notice | warn | error | crit ]
@@ -225,18 +350,18 @@ http {
             proxy_buffers 4 32k;   #proxy_buffers 缓冲区，网页平均在 32k 以下的设置
             proxy_busy_buffers_size 64k; #高负荷下缓冲大小（proxy_buffers*2）
             proxy_max_temp_file_size 2048m; #默认 1024m, 该指令用于设置当网页内容大于 proxy_buffers 时，临时文件大小的最大值。如果文件大于这个值，它将从 upstream 服务器同步地传递请求，而不是缓冲到磁盘
-            proxy_temp_file_write_size 512k; 这是当被代理服务器的响应过大时 Nginx 一次性写入临时文件的数据量。
+            proxy_temp_file_write_size 512k; 这是当被代理服务器的响应过大时 nginx 一次性写入临时文件的数据量。
             proxy_temp_path  /var/tmp/nginx/proxy_temp;    ##定义缓冲存储目录，之前必须要先手动创建此目录
             proxy_headers_hash_max_size 51200;
             proxy_headers_hash_bucket_size 6400;
             #######################################################
         }
 
-        #设定查看 Nginx 状态的地址
-        location /NginxStatus {
+        #设定查看 nginx 状态的地址
+        location /nginxStatus {
             stub_status on;
             access_log on;
-            auth_basic "NginxStatus";
+            auth_basic "nginxStatus";
             auth_basic_user_file conf/htpasswd;
             #htpasswd 文件的内容可以用 apache 提供的 htpasswd 工具来产生。
         }
@@ -260,7 +385,7 @@ http {
 }
 ```
 
-# Nginx 服务器基础配置指令
+# nginx 服务器基础配置指令
 
 ## nginx.conf 文件的结构
 
@@ -274,9 +399,9 @@ http {
 
 > 所有的所有的所有的指令，都要以`;`结尾
 
-## Nginx 运行相关的 Global 部分
+## nginx 运行相关的 Global 部分
 
-### 配置运行 Nginx 服务器用户
+### 配置运行 nginx 服务器用户
 
 user nobody nobody;
 
@@ -297,7 +422,7 @@ processor       : 3
 4
 ```
 
-### 配置 Nginx 进程 PID 存放路径
+### 配置 nginx 进程 PID 存放路径
 
 pid logs/nginx.pid;
 
@@ -366,7 +491,7 @@ Refer:
 
 #### 配置连接超时时间
 
-> 与用户建立连接后，Nginx 可以保持这些连接一段时间，默认 75s
+> 与用户建立连接后，nginx 可以保持这些连接一段时间，默认 75s
 > 下面的 65s 可以被 Mozilla/Konqueror 识别，是发给用户端的头部信息`Keep-Alive`值
 
 keepalive_timeout 75s 65s;
@@ -388,7 +513,7 @@ listen 192.168.1.10;
 listen 8000; # 等同于 listen *:8000;
 listen 192.168.1.10 default_server backlog=511; # 该 ip 的连接请求默认由此虚拟主机处理；最多允许 1024 个网络连接同时处于挂起状态
 
-#### **基于名称的虚拟主机配置**
+#### 基于名称的虚拟主机配置
 
 server_name myserver.com www.myserver.com;
 
@@ -400,7 +525,7 @@ server_name ~^www\d+\.myserver\.com$; # 使用正则
 
 > nginx 的配置中，可以用正则的地方，都以`~`开头
 
-> from Nginx~0.7.40 开始，server_name 中的正则支持 字符串捕获功能（capture）
+> from nginx~0.7.40 开始，server_name 中的正则支持 字符串捕获功能（capture）
 
 server_name ~^www\.(.+)\.com$; # 当请求通过 www.myserver.com 请求时， myserver 就被记录到`$1`中，在本 server 的上下文中就可以使用
 
@@ -415,7 +540,7 @@ server_name ~^www\.(.+)\.com$; # 当请求通过 www.myserver.com 请求时， m
 
 #### 配置 https 证书
 
-***原理***
+**原理**
 
 https 是在 http 和 TCP 中间加上一层加密层
 
@@ -501,7 +626,7 @@ $ openssl x509 -req -days 1000 -in server.csr -signkey server.key -out server.cr
 
 如果想查看证书里面的内容，可以通过 $openssl x509 -in server.crt -text -noout 查看
 
-#### **基于 IP 的虚拟主机配置**
+#### 基于 IP 的虚拟主机配置
 
 > 基于 IP 的虚拟主机，需要将网卡设置为同时能够监听多个 IP 地址
 
@@ -536,7 +661,7 @@ http {
 }
 ```
 
-#### **配置 location 块**
+#### 配置 location 块
 
 > location 块的配置，应该是最常用的了
 
@@ -546,7 +671,7 @@ location [ = | ~ | ~* | ^~ ] uri {...}
 
 先不考虑 那 4 种匹配方式
 
-1. Nginx 首先会再 server 块的多个 location 中搜索是否有`标准 uri`和请求字符串匹配， 如果有，记录匹配度最高的一个；
+1. nginx 首先会再 server 块的多个 location 中搜索是否有`标准 uri`和请求字符串匹配， 如果有，记录匹配度最高的一个；
 2. 然后，再用 location 块中的`正则 uri`和请求字符串匹配， 当第一个`正则 uri`匹配成功，即停止搜索， 并使用该 location 块处理请求；
 3. 如果，所有的`正则 uri`都匹配失败，就使用刚记录下的匹配度最高的一个`标准 uri`处理请求
 4. 如果都失败了，那就失败喽
@@ -560,13 +685,24 @@ location [ = | ~ | ~* | ^~ ] uri {...}
 
 > `^~` 也是支持浏览器编码过的 URI 的匹配的哦， 如 `/html/%20/data` 可以成功匹配 `/html/ /data`
 
-#### 配置请求的根目录
+#### [root] 配置请求的根目录
 
 Web 服务器收到请求后，首先要在服务端指定的目录中寻找请求资源
 
+```
 root /var/www;
+```
+**root 后跟的指定目录是上级目录**
 
-#### 更改 location 的 URI
+该上级目录下要含有和 location 后指定名称的同名目录才行，末尾“/”加不加无所谓
+```
+location /c/ {
+      root /a/
+}
+```
+访问站点 http://location/c 访问的就是 /a/c 目录下的站点信息。
+
+#### [alias] 更改 location 的 URI
 
 除了使用 root 指明处理请求的根目录，还可以使用 alias 改变 location 收到的 URI 的请求路径
 
@@ -575,6 +711,16 @@ location ~ ^/data/(.+\.(htm|html))$ {
     alias /locatinotest1/other/$1;
 }
 ```
+**alias 后跟的指定目录是准确的，并且末尾必须加“/”，否则找不到文件**
+
+```
+location /c/ {
+      alias /a/
+}
+```
+访问站点 http://location/c 访问的就是 /a/ 目录下的站点信息。
+
+【注】一般情况下，在 location / 中配置 root，在 location /other 中配置 alias 是一个好习惯。
 
 #### 设置网站的默认首页
 
@@ -600,7 +746,7 @@ location /404.html {
 }
 ```
 
-#### 基于 IP 配置 Nginx 的访问权限
+#### 基于 IP 配置 nginx 的访问权限
 
 ```
 location / {
@@ -612,8 +758,7 @@ location / {
 ```
 > 从 192.168.1.0 的用户时可以访问的，因为解析到 allow 那一行之后就停止解析了
 
-
-#### 基于密码配置 Nginx 的访问权限
+#### 基于密码配置 nginx 的访问权限
 
 auth_basic "please login";
 auth_basic_user_file /etc/nginx/conf/pass_file;
@@ -631,7 +776,72 @@ name2:password2:comment
 > 经过 basic auth 认证之后没有过期时间，直到该页面关闭；
 > 如果需要更多的控制，可以使用 HttpAuthDigestModule http://wiki.nginx.org/HttpAuthDigestModule
 
-# Nginx 服务器基础配置实例
+
+# 应用
+## 架设简单文件服务器
+
+将 /data/public/ 目录下的文件通过 nginx 提供给外部访问
+```
+#mkdir /data/public/
+#chmod 777 /data/public/
+```
+```
+worker_processes 1;
+error_log logs/error.log info;
+events {
+    use epoll;
+}
+http {
+    server {
+        # 监听 8080 端口
+        listen 8080;
+        location /share/ {
+            # 打开自动列表功能，通常关闭
+            autoindex on;
+            # 将 /share/ 路径映射至 /data/public/，请保证 nginx 进程有权限访问 /data/public/
+            alias /data/public/;
+        }
+    }
+}
+```
+
+## nginx 正向代理
+
+ -  正向代理指代理客户端访问服务器的一个中介服务器，代理的对象是客户端。正向代理就是代理服务器替客户端去访问目标服务器
+ -  反向代理指代理后端服务器响应客户端请求的一个中介服务器，代理的对象是服务器。
+
+1. 配置
+
+代理服务器配置
+
+nginx.conf
+
+```
+server{
+    resolver x.x.x.x;
+#       resolver 8.8.8.8;
+    listen 82;
+    location / {
+            proxy_pass http://$http_host$request_uri;
+    }
+    access_log  /data/httplogs/proxy-$host-aceess.log;
+}
+```
+
+location 保持原样即可，根据自己的配置更改 listen port 和 dnf 即 resolver
+验证：
+在需要访问外网的机器上执行以下操作之一即可：
+
+```
+1. export http_proxy=http://yourproxyaddress：proxyport（建议）
+2. vim ~/.bashrc
+    export http_proxy=http://yourproxyaddress：proxyport
+```
+
+2 不足
+nginx 不支持 CONNECT 方法，不像我们平时用的 GET 或者 POST，可以选用 apache 或 squid 作为代替方案。
+
+## nginx 服务器基础配置实例
 
 ```
 user nginx nginx;
@@ -679,7 +889,7 @@ http {
         server_name 192.168.0.254;
 
         auth_basic "please Login:";
-        auth_basic_user_file /opt/X_nginx/Nginx/myweb/user_passwd;
+        auth_basic_user_file /opt/X_nginx/nginx/myweb/user_passwd;
 
         access_log myweb/server2/log/access.log;
         error_page 404 /404.html;
@@ -704,7 +914,7 @@ http {
 
 ```
 #./sbin/nginx -c conf/nginx02.conf
-nginx: [warn] the "user" directive makes sense only if the master process runs with super-user privileges, ignored in /opt/X_nginx/Nginx/conf/nginx02.conf:1
+nginx: [warn] the "user" directive makes sense only if the master process runs with super-user privileges, ignored in /opt/X_nginx/nginx/conf/nginx02.conf:1
 .
 ├── 404.html
 ├── server1
@@ -716,16 +926,15 @@ nginx: [warn] the "user" directive makes sense only if the master process runs w
 │       └── access.log
 └── server2
     ├── location1
-        │   └── index.svr2-loc1.htm
-            ├── location2
-                │   └── index.svr2-loc2.htm
-                    └── log
-                            └── access.log
+    │   └── index.svr2-loc1.htm
+    ├── location2
+    │   └── index.svr2-loc2.htm
+    └── log
+        └── access.log
 
-                            8 directories, 7 files
-
+8 directories, 7 files
 ```
-## 测试 myServer1 的访问
+### 测试 myServer1 的访问
 
 ```
 http://myserver1:8081/server1/location1/
@@ -735,7 +944,7 @@ http://myserver1:8081/server1/location2/
 this is server1/location1/index.svr1-loc2.htm
 ```
 
-## 测试 myServer2 的访问
+### 测试 myServer2 的访问
 ```
 http://192.168.0.254:8082/server2/location1/
 this is server2/location1/index.svr2-loc1.htm
@@ -746,198 +955,35 @@ this is server2/location1/index.svr2-loc2.htm
 http://192.168.0.254:8082/server2/location2/
 404 404 404 404
 ```
-# Nginx 服务器架构
+## 使用缓存
 
-## 模块化结构
+创建缓存目录
 
-> Nginx 服务器的开发`完全`遵循模块化设计思想
-
-### 模块化开发
-
-1. 单一职责原则，一个模块只负责一个功能
-2. 将程序分解，自顶向下，逐步求精
-3. 高内聚，低耦合
-
-### Nginx 的模块化结构
-
-+ 核心模块：Nginx 最基本最核心的服务，如进程管理、权限控制、日志记录；
-+ 标准 HTTP 模块：Nginx 服务器的标准 HTTP 功能；
-+ 可选 HTTP 模块：处理特殊的 HTTP 请求
-+ 邮件服务模块：邮件服务
-+ 第三方模块：作为扩展，完成特殊功能
-
-
-## Nginx 的模块清单
-
-+ 核心模块
-    - ngx_core
-    - ngx_errlog
-    - ngx_conf
-    - ngx_events
-    - ngx_event_core
-    - ngx_epll
-    - ngx_regex
-
-+ 标准 HTTP 模块
-    - ngx_http
-    - ngx_http_core             #配置端口，URI 分析，服务器相应错误处理，别名控制 (alias) 等
-    - ngx_http_log              #自定义 access 日志
-    - ngx_http_upstream         #定义一组服务器，可以接受来自 proxy, Fastcgi,Memcache 的重定向；主要用作负载均衡
-    - ngx_http_static
-    - ngx_http_autoindex        #自动生成目录列表
-    - ngx_http_index            #处理以`/`结尾的请求，如果没有找到 index 页，则看是否开启了`random_index`；如开启，则用之，否则用 autoindex
-    - ngx_http_auth_basic       #基于 http 的身份认证 (auth_basic)
-    - ngx_http_access           #基于 IP 地址的访问控制 (deny,allow)
-    - ngx_http_limit_conn       #限制来自客户端的连接的响应和处理速率
-    - ngx_http_limit_req        #限制来自客户端的请求的响应和处理速率
-    - ngx_http_geo
-    - ngx_http_map              #创建任意的键值对变量
-    - ngx_http_split_clients
-    - ngx_http_referer          #过滤 HTTP 头中 Referer 为空的对象
-    - ngx_http_rewrite          #通过正则表达式重定向请求
-    - ngx_http_proxy
-    - ngx_http_fastcgi          #支持 fastcgi
-    - ngx_http_uwsgi
-    - ngx_http_scgi
-    - ngx_http_memcached
-    - ngx_http_empty_gif        #从内存创建一个 1×1 的透明 gif 图片，可以快速调用
-    - ngx_http_browser          #解析 http 请求头部的 User-Agent 值
-    - ngx_http_charset          #指定网页编码
-    - ngx_http_upstream_ip_hash
-    - ngx_http_upstream_least_conn
-    - ngx_http_upstream_keepalive
-    - ngx_http_write_filter
-    - ngx_http_header_filter
-    - ngx_http_chunked_filter
-    - ngx_http_range_header
-    - ngx_http_gzip_filter
-    - ngx_http_postpone_filter
-    - ngx_http_ssi_filter
-    - ngx_http_charset_filter
-    - ngx_http_userid_filter
-    - ngx_http_headers_filter   #设置 http 响应头
-    - ngx_http_copy_filter
-    - ngx_http_range_body_filter
-    - ngx_http_not_modified_filter
-
-+ 可选 HTTP 模块
-    - ngx_http_addition         #在响应请求的页面开始或者结尾添加文本信息
-    - ngx_http_degradation      #在低内存的情况下允许服务器返回 444 或者 204 错误
-    - ngx_http_perl
-    - ngx_http_flv              #支持将 Flash 多媒体信息按照流文件传输，可以根据客户端指定的开始位置返回 Flash
-    - ngx_http_geoip            #支持解析基于 GeoIP 数据库的客户端请求
-    - ngx_google_perftools
-    - ngx_http_gzip             #gzip 压缩请求的响应
-    - ngx_http_gzip_static      #搜索并使用预压缩的以.gz 为后缀的文件代替一般文件响应客户端请求
-    - ngx_http_image_filter     #支持改变 png，jpeg，gif 图片的尺寸和旋转方向
-    - ngx_http_mp4              #支持.mp4,.m4v,.m4a 等多媒体信息按照流文件传输，常与 ngx_http_flv 一起使用
-    - ngx_http_random_index     #当收到 / 结尾的请求时，在指定目录下随机选择一个文件作为 index
-    - ngx_http_secure_link      #支持对请求链接的有效性检查
-    - ngx_http_ssl              #支持 https
-    - ngx_http_stub_status
-    - ngx_http_sub_module       #使用指定的字符串替换响应中的信息
-    - ngx_http_dav              #支持 HTTP 和 WebDAV 协议中的 PUT/DELETE/MKCOL/COPY/MOVE 方法
-    - ngx_http_xslt             #将 XML 响应信息使用 XSLT 进行转换
-
-+ 邮件服务模块
-    - ngx_mail_core
-    - ngx_mail_pop3
-    - ngx_mail_imap
-    - ngx_mail_smtp
-    - ngx_mail_auth_http
-    - ngx_mail_proxy
-    - ngx_mail_ssl
-
-+ 第三方模块
-    - echo-nginx-module         #支持在 nginx 配置文件中使用 echo/sleep/time/exec 等类 Shell 命令
-    - memc-nginx-module
-    - rds-json-nginx-module     #使 nginx 支持 json 数据的处理
-    - lua-nginx-module
-
-## Nginx 的 web 请求处理机制
-
-作为服务器软件，必须具备并行处理多个客户端的请求的能力， 工作方式主要以下 3 种：
-
-+ 多进程 (Apache)
-    - 优点：设计和实现简单；子进程独立
-    - 缺点：生成一个子进程要内存复制，在资源和时间上造成额外开销
-+ 多线程 (IIS)
-    - 优点：开销小
-    - 缺点：开发者自己要对内存进行管理；线程之间会相互影响
-+ 异步方式 (Nginx)
-
-经常说道异步非阻塞这个概念， 包含两层含义：
-
-通信模式：
-    + 同步：发送方发送完请求后，等待并接受对方的回应后，再发送下个请求
-    + 异步：发送方发送完请求后，不必等待，直接发送下个请求
-
-## Nginx 的事件驱动模型
-
-# 应用
-## 架设简单文件服务器
-
-将 /data/public/ 目录下的文件通过 nginx 提供给外部访问
 ```
-#mkdir /data/public/
-#chmod 777 /data/public/
+mkdir  /tmp/nginx_proxy_cache2 
+chmod 777 /tmp/nginx_proxy_cache2
 ```
-```
-worker_processes 1;
-error_log logs/error.log info;
-events {
-    use epoll;
-}
-http {
 
-    server {
-            # 监听 8080 端口
-            listen 8080;
-            location /share/ {
-                        # 打开自动列表功能，通常关闭
-                        autoindex on;
-                        # 将 /share/ 路径映射至 /data/public/，请保证 nginx 进程有权限访问 /data/public/
-                        alias /data/public/;
-                    }
-       }
+修改配置文件
+
+```
+# http 区域下添加缓存区配置
+proxy_cache_path /tmp/nginx_proxy_cache2 levels=1 keys_zone=cache_one:512m inactive=60s max_size=1000m;
+
+# server 区域下添加缓存配置
+#缓存相应的文件(静态文件)
+location ~ \.(gif|jpg|png|htm|html|css|js|flv|ico|swf)(.*) {
+     proxy_pass http://IP:端口;               #如果没有缓存则通过proxy_pass转向请求
+     proxy_redirect off;
+     proxy_set_header Host $host;
+     proxy_cache cache_one;
+     proxy_cache_valid 200 302 1h;            #对不同的HTTP状态码设置不同的缓存时间,h小时,d天数
+     proxy_cache_valid 301 1d;
+     proxy_cache_valid any 1m;
+     expires 30d;
 }
 ```
 
-## nginx 正向代理
-
- -  正向代理指代理客户端访问服务器的一个中介服务器，代理的对象是客户端。正向代理就是代理服务器替客户端去访问目标服务器
- -  反向代理指代理后端服务器响应客户端请求的一个中介服务器，代理的对象是服务器。
-
-1. 配置
-
-代理服务器配置
-
-nginx.conf
-
-```
-server{
-        resolver x.x.x.x;
-#       resolver 8.8.8.8;
-        listen 82;
-        location / {
-                proxy_pass http://$http_host$request_uri;
-        }
-        access_log  /data/httplogs/proxy-$host-aceess.log;
-}
-```
-
-location 保持原样即可，根据自己的配置更改 listen port 和 dnf 即 resolver
-验证：
-在需要访问外网的机器上执行以下操作之一即可：
-
-```
-1. export http_proxy=http://yourproxyaddress：proxyport（建议）
-2. vim ~/.bashrc
-    export http_proxy=http://yourproxyaddress：proxyport
-```
-
-2 不足
-nginx 不支持 CONNECT 方法，不像我们平时用的 GET 或者 POST，可以选用 apache 或 squid 作为代替方案。
 
 # 其他
 
