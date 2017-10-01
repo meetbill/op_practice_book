@@ -2,6 +2,9 @@
 
 <!-- vim-markdown-toc GFM -->
 * [安装](#安装)
+    * [安装依赖](#安装依赖)
+    * [下载](#下载)
+    * [编译安装](#编译安装)
 * [nginx 服务架构](#nginx-服务架构)
     * [模块化结构](#模块化结构)
         * [模块化开发](#模块化开发)
@@ -53,18 +56,32 @@
 <!-- vim-markdown-toc -->
 # 安装
 
+## 安装依赖
+
 安装 nginx 之前，确保系统已经安装 gcc、openssl-devel、pcre-devel 和 zlib-devel 软件库
 
-* gcc、openssl-devel、zlib-devel 可以通过光盘直接选择安装
+* gcc 可以通过光盘直接选择安装
+* openssl-devel、zlib-devel 可以通过光盘直接选择安装，https 时使用
 * pcre-devel 安装 pcre 库是为了使 nginx 支持 HTTP Rewrite 模块
+
+## 下载
+
+[nginx 下载](http://nginx.org/en/download.html)
+
+## 编译安装
+
+通过上面的下载页下载最新的稳定版
 
 ```
 #wget http://nginx.org/download/nginx-1.8.0.tar.gz
 #tar xzvf nginx-1.8.0.tar.gz
 #cd nginx-1.8.0
-#./configure --prefix=/opt/X_nginx/nginx
+#./configure --prefix=/opt/X_nginx/nginx --with-http_ssl_module
 #make && sudo make install
 ```
+> * --prefix=/opt/X_nginx/nginx 安装目录
+> * --with-http_ssl_module 添加 https 支持
+
 # nginx 服务架构
 
 ## 模块化结构
@@ -584,7 +601,7 @@ https 是在 http 和 TCP 中间加上一层加密层
 
 只要证书（证书里有服务端的公钥）是可信的，公钥就是可信的。
 ```
-***证书格式***
+**证书格式**
 
 Linux 下的工具们通常使用 base64 编码的文本格式，相关常用后缀如下
 
@@ -597,7 +614,7 @@ Linux 下的工具们通常使用 base64 编码的文本格式，相关常用后
 * 其他
     * .keystore java 密钥库（包括证书和私钥）
 
-***制作证书***
+**制作证书**
 
 ```
 1. 生成服务器端的私钥 (key 文件）
@@ -605,19 +622,19 @@ $openssl genrsa  -out server.key 1024
 
 2. 生成服务器端证书签名请求文件 (csr 文件）;
 $ openssl req -new -key server.key -out server.csr
-    You are about to be asked to enter information that will be incorporated into your certificate request.
-    What you are about to enter is what is called a Distinguished Name or a DN.
-    There are quite a few fields but you can leave some blank
-    For some fields there will be a default value,
-    If you enter '.', the field will be left blank.
-    -----
-    Country Name (2 letter code) [XX]:CN----------------------------------- 证书持有者所在国家
-    State or Province Name (full name) []:BJ------------------------------- 证书持有者所在州或省份（可省略不填）
-    Locality Name (eg, city) []:BJ----------------------------------------- 证书持有者所在城市（可省略不填）
-    Organization Name (eg, company) []:SC---------------------------------- 证书持有者所属组织或公司
-    Organizational Unit Name (eg, section) []:.---------------------------- 证书持有者所属部门（可省略不填）
-    Common Name (eg, your name or your server's hostname) []:ceshi.com----- 域名
-    Email Address []:------------------------------------------------------ 邮箱（可省略不填）
+
+...
+Country Name:CN------------证书持有者所在国家
+State or Province Name:BJ--证书持有者所在州或省份（可省略不填）
+Locality Name:BJ-----------证书持有者所在城市（可省略不填）
+Organization Name:SC-------证书持有者所属组织或公司
+Organizational Unit Name:.-证书持有者所属部门（可省略不填）
+Common Name :ceshi.com-----域名
+Email Address:-------------邮箱（可省略不填）
+
+A challenge password:------直接回车
+An optional company name:--直接回车
+
 
 3. 生成证书文件 (crt 文件）
 $ openssl x509 -req -days 1000 -in server.csr -signkey server.key -out server.crt
@@ -625,6 +642,21 @@ $ openssl x509 -req -days 1000 -in server.csr -signkey server.key -out server.cr
 以上生成 server.crt  server.key 文件即是用于 HTTPS 配置的证书和 key
 
 如果想查看证书里面的内容，可以通过 $openssl x509 -in server.crt -text -noout 查看
+
+**配置 nginx**
+
+在 nginx 的 server 区域内添加如下 
+
+```
+listen 443 ssl;
+ssl_certificate /opt/https/server.crt;
+ssl_certificate_key /opt/https/server.key;
+ssl_protocols SSLv3 TLSv1;
+ssl_ciphers HIGH:!ADH:!EXPORT57:RC4+RSA:+MEDIUM;
+ssl_prefer_server_ciphers on;
+ssl_session_cache shared:SSL:2m;
+ssl_session_timeout 5m;
+```
 
 #### 基于 IP 的虚拟主机配置
 
