@@ -51,7 +51,9 @@
         * [测试 myServer1 的访问](#测试-myserver1-的访问)
         * [测试 myServer2 的访问](#测试-myserver2-的访问)
     * [使用缓存](#使用缓存)
-* [其他](#其他)
+    * [其他](#其他)
+        * [ngx_http_sub_module 替换响应中内容](#ngx_http_sub_module-替换响应中内容)
+        * [配置 http 强制跳转 https](#配置-http-强制跳转-https)
 
 <!-- vim-markdown-toc -->
 # 安装
@@ -1017,6 +1019,17 @@ location ~ \.(gif|jpg|png|htm|html|css|js|flv|ico|swf)(.*) {
 ```
 
 
-# 其他
+## 其他
+
+### ngx_http_sub_module 替换响应中内容
 
 * ngx_http_sub_module nginx 用来替换响应内容的一个模块（应用：有些程序中写死了端口，可以通过此工具将页面中的端口替换为其他端口）
+
+### 配置 http 强制跳转 https
+
+在 nginx 配置文件中的 server 区域添加如下内容
+```
+if ($scheme = 'http') {
+    rewrite ^(.*)$ https://$host$uri;
+}  
+```
