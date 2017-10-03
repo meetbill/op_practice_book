@@ -7,7 +7,6 @@
     * [Linux 安全](doc/Linux/safety.md)
     * [Linux 优化](doc/Linux/optimize.md)
     * [脚本编程 (shell)](doc/Linux/shell.md)
-    * [脚本编程 (python)](doc/Linux/python.md)
     * [常见服务架设](doc/Linux/service.md)
     * [常用问题处理](doc/Linux/op.md)
 * [数据库篇](doc/db/README.md)
