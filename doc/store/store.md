@@ -14,7 +14,8 @@
         * [NFS 搭建](#nfs-搭建)
         * [启动 NFS 服务端](#启动-nfs-服务端)
         * [配置 NFS 服务端](#配置-nfs-服务端)
-        * [配置 NFS 客户端](#配置-nfs-客户端)
+        * [配置 Linux NFS 客户端](#配置-linux-nfs-客户端)
+        * [配置 Windows NFS 客户端](#配置-windows-nfs-客户端)
         * [常见问题](#常见问题)
             * [rpcbind 安装失败](#rpcbind-安装失败)
             * [nfs 客户端挂载失败](#nfs-客户端挂载失败)
@@ -59,7 +60,6 @@ NFS 的基本原则是“容许不同的客户端及服务端通过一组 RPC �
 ----|----|----|
 CentOS6.6 x86_64|NFS 服务端（NFS-SERVER）|192.168.1.21|
 CentOS6.6 x86_64|NFS 客户端（NFS-CLIENT1）|192.168.1.22|
-
 
 服务器版本：6.x
 
@@ -115,147 +115,194 @@ CentOS6.6 x86_64|NFS 客户端（NFS-CLIENT1）|192.168.1.22|
 
 ### 启动 NFS 服务端
 
-```
-# 启动 rpcbind 状态
-[root@nfs-server ~]# /etc/init.d/rpcbind start
-Starting rpcbind:                                       [  OK  ]
-# 查看 rpcbind 状态
-[root@nfs-server ~]# /etc/init.d/rpcbind status
-rpcbind (pid  1826) is running...
-# 查看 rpcbind 默认端口 111
-[root@nfs-server ~]# lsof -i :111
-COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
-rpcbind 1826  rpc  6u IPv4 12657      0t0  UDP *:sunrpc
-rpcbind 1826  rpc  8u IPv4 12660      0t0  TCP *:sunrpc (LISTEN)
-rpcbind 1826  rpc  9u IPv6 12662      0t0  UDP *:sunrpc
-rpcbind 1826  rpc 11u IPv6 12665      0t0  TCP *:sunrpc (LISTEN)
-# 查看 rpcbind 服务端口
-[root@nfs-server ~]# netstat -lntup|grep rpcbind
-tcp  0 0 0.0.0.0:111  0.0.0.0:*         LISTEN      1826/rpcbind
-tcp  0 0 :::111       :::*              LISTEN      1826/rpcbind
-udp  0 0 0.0.0.0:729  0.0.0.0:*                     1826/rpcbind
-udp  0 0 0.0.0.0:111  0.0.0.0:*                     1826/rpcbind
-udp  0 0 :::729       :::*                          1826/rpcbind
-udp  0 0 :::111       :::*                          1826/rpcbind
-# 查看 rpcbind 开机是否自启动
-[root@nfs-server ~]# chkconfig --list rpcbind
-rpcbind    0:off   1:off   2:on    3:on    4:on    5:on    6:off
-# 查看 nfs 端口信息（没有发现）
-[root@nfs-server ~]# rpcinfo -p localhost
-   program vers proto   port  service
-    100000    4   tcp    111  portmapper
-    100000    3   tcp    111  portmapper
-    100000    2   tcp    111  portmapper
-    100000    4   udp    111  portmapper
-    100000    3   udp    111  portmapper
-    100000    2   udp    111  portmapper
-# 启动 NFS 服务
-[root@nfs-server ~]# /etc/init.d/nfs start
-Starting NFS services:                                  [  OK  ]
-Starting NFS quotas:                                    [  OK  ]
-Starting NFS mountd:                                    [  OK  ]
-Starting NFS daemon:                                    [  OK  ]
-正在启动 RPC idmapd：                                   [确定]
+    ```
+    # 启动 rpcbind 状态
+    [root@nfs-server ~]# /etc/init.d/rpcbind start
+    Starting rpcbind:                                   [  OK  ]
 
-# 设置 nfs 开机自启动
-[root@nfs-server ~]# chkconfig nfs on
-# 查看 nfs 开机是否启动（已打开）
+    # 查看 rpcbind 状态
+    [root@nfs-server ~]# /etc/init.d/rpcbind status
+    rpcbind (pid  1826) is running...
 
-如何确定`rpcbind`服务一定在`NFS`服务之前启动？？？
+    # 查看 rpcbind 默认端口 111
+    [root@nfs-server ~]# lsof -i :111
+    COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+    rpcbind 1826  rpc  6u IPv4 12657  0t0  UDP *:sunrpc
+    rpcbind 1826  rpc  8u IPv4 12660  0t0  TCP *:sunrpc (LISTEN)
+    rpcbind 1826  rpc  9u IPv6 12662  0t0  UDP *:sunrpc
+    rpcbind 1826  rpc 11u IPv6 12665  0t0  TCP *:sunrpc (LISTEN)
 
-# 无须调整，默认 rpcbind 开机顺序为 13，nfs 为 30
-[root@nfs-server ~]# cat /etc/init.d/rpcbind|grep 'chkconfig'
-# chkconfig: 2345 13 87（开机启动顺序 13）
-[root@nfs-server ~]# cat /etc/init.d/nfs|grep 'chkconfig'
-# chkconfig: - 30 60（开机启动顺序 30）
+    # 查看 rpcbind 服务端口
+    [root@nfs-server ~]# netstat -lntup|grep rpcbind
+    tcp  0 0 0.0.0.0:111  0.0.0.0:*        LISTEN   1826/rpcbind
+    tcp  0 0 :::111       :::*             LISTEN   1826/rpcbind
+    udp  0 0 0.0.0.0:729  0.0.0.0:*                 1826/rpcbind
+    udp  0 0 0.0.0.0:111  0.0.0.0:*                 1826/rpcbind
+    udp  0 0 :::729       :::*                      1826/rpcbind
+    udp  0 0 :::111       :::*                      1826/rpcbind
 
-```
+    # 查看 rpcbind 开机是否自启动
+    [root@nfs-server ~]# chkconfig --list rpcbind
+    rpcbind    0:off   1:off   2:on   3:on  4:on   5:on    6:off
+
+    # 查看 nfs 端口信息（没有发现）
+    [root@nfs-server ~]# rpcinfo -p localhost
+       program vers proto   port  service
+        100000    4   tcp    111  portmapper
+        100000    3   tcp    111  portmapper
+        100000    2   tcp    111  portmapper
+        100000    4   udp    111  portmapper
+        100000    3   udp    111  portmapper
+        100000    2   udp    111  portmapper
+
+    # 启动 NFS 服务
+    [root@nfs-server ~]# /etc/init.d/nfs start
+    Starting NFS services:                             [  OK  ]
+    Starting NFS quotas:                               [  OK  ]
+    Starting NFS mountd:                               [  OK  ]
+    Starting NFS daemon:                               [  OK  ]
+    正在启动 RPC idmapd：                              [确定]
+
+    # 设置 nfs 开机自启动
+    [root@nfs-server ~]# chkconfig nfs on
+
+    # 查看 nfs 开机是否启动（已打开）
+
+    如何确定`rpcbind`服务一定在`NFS`服务之前启动？？？
+
+    # 无须调整，默认 rpcbind 开机顺序为 13，nfs 为 30
+    [root@nfs-server ~]# cat /etc/init.d/rpcbind|grep 'chkconfig'
+    # chkconfig: 2345 13 87（开机启动顺序 13）
+
+    [root@nfs-server ~]# cat /etc/init.d/nfs|grep 'chkconfig'
+    # chkconfig: - 30 60（开机启动顺序 30）
+    ```
 
 ### 配置 NFS 服务端
 
-`NFS`配置文件为`/etc/exports`
+NFS 配置文件为 /etc/exports
 
-```
-# 查看 NFS 配置文件
-[root@nfs-server ~]# ll /etc/exports
--rw-r--r--. 1 root root 0 1 月  12 2010 /etc/exports
+**配置格式**
 
-`/etc/exports`配置文件格式
-`NFS`共享的目录 `NFS`客户端地址（参 1，参 2...）
-`NFS`共享的目录 `NFS`客户端地址 1（参 1，参 2...） 客户端地址 2（参 1，参 2...）
+    ```
+    /etc/exports 配置文件格式
+    NFS 共享的目录 NFS 客户端地址 (arg1，arg2...)
+    NFS 共享的目录 NFS 客户端地址 1(arg1，arg2...) 客户端地址 2(arg1,arg2...)
+    ```
+如
+    ```
+     /home/share 192.168.102.15(rw,sync) *(ro)
+    ```
 
-# 创建共享目录
-mkdir /data
-# NFS 配置文件添加共享目录相关信息
-cat >>/etc/exports<< EOF
-########nfs sync dir by zhangjie at 20150909########
-/data  * (rw,sync,all_squash)
-EOF
-# NFS 平滑生效
-/etc/init.d/nfs reload
+**配置实例**
 
-# 查看共享记录
-[root@nfs-server ~]# showmount -e localhost
-Export list for localhost:
-/data *
-# 本机挂载测试
-[root@nfs-server ~]# mount -t nfs 192.168.1.21:/data /mnt
-# 查看是否已经挂载成功
-[root@nfs-server ~]# df -h
-Filesystem          Size  Used Avail Use% Mounted on
-/dev/sda3            18G  1.6G   15G  10% /
-tmpfs               491M     0  491M   0% /dev/shm
-/dev/sda1           190M   61M  120M  34% /boot
-192.168.0.1:/data   18G  1.6G   15G  10% /mnt
+    ```
 
-# 配置例子
-/ceshi_test *(rw,sync,no_root_squash,nohide,no_root_squash,no_subtree_check,sync)
-```
+    # 创建共享目录
+    mkdir /data
 
-### 配置 NFS 客户端
-```
-# 启动 rpcbind 服务
-[root@lamp01 ~]# /etc/init.d/rpcbind start
-Starting rpcbind:                                       [  OK  ]
-# 测试是否可以连接 NFS 服务器
-[root@client ~]# showmount -e 192.168.1.21
-Export list for 192.168.1.21:
-/data *
-# 挂载客户端 NFS 服务
-[root@lamp01 ~]# mount -t nfs 192.168.1.21:/data /mnt
-# 查看是否挂载成功
-[root@lamp01 ~]# df -h
-Filesystem          Size  Used Avail Use% Mounted on
-/dev/sda3            18G  1.6G   15G  10% /
-tmpfs               491M     0  491M   0% /dev/shm
-/dev/sda1           190M   61M  120M  34% /boot
-192.168.1.21:/data   18G  1.6G   15G  10% /mnt
+    # NFS 配置文件添加共享目录相关信息
+    cat >>/etc/exports<< EOF
+    ########nfs sync dir by zhangjie at 20150909########
+    /data  *(rw,sync,all_squash)
+    EOF
 
-# 查看 NFS 服务器完整参数配置（仔细看默认添加了很多参数，这里的 anonuid 用户、anongid 组）
-[root@nfs-server /]# cat /var/lib/nfs/etab
-/data   *(rw,sync,wdelay,hide,nocrossmnt,secure,root_squash,no_all_squash,no_subtree_check,secure_locks,acl,anonuid=65534,anongid=65534,sec=sys,rw,root_squash,no_all_squash)
-# 查看用户组为 65534 的用户（nfsnobody 用户）
-[root@nfs-server /]# grep '65534' /etc/passwd
-nfsnobody:x:65534:65534:Anonymous NFS User:/var/lib/nfs:/sbin/nologin
-# 更改目录所属用户、所属组
-[root@nfs-server /]# chown -R nfsnobody.nfsnobody /data/
-# 查看目录所属用户、所属组
-[root@nfs-server /]# ls -ld /data/
-drwxr-xr-x 2 nfsnobody nfsnobody 4096 9 月   8 07:16 /data/
+    # NFS 平滑生效
+    /etc/init.d/nfs reload
 
-> NFS 系统安全挂载
+    # 查看共享记录
+    [root@nfs-server ~]# showmount -e localhost
+    Export list for localhost:
+    /data *
 
-一般`NFS`服务器共享的只是普通的静态数据（图片、附件、视频等等），不需要执行 suid、exec 等权限，挂载的这个文件系统，只能作为存取至用，无法执行程序，对于客户端来讲增加了安全性，（如：很多木马篡改站点文件都是由上传入口上传的程序到存储目录，然后执行的）注意：非性能的参数越多，速度可能越慢
+    # 本机挂载测试
+    [root@nfs-server ~]# mount -t nfs 192.168.1.21:/data /mnt
 
-# 安全挂载参数（nosuid、noexec、nodev）
-mount -t nfs nosuid,noexec,nodev,rw 192.168.1.21:/data /mnt
-# 禁止更新目录及文件时间戳挂载（noatime、nodiratime）
-mount -t nfs noatime,nodiratime 192.168.1.21:/data /mnt
-# 安全加优化的挂载方式（nosuid、noexec、nodev、noatime、nodiratime、intr、rsize、wsize）
-mount -t nfs -o nosuid,noexec,nodev,noatime,nodiratime,intr,rsize=131072,wsize=131072 192.168.1.21:/data /mnt
-# 默认挂载方式（无）
-mount -t nfs 192.168.24.7:/data /mnt
-```
+    # 查看是否已经挂载成功
+    [root@nfs-server ~]# df -h
+    Filesystem          Size  Used Avail Use% Mounted on
+    /dev/sda3            18G  1.6G   15G  10% /
+    tmpfs               491M     0  491M   0% /dev/shm
+    /dev/sda1           190M   61M  120M  34% /boot
+    192.168.0.1:/data   18G  1.6G   15G  10% /mnt
+
+    # 配置例子
+    /ceshi_test *(rw,sync,no_root_squash,nohide,no_root_squash,no_subtree_check,sync)
+    ```
+
+### 配置 Linux NFS 客户端
+    ```
+    # 启动 rpcbind 服务
+    [root@lamp01 ~]# /etc/init.d/rpcbind start
+    Starting rpcbind:                                   [  OK  ]
+
+    # 测试是否可以连接 NFS 服务器
+    [root@client ~]# showmount -e 192.168.1.21
+    Export list for 192.168.1.21:
+    /data *
+
+    # 挂载客户端 NFS 服务
+    [root@lamp01 ~]# mount -t nfs 192.168.1.21:/data /mnt
+
+    # 查看是否挂载成功
+    [root@lamp01 ~]# df -h
+    Filesystem          Size  Used Avail Use% Mounted on
+    /dev/sda3            18G  1.6G   15G  10% /
+    tmpfs               491M     0  491M   0% /dev/shm
+    /dev/sda1           190M   61M  120M  34% /boot
+    192.168.1.21:/data   18G  1.6G   15G  10% /mnt
+
+    # 查看 NFS 服务器完整参数配置（仔细看默认添加了很多参数，这里的 anonuid 用户、anongid 组）
+    [root@nfs-server /]# cat /var/lib/nfs/etab
+    /data   *(rw,sync,wdelay,hide,nocrossmnt,secure,root_squash,no_all_squash,no_subtree_check,secure_locks,acl,anonuid=65534,anongid=65534,sec=sys,rw,root_squash,no_all_squash)
+
+    # 查看用户组为 65534 的用户（nfsnobody 用户）
+    [root@nfs-server /]# grep '65534' /etc/passwd
+    nfsnobody:x:65534:65534:Anonymous NFS User:/var/lib/nfs:/sbin/nologin
+
+    # 更改目录所属用户、所属组
+    [root@nfs-server /]# chown -R nfsnobody.nfsnobody /data/
+
+    # 查看目录所属用户、所属组
+    [root@nfs-server /]# ls -ld /data/
+    drwxr-xr-x 2 nfsnobody nfsnobody 4096 9 月   8 07:16 /data/
+
+    > NFS 系统安全挂载
+
+    一般`NFS`服务器共享的只是普通的静态数据（图片、附件、视频等等），不需要执行 suid、exec 等权限，挂载的这个文件系统，只能作为存取至用，无法执行程序，对于客户端来讲增加了安全性，（如：很多木马篡改站点文件都是由上传入口上传的程序到存储目录，然后执行的）注意：非性能的参数越多，速度可能越慢
+
+    # 安全挂载参数（nosuid、noexec、nodev）
+    mount -t nfs nosuid,noexec,nodev,rw 192.168.1.21:/data /mnt
+
+    # 禁止更新目录及文件时间戳挂载（noatime、nodiratime）
+    mount -t nfs noatime,nodiratime 192.168.1.21:/data /mnt
+
+    # 安全加优化的挂载方式（nosuid、noexec、nodev、noatime、nodiratime、intr、rsize、wsize）
+    mount -t nfs -o nosuid,noexec,nodev,noatime,nodiratime,intr,rsize=131072,wsize=131072 192.168.1.21:/data /mnt
+
+    # 默认挂载方式（无）
+    mount -t nfs 192.168.24.7:/data /mnt
+    ```
+### 配置 Windows NFS 客户端
+
+    ```
+    启动 windos NFS 客户端服务：
+    1. 打开控制面板 ->程序 ->打开或关闭 windows 功能 ->NFS 客户端
+    勾选 NFS 客户端，即开启 windows NFS 客户端服务。
+
+    2.win+R->cmd
+    mount 192.168.1.21:/data X:
+    成功挂载，打开我的点脑，你即可在你网络位置看到 X: 盘了
+
+    X: 你挂载的网络文件盘 -- 注意，可能会与你的其他盘冲突，你可以随意更改
+
+    3. 取消挂载
+    直接在 我的电脑 里面鼠标点击取消映射网络驱动器 X:
+    或者：win+R->cmd
+    输入：umount X:
+    (umount -a 取消所有网络驱动器）
+    ```
+
 ### 常见问题
 #### rpcbind 安装失败
 
