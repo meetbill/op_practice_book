@@ -5,6 +5,7 @@
     * [安装依赖](#安装依赖)
     * [下载](#下载)
     * [编译安装](#编译安装)
+        * [编译时将 ssl 模块静态编译](#编译时将-ssl-模块静态编译)
 * [nginx 服务架构](#nginx-服务架构)
     * [模块化结构](#模块化结构)
         * [模块化开发](#模块化开发)
@@ -83,6 +84,16 @@
 ```
 > * --prefix=/opt/X_nginx/nginx 安装目录
 > * --with-http_ssl_module 添加 https 支持
+
+### 编译时将 ssl 模块静态编译
+
+```
+./configure  --prefix=/opt/X_nginx/nginx \
+             --with-openssl=../openssl-1.0.2l \
+             --with-zlib=../zlib-1.2.11 \
+             --with-pcre=../pcre-8.41 \
+             --with-http_ssl_module
+```
 
 # nginx 服务架构
 
