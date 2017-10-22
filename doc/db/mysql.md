@@ -649,6 +649,12 @@ mysql>
 ### 为用户授权
 使用***GRANT 命令***为用户授予数据库操作的权力，比如增删改查等。
 
+```
+> GRANT ALL PRIVILEGES ON *.* TO 'myuser'@'%' IDENTIFIED BY 'mypassword' WITH GRANT OPTION;  
+> FLUSH   PRIVILEGES; 
+```
+其中 `%` 表示对所有主机开放，只对本机开放时可以写 `127.0.0.1`
+
 ### 修改用户密码
 SET PASSWORD（推荐）,MySQL5.7.6 及以后：
 
