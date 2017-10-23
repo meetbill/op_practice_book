@@ -40,7 +40,7 @@
 # NTP
 ## 简介
 
-Network Time Protocol（NTP） 是用来使计算机时间同步化的一种协议，它可以使计算机对其服务器或时钟源（如石英钟，GPS 等等）做同步化，它可以提供高精准度的时间校正（LAN 上与标准间差小于 1 毫秒，WAN 上几十毫秒），且可使用加密确认的方式来防止恶毒的协议攻击。默认使用 `UDP 123 端口`
+Network Time Protocol-NTP 是用来使计算机时间同步化的一种协议，它可以使计算机对其服务器或时钟源（如石英钟，GPS 等等）做同步化，它可以提供高精准度的时间校正（LAN 上与标准间差小于 1 毫秒，WAN 上几十毫秒），且可使用加密确认的方式来防止恶毒的协议攻击。默认使用 `UDP 123 端口`
 
 NTP 提供准确时间，首先需要一个准确的 UTC 时间来源，NTP 获得 UTC 的时间来源可以从原子钟、天文台、卫星，也可从 Internet 上获取。时间服务器按照 NTP 服务器的等级传播，根据离外部 UTC 源的远近将所有服务器归入不用的层 (Stratum) 中。Stratum-1 在顶层由外部 UTC 接入，stratum-1 的时间服务器为整个系统的基础，Stratum 的总数限制在 15 以内。下图为 NTP 层次图：
 
@@ -55,10 +55,18 @@ NTP 提供准确时间，首先需要一个准确的 UTC 时间来源，NTP 获�
 ```
 # grep -vE '^#|^$' /etc/ntp.conf
 driftfile /var/lib/ntp/drift
+
+# 默认对所有 client 拒绝所有的操作
 restrict default kod nomodify notrap nopeer noquery
 restrict -6 default kod nomodify notrap nopeer noquery
+
+# 允许本机地址的一切操作
 restrict 127.0.0.1
 restrict -6 ::1
+
+# 允许其他机器连接
+restrict default kod nomodify
+
 server 0.centos.pool.ntp.org
 server 1.centos.pool.ntp.org
 server 2.centos.pool.ntp.org
@@ -68,17 +76,26 @@ keys /etc/ntp/keys
 
 ### 配置选项说明
 
-* `driftfile` 选项， 则指定了用来保存系统时钟频率偏差的文件。 ntpd 程序使用它来自动地补偿时钟的自然漂移， 从而使时钟即使在切断了外来时源的情况下， 仍能保持相当的准确度。另外，driftfile 选项也保存上一次响应所使用的 NTP 服务器的信息。 这个文件包含了 NTP 的内部信息， 它不应被任何其他进程修改。`无需更改`
-* `restrict default kod nomodify notrap nopeer noquery`  默认拒绝所有 NTP 客户端的操作 [ restrict <IP 地址》 《子网掩码》|《网段》 [ignore|nomodiy|notrap|notrust|nknod ] 指定可以通信的 IP 地址和网段。如果没有指定选项，表示客户端访问 NTP 服务器没有任何限制
-	* `ignore`:     关闭所有 NTP 服务
-	* `nomodiy`:    表示客户端不能更改 NTP 服务器的时间参数，但可以通过 NTP 服务器进行时间同步
-	* `notrust`:    拒绝没有通过认证的客户端
-	* `knod`:       kod 技术科阻止 "Kiss of Death" 包（一种 DOS 攻击）对服务器的破坏，使用 knod 开启功能
-	* `nopeer`:     不与其它同一层的 NTP 服务器进行同步
+* `driftfile` 选项， 用来保存系统时钟频率偏差。 ntpd 程序使用它来自动地补偿时钟的自然漂移， 从而使时钟即使在切断了外来时源的情况下， 仍能保持相当的准确度。`无需更改`
+* `restrict` 语法为：restrict IP mask 掩码 参数
+    * IP 规定了允许或不允许访问的地址（此处若为 default，即为 0.0.0.0 所有 ip），配合掩码可以对某一网段进行限制。
+        * `ignore`:     关闭所有 NTP 服务
+        * `nomodiy`:    客户端不能修改服务端的时间，但可以作为客户端的校正服务器
+        * `notrust`:    拒绝没有通过认证的客户端
+        * `kod`:        kod 技术科阻止 "Kiss of Death" 包（一种 DOS 攻击）对服务器的破坏
+        * `nopeer`:     不与其它同一层的 NTP 服务器进行同步
+        * `noquery`:    不提供时间查询，即用户端不能使用 ntpq，ntpc 等命令来查询 ntp 服务器
+        * `notrap`:     不提供trap远端事件登陆的功能
 * `server [IP|FQDN|prefer]`指该服务器上层 NTP Server，使用 prefer 的优先级最高，没有使用 prefer 则按照配置文件顺序由高到低，默认情况下至少 15min 和上层 NTP 服务器进行时间校对
 * `fudge`:          可以指定本地 NTP Server 层，如 `fudge 127.0.0.1 stratum 9`
 * `broadcast 网段 子网掩码`:    指定 NTP 进行时间广播的网段，如`broadcast 192.168.1.255`
 * `logfile`:        可以指定 NTP Server 日志文件
+
+**bill 提醒**
+```
+restrict 用于权限控制，server 用于设定上级时间服务器
+主要是这两个参数
+```
 
 几个与 NTP 相关的配置文件：` /usr/share/zoneinfo/`、`/etc/sysconfig/clock`、`/etc/localtime`
 
@@ -108,9 +125,9 @@ synchronised to NTP server (192.168.0.18) at stratum 4
 
 ```
 # ntpq -np
-     remote           refid      st t when poll reach   delay   offset  jitter
-==============================================================================
-*192.168.0.18       202.112.31.197   3 u  101 1024  377   14.268    0.998   0.143
+   remote refid  st t when poll reach   delay   offset  jitter
+==============================================================
+* NTPD(IP)  IP   3  u  101 1024  377   14.268    0.998   0.143
 ```
 
 输出说明：
