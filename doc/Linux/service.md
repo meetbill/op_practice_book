@@ -3,9 +3,13 @@
 <!-- vim-markdown-toc GFM -->
 * [NTP](#ntp)
     * [简介](#简介)
-    * [NTP Server 安装配置](#ntp-server-安装配置)
+    * [ntpd](#ntpd)
+        * [NTP Server 安装配置](#ntp-server-安装配置)
         * [配置选项说明](#配置选项说明)
-    * [相关命令](#相关命令)
+        * [相关命令](#相关命令)
+    * [chrony](#chrony)
+        * [chrony server](#chrony-server)
+        * [chrony client](#chrony-client)
 * [Cron](#cron)
     * [Cron 基础](#cron-基础)
         * [什么是 cron, crond, crontab](#什么是-cron-crond-crontab)
@@ -46,7 +50,8 @@ NTP 提供准确时间，首先需要一个准确的 UTC 时间来源，NTP 获�
 
 ![Screenshot](../../images/linux_service/Network_Time_Protocol_servers_and_clients.png)
 
-## NTP Server 安装配置
+## ntpd
+### NTP Server 安装配置
 
 关于 NTP 服务器的安装，根据不同版本安装方法也不同。REDHAT 系统则可以使用 yum 安装，Ubuntu 系列可以使用 `apt-get` 安装，这里不做具体的介绍，主要详细介绍配置文件的信息。
 
@@ -110,7 +115,7 @@ cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 sed -i 's:ZONE=.*:ZONE="Asia/Shanghai":g' /etc/sysconfig/clock
 ```
 
-## 相关命令
+### 相关命令
 
 `ntpstat` 查看同步状态
 
@@ -143,6 +148,58 @@ synchronised to NTP server (192.168.0.18) at stratum 4
 * `jitter`:  与 BIOS 硬件时间差异
 
 `ntpdate` 同步当前时间：`ntpdate NTP 服务器地址`
+
+## chrony
+
+使用安装命令安装 chrony 包即可
+
+### chrony server
+
+配置文件: /etc/chrony.conf
+
+对于 chrony server 来说，主要配置两项，上游的 ntp 服务器和对下游的权限
+
+> * 上游的 ntp 服务器
+>   * 有固定的 ntp 服务器或者可连互联网
+>     * 配置 `server 0.centos.pool.ntp.org iburst` 即可
+>   * 无外网环境使用本地的时间进行往下游同步
+>     * 配置 `local stratum 10`
+> * 对下游的权限
+>   * `allow 10.0.0.0/24` 对 10.0.0 网段开放
+>   * `allow 0/0` 对所有 IP 开放
+
+**bill 提醒**
+```
+(1)无外网环境时，如果没有设置 local stratum 0，下游服务器显示的状态是不可达状态
+(2)不加 allow 记录时，默认拒绝所有连接
+```
+启动并设置开机自启
+```
+# systemctl enable chronyd.service
+# systemctl start chronyd.service
+```
+### chrony client
+
+对于 client 来说，只需要配置上游的服务器
+
+配置文件: /etc/chrony.conf
+
+添加 `server 上游服务器IP/主机名 iburst`即可
+
+启动并设置开机自启
+```
+# systemctl enable chronyd.service
+# systemctl start chronyd.service
+```
+
+**查看同步状态**
+
+```
+#chronyc sources -v
+```
+上面命令会输出上游服务器的连接状态
+> * * 正常
+> * ? 不可达
 
 # Cron
 ## Cron 基础
