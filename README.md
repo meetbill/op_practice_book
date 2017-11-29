@@ -4,8 +4,9 @@
 
 ## 阅读本书
 
-> * [网上阅读（推荐）](https://billwang139967.gitbooks.io/op_practice_book/content/)
-> * [下载本书 (pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
+> * [网上阅读(gitbooks)](https://billwang139967.gitbooks.io/op_practice_book/content/)----gitbooks 网络被墙的厉害，可以通过下面链接在 github 上阅读
+> * [网上阅读(github)](https://github.com/BillWang139967/op_practice_book/blob/master/SUMMARY.md)
+> * [下载本书(pdf)](https://www.gitbook.com/download/pdf/book/billwang139967/op_practice_book)
 
 ## 相关内容
 

@@ -215,7 +215,7 @@ Net 模式（没有独立 IP 时使用这种方式）
 
 ## 管理 kvm 上的虚拟机
 
-* Virsh list           #显示本地活动虚拟机
+* virsh list           #显示本地活动虚拟机
 * virsh list  --all    #显示本地所有的虚拟机（活动的 + 不活动的）
 * virsh start x        #启动名字为 x 的非活动虚拟机
 * virsh shutdown x     #正常关闭虚拟机
