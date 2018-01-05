@@ -170,8 +170,9 @@ synchronised to NTP server (192.168.0.18) at stratum 4
 
 **bill 提醒**
 ```
-(1)无外网环境时，如果没有设置 local stratum 0，下游服务器显示的状态是不可达状态
-(2)不加 allow 记录时，默认拒绝所有连接
+(1) 无外网环境时，如果没有设置 local stratum 0，下游服务器显示的状态是不可达状态
+(2) 不加 allow 记录时，默认拒绝所有连接
+(3) chrony 端口为 udp 123
 ```
 启动并设置开机自启
 ```
@@ -198,8 +199,8 @@ synchronised to NTP server (192.168.0.18) at stratum 4
 #chronyc sources -v
 ```
 上面命令会输出上游服务器的连接状态
-> * * 正常
-> * ? 不可达
+> * `* 正常`
+> * `? 不可达`
 
 # Cron
 ## Cron 基础
