@@ -1,48 +1,48 @@
 # Linux 工具篇
 
 <!-- vim-markdown-toc GFM -->
-* [编程相关](#编程相关)
-    * [vim IDE 工具](#vim-ide-工具)
-    * [Git 分布式管理系统](#git-分布式管理系统)
-        * [Git 基础](#git-基础)
-        * [知识点](#知识点)
-        * [其他操作](#其他操作)
-* [运维相关](#运维相关)
-    * [sed](#sed)
-    * [awk](#awk)
-        * [历史](#历史)
-        * [基础知识](#基础知识)
-        * [脚本](#脚本)
-        * [运算与编程](#运算与编程)
-    * [排查 java CPU 性能问题](#排查-java-cpu-性能问题)
-        * [用法](#用法)
-        * [示例](#示例)
-* [系统相关](#系统相关)
-    * [screen](#screen)
-        * [screen 使用](#screen-使用)
-        * [开启 screen 状态栏](#开启-screen-状态栏)
-* [网络相关](#网络相关)
-    * [curl](#curl)
-        * [curl 基础](#curl-基础)
-        * [curl 深入](#curl-深入)
-    * [tcpdump](#tcpdump)
-        * [tcp 三次握手和四次挥手](#tcp-三次握手和四次挥手)
-        * [tcpdump 使用](#tcpdump-使用)
-    * [nc](#nc)
-        * [语法](#语法)
-        * [TCP 端口扫描](#tcp-端口扫描)
-        * [扫描 UDP 端口](#扫描-udp-端口)
+* [1 编程相关](#1-编程相关)
+    * [1.1 vim IDE 工具](#11-vim-ide-工具)
+    * [1.2 Git 分布式管理系统](#12-git-分布式管理系统)
+        * [1.2.1 Git 基础](#121-git-基础)
+        * [1.2.2 知识点](#122-知识点)
+        * [1.2.3 其他操作](#123-其他操作)
+* [2 运维相关](#2-运维相关)
+    * [2.1 sed](#21-sed)
+    * [2.2 awk](#22-awk)
+        * [2.2.1 基础知识](#221-基础知识)
+        * [2.2.2 脚本](#222-脚本)
+        * [2.2.3 运算与编程](#223-运算与编程)
+    * [2.3 排查 java CPU 性能问题](#23-排查-java-cpu-性能问题)
+        * [2.3.1 用法](#231-用法)
+        * [2.3.2 示例](#232-示例)
+* [3 系统相关](#3-系统相关)
+    * [3.1 screen](#31-screen)
+        * [3.1.1 screen 使用](#311-screen-使用)
+        * [3.1.2 开启 screen 状态栏](#312-开启-screen-状态栏)
+* [4 网络相关](#4-网络相关)
+    * [4.1 curl](#41-curl)
+        * [4.1.1 HTTP 请求](#411-http-请求)
+        * [4.1.2 curl 基础](#412-curl-基础)
+        * [4.1.3 curl 深入](#413-curl-深入)
+    * [4.2 tcpdump](#42-tcpdump)
+        * [4.2.1 tcp 三次握手和四次挥手](#421-tcp-三次握手和四次挥手)
+        * [4.2.2 tcpdump 使用](#422-tcpdump-使用)
+    * [4.3 nc](#43-nc)
+        * [4.3.1 语法](#431-语法)
+        * [4.3.2 TCP 端口扫描](#432-tcp-端口扫描)
+        * [4.3.3 扫描 UDP 端口](#433-扫描-udp-端口)
 
 <!-- vim-markdown-toc -->
 
-# 编程相关
-## vim IDE 工具
+# 1 编程相关
+## 1.1 vim IDE 工具
 
 * [VIM 一键 IDE](https://github.com/BillWang139967/Vim)
 
-## Git 分布式管理系统
+## 1.2 Git 分布式管理系统
 
-### Git 基础
+### 1.2.1 Git 基础
 
 **环境配置**
 
@@ -72,7 +72,7 @@
 + `git checkout --track origin/<origin-branch-name>` : 跟踪远程分支（创建跟踪远程分支，Git 在 `git push` 的时候不需要指定 `origin` 和 `branch-name` ，其实当我们 `clone` 一个 repo 到本地的时候，`master` 分支就是 origin/master 的跟踪分支，所以提交的时候直接 `git push`)。
 + `git push origin :<origin-branch-name>` : 删除远程分支
 
-实践---主分支 Master/ 开发分支 Develop
+实践 --- 主分支 Master/ 开发分支 Develop
 ```
 主分支只用来分布重大版本，日常开发应该在另一条分支上完成。我们把开发用的分支，叫做 Develop。
 
@@ -107,7 +107,7 @@ git branch -d develop
     git config --global alias.ci commit
     git config --global alias.st status
 
-### 知识点
+### 1.2.2 知识点
 
 基本命令让你快速的上手使用 Git，知识点能让你更好的理解 Git。
 
@@ -206,7 +206,7 @@ Git 的核心数是很简单的，就是一个链表（或者一棵树更准确�
 
 上面我们说过 `git pull` 等价于 `git fetch` 和 `git merge` 两条命令。当我们 `clone` 一个 repo 到本地时，就有了本地分支和远端分支的概念（假定我们只有一个主分支），本地分支是 `master`，远端分支是 `origin/master`。通过上面我们对 Git 数据结构的理解，`master` 和 `origin/master` 可以想成是指向最新 commit 结点的两个指针。刚 `clone` 下来的 repo，`master` 和 `origin/master` 指针指向同一个结点，我们在本地提交一次，`origin` 结点就更新一次，此时 `master` 和 `orgin/master` 就不再相同了。很有可能别人已经 commit 改 repo 很多次了，并且进行了提交。那么我们的本地的 `origin/master` 就不再是远程服务器上的最新的位置了。 `git fetch` 干的就是从服务器上同步服务器上最新的 `origin/master` 和一些服务器上新的记录 / 文件到本地。而 `git merge` 就是合并操作了（解决文件冲突）。`git push` 是把本地的 `origin/master` 和 `master` 指向相同的位置，并且推送到远程的服务器。
 
-### 其他操作
+### 1.2.3 其他操作
 
 **解决 GitHub commit 次数过多.git 文件过大**
 
@@ -237,17 +237,15 @@ fatal: HTTP request failed
 #git config --global http.sslVerify false
 
 ```
-# 运维相关
-## sed
+# 2 运维相关
+## 2.1 sed
 
-## awk
-### 历史
-
+## 2.2 awk
 AWK 是贝尔实验室 1977 年搞出来的文本处理工具。
 
 之所以叫 AWK 是因为其取了三位创始人 Alfred Aho，Peter Weinberger, 和 Brian Kernighan 的 Family Name 的首字符
 
-### 基础知识
+### 2.2.1 基础知识
 **分隔符**
 
 默认情况下， awk 使用空格当作分隔符。分割后的字符串可以使用 $1, $2 等访问。
@@ -321,7 +319,7 @@ awk 支持递归引号。单引号内可以输出转义的单引号，双引号�
 awk 'BEGIN{print "\x27"}'
 ```
 
-### 脚本
+### 2.2.2 脚本
 
 ```text
 BEGIN{ 这里面放的是执行前的语句 }
@@ -329,7 +327,7 @@ END {这里面放的是处理完所有的行后要执行的语句 }
 {这里面放的是处理每一行时要执行的语句}
 ```
 
-### 运算与编程
+### 2.2.3 运算与编程
 
 awk 是弱类型语言，变量可以是串，也可以是数字，这依赖于实际情况。
 所有的数字都是浮点型。
@@ -387,7 +385,7 @@ awk -F/ '{printf "%s-%s-%s\n",$1,$2,$3}'  date
 ```bash
 awk '{sum+=$5} END {print sum}'
 ```
-## 排查 java CPU 性能问题
+## 2.3 排查 java CPU 性能问题
 
 [show-busy-java-threads.sh](https://github.com/BillWang139967/op_practice_code/blob/master/Linux/op/show-busy-java-threads.sh)
 ```
@@ -409,7 +407,7 @@ PS，如何操作可以参见 [@bluedavy](http://weibo.com/bluedavy) 的《分�
 
 查问题时，会要多次这样操作以确定问题，上面过程**太繁琐太慢了**。
 
-### 用法
+### 2.3.1 用法
 
 ```bash
 show-busy-java-threads.sh
@@ -427,7 +425,7 @@ show-busy-java-threads.sh -c 《要显示的线程栈数》 -p 《指定的 Java
 sudo show-busy-java-threads.sh
 ```
 
-### 示例
+### 2.3.2 示例
 
 ```bash
 $ show-busy-java-threads.sh
@@ -477,14 +475,14 @@ $ show-busy-java-threads.sh
     - 优化性能，通过`read -a`简化反复的`awk`操作 #51
     - 发现并解决`jstack`非当前用户`Java`进程的问题 #50
 
-# 系统相关
-## screen
+# 3 系统相关
+## 3.1 screen
 
 现在很多时候我们的开发环境都已经部署到云端了，直接通过 SSH 来登录到云端服务器进行开发测试以及运行各种命令，一旦网络中断，通过 SSH 运行的命令也会退出，这个发让人发疯的。
 
 好在有 screen 命令，它可以解决这些问题。我使用 screen 命令已经有三年多的时间了，感觉还不错。
 
-### screen 使用
+### 3.1.1 screen 使用
 
 **新建一个 Screen Session**
 
@@ -531,15 +529,34 @@ $ Ctrl + a ESC
 
 可以 Page Up 也可以 Page Down。
 
-### 开启 screen 状态栏
+### 3.1.2 开启 screen 状态栏
 
 ```
 #curl -o screen.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/tools/screen.sh
 #sh screen.sh
 ```
-# 网络相关
-## curl
-### curl 基础
+# 4 网络相关
+## 4.1 curl
+### 4.1.1 HTTP 请求
+
+GET 和 POST 是 HTTP 请求的两种基本方法，最直观的区别就是 GET 把参数包含在 URL 中，POST 通过 request body 传递参数。
+
+```
+    在万维网世界，TCP 就像汽车，我们用 TCP 来运输数据，它很可靠，
+从来不会发生丢件少件的现象。但是如果路上跑的全是看起来一模一样
+的汽车，那这个世界看起来是一团混乱，送急件的汽车可能被前面满载
+货物的汽车拦堵在路上，整个交通系统一定会瘫痪。为了避免这种情况
+发生，交通规则 HTTP 诞生了。HTTP 给汽车运输设定了好几个服务类别，
+有 GET, POST, PUT, DELETE 等等，HTTP 规定，当执行 GET 请求的时候，
+要给汽车贴上 GET 的标签（设置 method 为 GET)，而且要求把传送的数
+据放在车顶上 (url) 以方便记录。如果是 POST 请求，就要在车上贴上 
+POST 的标签，并把货物放在车厢里。
+
+    当然，你也可以在 GET 的时候往车厢内偷偷藏点货物，但是这是很不
+光彩；也可以在 POST 的时候在车顶上也放一些数据。
+```
+
+### 4.1.2 curl 基础
 在介绍前，我需要先做两点说明：
 
 1. 下面的例子中会使用 [httpbin.org](http://httpbin.org/) ，httpbin 提供客户端测试 http 请求的服务，非常好用，具体可以查看他的网站。
@@ -548,6 +565,8 @@ $ Ctrl + a ESC
 下面开始简单介绍几个命令：
 
 **get**
+
+> * curl protocol://address:port/url?args
 
 直接以个 GET 方式请求一个 url，输出返回内容：
 
@@ -573,6 +592,11 @@ curl httpbin.org
 ```
 
 **post**
+
+> * curl --data "args" "protocol://address:port/url"
+>   * -d/--data <data>   HTTP POST方式传送数据
+>　 * --data-ascii <data>  以ascii的方式post数据
+>   * --data-binary <data> 以二进制的方式post数据
 
 使用 `--request` 指定请求类型， `--data` 指定数据，例如：
 
@@ -639,7 +663,7 @@ curl httpbin.org/post --form "name=tomshine" --form "f=@/Users/tomshine/test.txt
 }
 ```
 
-### curl 深入
+### 4.1.3 curl 深入
 **显示头信息**
 
 使用 `--include` 在输出中包含头信息，使用 `--head` 只返回头信息，例如：
@@ -857,10 +881,10 @@ curl httpbin.org/basic-auth/tomshine/123456 --user tomshine:123456
 
 
 
-## tcpdump
+## 4.2 tcpdump
 
 
-### tcp 三次握手和四次挥手
+### 4.2.1 tcp 三次握手和四次挥手
 
 **三次握手**
 
@@ -966,7 +990,7 @@ seq 1823848744:1823848808 意思是初始序列号：结束序列号，其实后
 
 4. 在很多时候，TCP 连接的断开都会由 TCP 层自动进行，例如你 CTRL+C 终止你的程序，TCP 连接依然会正常关闭。
 
-### tcpdump 使用
+### 4.2.2 tcpdump 使用
 
 **针对特定网口抓包 (-i 选项）**
 
@@ -984,11 +1008,11 @@ seq 1823848744:1823848808 意思是初始序列号：结束序列号，其实后
 
 > tcpdump -n -tttt -i eth0
 
-## nc
+## 4.3 nc
 
 nc 检测端口更方便，同时批量进行检测端口的话是非常好的工具
 
-### 语法
+### 4.3.1 语法
 
 nc [-hlnruz][-g《网关...>][-G《指向器数目》][-i《延迟秒数》][-o《输出文件》][-p《通信端口》][-s《来源位址》][-v...][-w《超时秒数》][主机名称][通信端口...]
     ```
@@ -1009,7 +1033,7 @@ nc [-hlnruz][-g《网关...>][-G《指向器数目》][-i《延迟秒数》][-o�
     -z 使用 0 输入 / 输出模式，只在扫描通信端口时使用。
 
     ```
-### TCP 端口扫描
+### 4.3.2 TCP 端口扫描
     ```
     # nc -v -z -w2 10.20.144.145 1-100
     Connection to 10.20.144.145 22 port [tcp/ssh] succeeded!
@@ -1023,7 +1047,7 @@ nc [-hlnruz][-g《网关...>][-G《指向器数目》][-i《延迟秒数》][-o�
     ```
     不加 -v 时仅输出 succeeded 的结果
 
-### 扫描 UDP 端口
+### 4.3.3 扫描 UDP 端口
     ```
     # nc -u -z -w2 10.20.144.145 1-1000 // 扫描 10.20.144.145 的端口 范围是 1-1000
     扫描指定端口
