@@ -24,6 +24,7 @@
     * [Docker 三大核心概念](#docker-三大核心概念)
     * [Docker 镜像使用](#docker-镜像使用)
         * [导入导出镜像](#导入导出镜像)
+    * [docker 网络](#docker-网络)
     * [私有仓库](#私有仓库)
         * [一、环境准备](#一环境准备)
             * [1. ip](#1-ip)
@@ -139,7 +140,7 @@ sudo usermod -aG docker your_username
 ```
 #### 8. 其他配置
 
-设置 ipv4 转发(centos 上需要配置)，实践中发现 Ubuntu 和 Suse 上无需配置
+设置 ipv4 转发 (centos 上需要配置），实践中发现 Ubuntu 和 Suse 上无需配置
 
 查看
 ```
@@ -198,9 +199,34 @@ Docker 用容器来运行应用。容器是从镜像创建出来的实例（好�
 导入 #docker load -i zabbix.tar
 
 ```
-注意:导出镜像时使用 imagesid 导出后，如下，导入镜像时 REPOSITORY 和 TAG 会为 <none>(我个人认为是一个 imagesid 可对应多组 REPOSITORY 和 TAG 的原因)
+注意：导出镜像时使用 imagesid 导出后，如下，导入镜像时 REPOSITORY 和 TAG 会为 <none>（我个人认为是一个 imagesid 可对应多组 REPOSITORY 和 TAG 的原因）
 #docker save -o zabbix.tar imagesid
 ```
+
+## docker 网络
+docker 的网络模式大致可以分成五种类型，在安装完 docker 之后，宿主机上会创建三个网络，分别是 bridge 网络，host 网络，none 网络，可以使用 docker network ls 命令查看。
+
+bridge方式(默认)、none方式、host方式、container复用方式
+
+1、bridge方式： --network=bridge
+
+容器与Host网络是连通的： 
+eth0实际上是veth pair的一端，另一端（vethb689485）连在docker0网桥上 
+通过Iptables实现容器内访问外部网络
+
+2、none方式： --network=none 
+
+这样创建出来的容器完全没有网络，将网络创建的责任完全交给用户。可以实现更加灵活复杂的网络。 
+另外这种容器可以可以通过link容器实现通信。
+
+3、host方式： --network=host
+
+容器和主机公用网络资源，使用宿主机的IP和端口 
+这种方式是不安全的。如果在隔离良好的环境中（比如租户的虚拟机中）使用这种方式，问题不大。
+
+4、container复用方式： --network=container:name or id
+
+新创建的容器和已经存在的一个容器共享一个IP网络资源
 
 ## 私有仓库
 ### 一、环境准备
