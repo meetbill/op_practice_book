@@ -1,58 +1,49 @@
 # Docker
 
 <!-- vim-markdown-toc GFM -->
-* [centos7 安装 docker](#centos7-安装-docker)
-    * [一 准备](#一-准备)
-        * [1. centos7 x86-64](#1-centos7-x86-64)
-        * [2. 查看版本](#2-查看版本)
-    * [二 安装 docker](#二-安装-docker)
-        * [本地源安装](#本地源安装)
-        * [网络源安装](#网络源安装)
-            * [1. 更新系统](#1-更新系统)
-            * [2. 添加 docker 版本仓库](#2-添加-docker-版本仓库)
-            * [3. 安装 docker](#3-安装-docker)
-            * [4. 设置 docker 开机自启动](#4-设置-docker-开机自启动)
-            * [5. 启动 Docker daemon](#5-启动-docker-daemon)
-            * [6. 验证 docker 安装是否成功](#6-验证-docker-安装是否成功)
-            * [7. 创建 docker 组](#7-创建-docker-组)
-            * [8. 其他配置](#8-其他配置)
-    * [三 卸载 docker](#三-卸载-docker)
-        * [1. 列出安装的 docker](#1-列出安装的-docker)
-        * [2. 删除安装包](#2-删除安装包)
-        * [3. 删除数据文件](#3-删除数据文件)
-* [Docker 使用](#docker-使用)
-    * [Docker 三大核心概念](#docker-三大核心概念)
-    * [Docker 镜像使用](#docker-镜像使用)
-        * [导入导出镜像](#导入导出镜像)
-    * [docker 网络](#docker-网络)
-    * [私有仓库](#私有仓库)
-        * [一、环境准备](#一环境准备)
-            * [1. ip](#1-ip)
-        * [二、搭建](#二搭建)
-            * [1. 搭建仓库 registry](#1-搭建仓库-registry)
-        * [2. 基于私有仓库镜像运行容器](#2-基于私有仓库镜像运行容器)
-            * [3. 访问私有仓库](#3-访问私有仓库)
-            * [4. 为基础镜像打个标签](#4-为基础镜像打个标签)
-            * [5. 改 Docker 配置文件制定私有仓库 url](#5-改-docker-配置文件制定私有仓库-url)
-            * [6. 提交镜像到本地私有仓库中](#6-提交镜像到本地私有仓库中)
-            * [7. 查看私有仓库是否存在对应的镜像](#7-查看私有仓库是否存在对应的镜像)
-        * [三、在 docker 客户机验证](#三在-docker-客户机验证)
-            * [1. 修改 Docker 配置文件](#1-修改-docker-配置文件)
-            * [2. 从私有仓库中下载已有的镜像](#2-从私有仓库中下载已有的镜像)
-    * [dockerfile 最佳实践](#dockerfile-最佳实践)
+* [1 centos7 安装 docker](#1-centos7-安装-docker)
+    * [1.1 准备](#11-准备)
+    * [1.2 安装 docker](#12-安装-docker)
+        * [1.2.1 本地源安装](#121-本地源安装)
+        * [1.2.2 网络源安装](#122-网络源安装)
+    * [1.3 卸载 docker](#13-卸载-docker)
+        * [1.3.1 列出安装的 docker](#131-列出安装的-docker)
+        * [1.3.2 删除安装包](#132-删除安装包)
+        * [1.3.3 删除数据文件](#133-删除数据文件)
+* [2 Docker 基础](#2-docker-基础)
+    * [2.1 Docker 三大核心概念](#21-docker-三大核心概念)
+    * [2.2 Docker 镜像使用](#22-docker-镜像使用)
+        * [2.2.1 docker tag](#221-docker-tag)
+        * [2.2.2 导入导出镜像](#222-导入导出镜像)
+    * [2.3 docker 网络](#23-docker-网络)
+    * [2.4 私有仓库](#24-私有仓库)
+        * [2.4.1 环境准备](#241-环境准备)
+        * [2.4.2 搭建](#242-搭建)
+        * [2.4.3 在 docker 客户机验证](#243-在-docker-客户机验证)
+* [3 dockerfile 最佳实践](#3-dockerfile-最佳实践)
+* [4 docker 应用](#4-docker-应用)
+    * [4.1 mysql](#41-mysql)
+* [5 其他](#5-其他)
+    * [5.1 centos 6.5 上安装docker](#51-centos-65-上安装docker)
+    * [5.2 Alpine Linux](#52-alpine-linux)
+* [6 docker 常见问题](#6-docker-常见问题)
+    * [6.1 docker 容器故障致无法启动解决实例](#61-docker-容器故障致无法启动解决实例)
+    * [6.2 启动容器失败](#62-启动容器失败)
+    * [6.3 centos7 上运行容器挂载卷没有写入权限](#63-centos7-上运行容器挂载卷没有写入权限)
 
 <!-- vim-markdown-toc -->
 
-# centos7 安装 docker
-## 一 准备
-### 1. centos7 x86-64
-### 2. 查看版本
+# 1 centos7 安装 docker
+## 1.1 准备
+centos7 x86-64
+
+查看版本
 ```
 #uname -r
 3.10.0-123.el7.x86_64
 ```
-## 二 安装 docker
-### 本地源安装
+## 1.2 安装 docker
+### 1.2.1 本地源安装
 
 Centos 7.3 离线安装 docker-ce(1703)
 
@@ -64,12 +55,8 @@ Centos 7.3 离线安装 docker-ce(1703)
 [root@meetbill ~]#systemctl start docker
 
 ```
-### 网络源安装
-#### 1. 更新系统
-```
-#yum update -y
-```
-#### 2. 添加 docker 版本仓库
+### 1.2.2 网络源安装
+**添加 docker 版本仓库**
 ```
 cat >/etc/yum.repos.d/docker.repo <<-'EOF'
 [dockerrepo]
@@ -87,7 +74,7 @@ gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
 EOF
 ```
-#### 3. 安装 docker
+**安装 docker**
 
 docker 在 17 年 3 月份后，Docker 分成了企业版（EE）和社区版（CE），转向基于时间的 YY.MM 形式的版本控制方案，17.03 相当于 1.13.1 版本
 ```
@@ -95,15 +82,15 @@ docker 在 17 年 3 月份后，Docker 分成了企业版（EE）和社区版（
 ```
 安装旧版本 (1.12) 方法 `yum install docker-engine`
 
-#### 4. 设置 docker 开机自启动
+**设置 docker 开机自启动**
 ```
 #systemctl enable docker.service
 ```
-#### 5. 启动 Docker daemon
+**启动 Docker daemon**
 ```
 #systemctl start docker
 ```
-#### 6. 验证 docker 安装是否成功
+**验证 docker 安装是否成功**
 ```
 #docker run --rm hello-world
 --------------------------------------------------- 以下是程序输出
@@ -132,13 +119,13 @@ Share images, automate workflows, and more with a free Docker Hub account:
 For more examples and ideas, visit:
  https://docs.docker.com/engine/userguide/
 ```
-#### 7. 创建 docker 组
+**创建 docker 组**
 
 将 host 下的普通用户添加到 docker 组中后，可以不使用 sudo 即可执行 docker 程序（只是减少了每次使用 sudo 时输入密码的过程罢了，其实 docker 本身还是以 sudo 的权限在运行的。)
 ```
 sudo usermod -aG docker your_username
 ```
-#### 8. 其他配置
+**其他配置**
 
 设置 ipv4 转发 (centos 上需要配置），实践中发现 Ubuntu 和 Suse 上无需配置
 
@@ -158,22 +145,22 @@ sudo usermod -aG docker your_username
 [root@meetbill ~]#sysctl net.ipv4.ip_forward
 
 ```
-## 三 卸载 docker
-### 1. 列出安装的 docker
+## 1.3 卸载 docker
+### 1.3.1 列出安装的 docker
 ```
 yum list installed | grep docker
 ```
-### 2. 删除安装包
+### 1.3.2 删除安装包
 ```
 sudo yum -y remove docker-engine.x86_64
 ```
-### 3. 删除数据文件
+### 1.3.3 删除数据文件
 ```
 rm -rf /var/lib/docker
 ```
 
-# Docker 使用
-## Docker 三大核心概念
+# 2 Docker 基础
+## 2.1 Docker 三大核心概念
 - 镜像 Image
 镜像就是一个只读的模板。比如，一个镜像可以包含一个完整的 Centos 系统，并且安装了 zabbix
 镜像可以用来创建 Docker 容器。
@@ -183,7 +170,7 @@ Docker 用容器来运行应用。容器是从镜像创建出来的实例（好�
 - 仓库 Repository
 个好理解了，就是放镜像的文件的场所。比如最大的公开仓库是 Docker Hub。
 
-## Docker 镜像使用
+## 2.2 Docker 镜像使用
 
 当运行容器时，使用的镜像如果在本地中不存在，docker 就会自动从 docker 镜像仓库中下载，默认是从 Docker Hub 公共镜像源下载。
 下面我们来学习：
@@ -192,7 +179,25 @@ Docker 用容器来运行应用。容器是从镜像创建出来的实例（好�
 > * 拖取公共镜像源中的镜像
 > * 创建镜像
 
-### 导入导出镜像
+### 2.2.1 docker tag
+
+docker tag : 标记本地镜像，将其归入某一仓库。
+
+**语法**
+```
+docker tag [OPTIONS] IMAGE[:TAG] [REGISTRYHOST/][USERNAME/]NAME[:TAG]
+```
+**实例**
+
+将镜像ubuntu:15.10标记为 runoob/ubuntu:v3 镜像。
+```
+root@runoob:~# docker tag ubuntu:15.10 runoob/ubuntu:v3
+root@runoob:~# docker images   runoob/ubuntu:v3
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+runoob/ubuntu       v3                  4e3b13c8a266        3 months ago        136.3 MB
+```
+
+### 2.2.2 导入导出镜像
 
 导出 #docker save -o zabbix.tar meetbill/zabbix
 
@@ -203,8 +208,8 @@ Docker 用容器来运行应用。容器是从镜像创建出来的实例（好�
 #docker save -o zabbix.tar imagesid
 ```
 
-## docker 网络
-docker 的网络模式大致可以分成五种类型，在安装完 docker 之后，宿主机上会创建三个网络，分别是 bridge 网络，host 网络，none 网络，可以使用 docker network ls 命令查看。
+## 2.3 docker 网络
+docker 的网络模式大致可以分成四种类型，在安装完 docker 之后，宿主机上会创建三个网络，分别是 bridge 网络，host 网络，none 网络，可以使用 docker network ls 命令查看。
 
 bridge方式(默认)、none方式、host方式、container复用方式
 
@@ -228,44 +233,47 @@ eth0实际上是veth pair的一端，另一端（vethb689485）连在docker0网�
 
 新创建的容器和已经存在的一个容器共享一个IP网络资源
 
-## 私有仓库
-### 一、环境准备
+## 2.4 私有仓库
+### 2.4.1 环境准备
 
-#### 1. ip
-
+ip
+```
 role	ip
 docker 仓库机	192.168.1.52
 docker 客户机	192.168.1.136
+```
 
-### 二、搭建
+### 2.4.2 搭建
 
-#### 1. 搭建仓库 registry
-
+**(1)搭建仓库 registry**
+```
 docker pull regsity
-
-### 2. 基于私有仓库镜像运行容器
+```
+**基于私有仓库镜像运行容器**
+```
 > docker run -d --name registry --restart always -p 5000:5000 -v  /data/registry:/var/lib/registry registry
-
-#### 3. 访问私有仓库
+```
+**(2)访问私有仓库**
+```
 >curl -X GET http://192.168.1.52:5000/v2/_catalog
 {"repositories":[]}   #私有仓库为空，没有提交新镜像到仓库中
-
-#### 4. 为基础镜像打个标签
+```
+**(3)为基础镜像打个标签**
 
 根据 images 建立 tag,xxxxxxx 为某镜像 id 或 name
 
 docker tag xxxxxxx 192.168.1.52:5000/zabbix
-
-#### 5. 改 Docker 配置文件制定私有仓库 url
+ 
+**(4)改 Docker 配置文件制定私有仓库 url**
 
 > echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
 > systemctl restart docker
 
-#### 6. 提交镜像到本地私有仓库中
+**(5)提交镜像到本地私有仓库中**
 
 docker push 192.168.1.52:5000/zabbix
 
-#### 7. 查看私有仓库是否存在对应的镜像
+**(6)查看私有仓库是否存在对应的镜像**
 
 root@localhost ~
 > curl -X GET http://192.168.1.52:5000/v2/_catalog
@@ -273,20 +281,22 @@ root@localhost ~
 > curl -X GET http://192.168.1.52:5000/v2/zabbix/tags/list
 {"name":"zabbix","tags":["latest"]}
 
-### 三、在 docker 客户机验证
+### 2.4.3 在 docker 客户机验证
 
-#### 1. 修改 Docker 配置文件
+**(1)修改 Docker 配置文件**
 
-> echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
-> systemctl restart docker
+```
+echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
+systemctl restart docker
+```
+**(2)从私有仓库中下载已有的镜像**
 
-#### 2. 从私有仓库中下载已有的镜像
-
-> docker pull 192.168.1.52:5000/centos
-
+```
+docker pull 192.168.1.52:5000/centos
+```
 至此，私有仓库已 OK
 
-## dockerfile 最佳实践
+# 3 dockerfile 最佳实践
 
 
 **1、挑选合适的基础镜像**
@@ -330,3 +340,114 @@ root@localhost ~
 > * 如果是使用 ADD 命令来获取网络资源，是不推荐的。网络资源应该使用 RUN wget 或者 curl 命令来获取。
 
 总之，优先使用 COPY
+
+
+Docker daemon日志的位置，根据系统不同各不相同。  
+* Ubuntu - /var/log/upstart/docker.log
+* CentOS - /var/log/daemon.log | grep docker
+* Red Hat Enterprise Linux Server - /var/log/messages | grep docker
+
+# 4 docker 应用
+## 4.1 mysql
+**(1)拉取镜像**
+这里我们拉取官方的镜像,标签为5.6
+
+meetbill@Linux:~$ docker pull mysql:5.6
+
+等待下载完成后，我们就可以在本地镜像列表里查到REPOSITORY为mysql,标签为5.6的镜像。
+
+**(2)使用mysql镜像**
+
+运行容器
+```
+meetbill@Linux:~$mkdir mysql;cd mysql
+meetbill@Linux:~/mysql$ docker run -d \
+--restart always \
+-p 3306:3306 \
+--name mymysql \
+-v $PWD/data:/var/lib/mysql \
+-e MYSQL_ROOT_PASSWORD=123456  mysql:5.6
+```
+命令说明：
+> * -p 3306:3306：将容器的3306端口映射到主机的3306端口
+> * -v $PWD/data:/var/lib/mysql：将主机当前目录下的data目录挂载到容器的/mysql_data
+> * -e MYSQL_ROOT_PASSWORD=123456：初始化root用户的密码
+
+# 5 其他
+
+## 5.1 centos 6.5 上安装docker
+
+```
+rpm -ivh http://dl.Fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+yum -y install docker-io
+//更新device-mapper-libs
+yum install device-mapper-*
+/etc/init.d/docker start
+```
+**常见错误**
+```
+启动docker报错，错误log：
+INFO[0000] Listening for HTTP on unix (/var/run/docker.sock) 
+WARN[0000] You are running linux kernel version 2.6.32-431.el6.x86_64, which might be unstable running docker. Please upgrade your kernel to 3.10.0. 
+
+docker: relocation error: docker: symbol dm_task_get_info_with_deferred_remove, version Base not defined in file libdevmapper.so.1.02 with link time reference
+
+原因：是因为libdevmapper版本太旧，需要update【yum install device-mapper-*】 
+```
+
+## 5.2 Alpine Linux 
+Alpine Linux 打出的包非常小
+
+Alpine Linux,一个只有5M的Docker镜像
+
+
+# 6 docker 常见问题
+
+## 6.1 docker 容器故障致无法启动解决实例
+docker zabbix-server 启动异常退出后，启动失败，，，解决的方法如下
+
+查找启动文件
+```
+root@ubuntu:~#find / -name 'docker-zabbix'
+/xxxx/subvolumes/2086357831.../bin/docker-zabbix
+/xxxx/subvolumes/080fd911a6.../bin/docker-zabbix
+/xxxx/subvolumes/87bb2f9818...-init/bin/docker-zabbix
+/xxxx/87bb2f98185649304c505.../bin/docker-zabbix
+```
+修改配置文件进行调试(多输出一些信息进行判断和调试)
+
+## 6.2 启动容器失败
+提示如下
+```
+Error response from daemon: driver failed programming external connectivity on endpoint zabbix (f76e6128eb80f9b9b2a50bc8642d7d9d25dc491b58fcccadcc700943487960bd):  (iptables failed: iptables --wait -t nat -A DOCKER -p tcp -d 0/0 --dport 10080 -j DNAT --to-destination 172.17.0.11:80 ! -i docker0: iptables: No chain/target/match by that name.
+ (exit status 1))
+Error: failed to start containers: zabbix
+```
+解决方法
+```
+重启docker
+#systemctl restart docker
+```
+
+## 6.3 centos7 上运行容器挂载卷没有写入权限
+
+在CentOS7中运行容器，发现挂载的本地目录在容器中没有执行权限，原因是CentOS7中的安全模块selinux把权限禁掉了，至少有以下三种方式解决挂载的目录没有权限的问题：
+
+1，在运行容器的时候，给容器加特权：
+
+示例：docker run -i -t --privileged=true -v /home/docs:/src waterchestnut/nodejs:0.12.0
+
+2，临时关闭selinux：
+
+示例：su -c "setenforce 0"
+
+之后执行：docker run -i -t -v /home/docs:/src waterchestnut/nodejs:0.12.0
+
+注意：之后要记得重新开启selinux，命令：su -c "setenforce 1"
+
+3，添加selinux规则，将要挂载的目录添加到白名单：
+
+示例：chcon -Rt svirt_sandbox_file_t /home/docs
+
+之后执行：docker run -i -t -v /home/docs:/src waterchestnut/nodejs:0.12.0
