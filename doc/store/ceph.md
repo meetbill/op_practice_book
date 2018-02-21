@@ -1,4 +1,4 @@
-## ceph
+## Ceph
 
 <!-- vim-markdown-toc GFM -->
 * [Ceph](#ceph)

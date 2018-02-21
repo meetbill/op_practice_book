@@ -68,7 +68,7 @@
 
 #### 5.1.1 环境
 
-server：Centos 6.5/Centos 7.3
+server：CentOS 6.5/CentOS 7.3
 
 #### 5.1.2 查看系统时间
 
@@ -93,8 +93,8 @@ Sun Aug 14 23:18:41 EDT 2011
 **配置 /etc/pam.d/sshd**
 
 ```
-# Centos 6.5 在"auth       include      password-auth"行前添加如下内容
-# Centos 7 在"auth       substack     password-auth"行前添加如下内容
+# CentOS 6.5 在"auth       include      password-auth"行前添加如下内容
+# CentOS 7 在"auth       substack     password-auth"行前添加如下内容
 auth       required pam_google_authenticator.so
 ```
 即先 google 方式认证再 linux 密码认证
@@ -109,10 +109,10 @@ sed -i 's#^ChallengeResponseAuthentication no#ChallengeResponseAuthentication ye
 **重启 SSH 服务**
 
 ```
-# centos6
+# CentOS6
 #service sshd restart
 
-# centos7
+# CentOS7
 # systemctl restart sshd
 ```
 **关掉 selinux**

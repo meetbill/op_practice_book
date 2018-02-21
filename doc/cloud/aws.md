@@ -1,8 +1,6 @@
-## aws_book
-
-
+## AWS
 <!-- vim-markdown-toc GFM -->
-* [0 aws 产品](#0-aws-产品)
+* [0 AWS 产品](#0-aws-产品)
 * [1 使用 AWS S3](#1-使用-aws-s3)
     * [基本概念](#基本概念)
     * [基本操作](#基本操作)
@@ -19,7 +17,7 @@
 * [3 EC2](#3-ec2)
     * [重启与停止以及终止之间的区别](#重启与停止以及终止之间的区别)
     * [存储](#存储)
-* [4 aws vpc](#4-aws-vpc)
+* [4 AWS VPC](#4-aws-vpc)
     * [VPC 中几个概念](#vpc-中几个概念)
     * [VPC 规划](#vpc-规划)
 * [5 AWS 客户端](#5-aws-客户端)
@@ -30,14 +28,14 @@
         * [命令行参数](#命令行参数)
         * [使用](#使用)
     * [saws 工具](#saws-工具)
-        * [s3](#s3)
-    * [s3cmd](#s3cmd)
+        * [S3](#s3)
+    * [S3cmd](#s3cmd)
         * [下载及配置](#下载及配置)
-        * [使用 s3cmd](#使用-s3cmd)
+        * [使用 S3cmd](#使用-s3cmd)
 
 <!-- vim-markdown-toc -->
 
-# 0 aws 产品
+# 0 AWS 产品
 
 ***计算***
 
@@ -276,7 +274,7 @@ partition: 资源所处的分区。对于标准 AWS 区域，分区是 aws。如
 ![Screenshot](../../images/aws/architecture_storage.png)
 
 
-# 4 aws vpc
+# 4 AWS VPC
 
 ## VPC 中几个概念
 
@@ -418,11 +416,11 @@ aws s3api put-object --body /root/start.sh --bucket bucket-name --key "start.sh"
 
 saws 是 aws-cli 封装包
 
-### s3
+### S3
 
 ***上传文件***
 
-前提：aws 的配置中的访问密钥对 s3 的某 bucket-name 有权限
+前提：AWS 的配置中的访问密钥对 S3 的某 bucket-name 有权限
 
 输入 saws 后输入
 
@@ -436,7 +434,7 @@ saws>aws s3api put-object --body /root/start.sh --bucket bucket-name --key "star
 
 ***下载文件***
 
-前提：aws 的配置中的访问密钥对 s3 的某 bucket-name 有权限
+前提：AWS 的配置中的访问密钥对 S3 的某 bucket-name 有权限
 
 输入 saws 后输入
 
@@ -452,16 +450,16 @@ saws>aws s3api get-object --bucket bucket-name --key "start.sh" /root/start.sh2"
 }
 ```
 
-## s3cmd
+## S3cmd
 ### 下载及配置
 
-在 linux 上 安装 s3 客户端
+在 Linux 上 安装 s3 客户端
 
 [下载 s3cmd](https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/cloud/aws/s3cmd-2.0.0.tar.gz)
 
 下载后解压进入到目录中
 
-连接 aws s3 时可以通过`s3cmd --config`进行配置，`连接本地自有的存储可以配置如下`
+连接 AWS S3 时可以通过`s3cmd --config`进行配置，`连接本地自有的存储可以配置如下`
 
 在当前用户的家目录下创建 .s3cfg 文件、（也是 s3cmd 默认配置文件路径、)，并填入以下内容：
 
@@ -475,19 +473,19 @@ use_https = False
 # 签名是 V2 的话设置为 True
 signature_v2 = True
 ```
-### 使用 s3cmd
+### 使用 S3cmd
 
-配置完 s3cmd 就可以通过它来使用对象存储了。
+配置完 S3cmd 就可以通过它来使用对象存储了。
 
 对象存储中有两个非常重要的概念，bucket 和 object。object 对应需要存储的文件，而 bucket 作为 object 的存储空间。所以对象存储的操作主要涉及到的就是对 bucket 和 object 的操作。
 
 1. 操作 bucket
- 
+
  * **列举 bucket**
    ```
    # s3cmd ls
    ```
-   
+
    以列举当前的 bucket 为例：
 
    ```
@@ -522,8 +520,8 @@ signature_v2 = True
    ```
 
 2. 操作 object
-   
-   需要在 S3 中存储的文件在对象存储中被称为 object。为了说明上传 object 的过程，首先我们来创建一个用来上传的文件 test.txt (也就是一个 object), 并写入 samplecontent 作为文件的内容：
+
+   需要在 S3 中存储的文件在对象存储中被称为 object。为了说明上传 object 的过程，首先我们来创建一个用来上传的文件 test.txt （也就是一个 object), 并写入 samplecontent 作为文件的内容：
 
  * **准备文件**
    ```
@@ -627,5 +625,5 @@ signature_v2 = True
    SSE:       NONE
    ```
 
-其余使用请参见 s3cmd usage: [s3cmd 使用手册](http://s3tools.org/usage "s3cmd 使用手册")
+其余使用请参见 S3cmd usage: [S3cmd 使用手册](http://s3tools.org/usage "s3cmd 使用手册")
 

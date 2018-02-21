@@ -1,8 +1,8 @@
 # 物理机，云服务及虚拟化篇
 
 > * 物理机
-> * aws
+> * AWS
 > * 阿里云
 > * KVM
-> * docker
-> * openstack
+> * Docker
+> * OpenStack

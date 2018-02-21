@@ -404,7 +404,7 @@ http://IP:8001/
 $curl -o uwsgi.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/web/django/uwsgi.tar.gz
 
 ```
-注意：此包适用于 Centos7
+注意：此包适用于 CentOS7
 
 ### 使用工具包
 

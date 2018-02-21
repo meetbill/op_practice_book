@@ -7,8 +7,8 @@
     * [2.1 使用 API 控制 ECS](#21-使用-api-控制-ecs)
     * [2.2 克隆实例](#22-克隆实例)
 * [3 OSS](#3-oss)
-    * [3.1 创建一个 oss](#31-创建一个-oss)
-        * [3.1.1 bucket](#311-bucket)
+    * [3.1 创建一个 OSS](#31-创建一个-oss)
+        * [3.1.1 Bucket](#311-bucket)
         * [3.1.2 访问策略（访问控制）](#312-访问策略访问控制)
             * [需要一个 AccessKey](#需要一个-accesskey)
     * [3.2 OSSFS - 将 OSS 挂载到本地文件系统工具](#32-ossfs---将-oss-挂载到本地文件系统工具)
@@ -49,11 +49,11 @@
 
 # 3 OSS
 
-## 3.1 创建一个 oss
+## 3.1 创建一个 OSS
 
-### 3.1.1 bucket
+### 3.1.1 Bucket
 
-创建好后需要用到的是 bucket 名字和 endpoint
+创建好后需要用到的是 Bucket 名字和 endpoint
 
 ### 3.1.2 访问策略（访问控制）
 
@@ -159,7 +159,7 @@ sudo make install
 
 ### 3.2.4 运行
 
-设置 bucket name, access key/id 信息，将其存放在 /etc/passwd-ossfs 文件中，
+设置 Bucket name, access key/id 信息，将其存放在 /etc/passwd-ossfs 文件中，
 注意这个文件的权限必须正确设置，建议设为 640。
 
 ```
@@ -167,14 +167,14 @@ echo my-bucket:my-access-key-id:my-access-key-secret > /etc/passwd-ossfs
 chmod 640 /etc/passwd-ossfs
 ```
 
-将 oss bucket mount 到指定目录
+将 OSS Bucket mount 到指定目录
 
 ```
 ossfs my-bucket my-mount-point -ourl=my-oss-endpoint
 ```
 **示例**
 
-将`my-bucket`这个 bucket 挂载到`/tmp/ossfs`目录下，AccessKeyId 是`faint`，
+将`my-bucket`这个 Bucket 挂载到`/tmp/ossfs`目录下，AccessKeyId 是`faint`，
 AccessKeySecret 是`123`，oss endpoint 是`http://oss-cn-hangzhou.aliyuncs.com`
 
 ```
@@ -184,7 +184,7 @@ mkdir /tmp/ossfs
 ossfs my-bucket /tmp/ossfs -ourl=http://oss-cn-hangzhou.aliyuncs.com
 ```
 
-卸载 bucket:
+卸载 Bucket:
 
 ```bash
 umount /tmp/ossfs # root user

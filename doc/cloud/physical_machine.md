@@ -16,7 +16,7 @@
 
 **现象**
 ```
-reboot and select proper boot device or insert boot media in selected boot device and press a key
+Reboot and select proper boot device or insert boot media in selected boot device and press a key
 ```
 **可能原因**
 
@@ -24,13 +24,13 @@ reboot and select proper boot device or insert boot media in selected boot devic
 
 **硬件原因**
 
-> * raid 卡（可以开机时查看 raid 卡 能否识别到硬盘）
+> * RAID 卡（可以开机时查看 RAID 卡 能否识别到硬盘）
 > * 硬盘（硬盘状态灯是否正常）
 
 **软件原因**
 
 > * 开机启动项顺序
-> * raid 卡设置的启动盘配置
+> * RAID 卡设置的启动盘配置
 > * 引导项丢失
 
 #### 重做引导项方法

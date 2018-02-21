@@ -1,9 +1,9 @@
-## linux 基础
+## Linux 基础
 
 <!-- vim-markdown-toc GFM -->
 * [安装](#安装)
     * [安装准备](#安装准备)
-    * [安装 centos6.8](#安装-centos68)
+    * [安装 CentOS6.8](#安装-centos68)
     * [系统安装后的配置](#系统安装后的配置)
 * [Bash 基础特性](#bash-基础特性)
     * [命令历史](#命令历史)
@@ -21,7 +21,7 @@
         * [友情提示](#友情提示)
     * [bash 的 io 重定向及管道](#bash-的-io-重定向及管道)
         * [I/O 重定向](#io-重定向)
-* [linux 常用命令](#linux-常用命令)
+* [Linux 常用命令](#linux-常用命令)
     * [系统](#系统)
         * [系统信息](#系统信息)
         * [关机](#关机)
@@ -91,7 +91,7 @@
 
 # 安装
 
-centos 6.x
+CentOS 6.x
 
 ## 安装准备
     1. 下载安装镜像文件
@@ -100,7 +100,7 @@ centos 6.x
     http://mirrors.aliyun.com/centos/6.8/isos/i386/
     主要下载 Centos-6.8-x86_64-bin-DVD1.iso 和 Centos-6.8-x86_64-bin-DVD2.iso
 
-## 安装 centos6.8
+## 安装 CentOS6.8
 
 ***选择系统引导方式***
 
@@ -690,7 +690,7 @@ lp
 polkitd
 sslinux
 ~~~
-# linux 常用命令
+# Linux 常用命令
 
 ## 系统
 

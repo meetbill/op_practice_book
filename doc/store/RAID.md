@@ -1,4 +1,4 @@
-# 磁盘及 Raid
+# 磁盘及 RAID
 <!-- vim-markdown-toc GFM -->
 * [磁盘管理](#磁盘管理)
     * [查看磁盘信息](#查看磁盘信息)
@@ -11,18 +11,18 @@
         * [LSIUtil](#lsiutil)
         * [lsblk](#lsblk)
     * [磁盘扩展](#磁盘扩展)
-        * [Linux 下 xfs 扩展](#linux-下-xfs-扩展)
+        * [Linux 下 XFS 扩展](#linux-下-xfs-扩展)
     * [测试硬盘](#测试硬盘)
         * [dd 测试硬盘读写速度](#dd-测试硬盘读写速度)
 * [RAID](#raid)
     * [RAID 分类](#raid-分类)
         * [RAID 0(striped)](#raid-0striped)
         * [RAID 1(mirroring)](#raid-1mirroring)
-        * [RAID5 分布式奇偶校验的独立磁盘结构](#raid5-分布式奇偶校验的独立磁盘结构)
+        * [RAID 5 分布式奇偶校验的独立磁盘结构](#raid-5-分布式奇偶校验的独立磁盘结构)
         * [RAID0+1/1+0](#raid0110)
-    * [megacli 管理工具](#megacli-管理工具)
-    * [raid 日常运维](#raid-日常运维)
-        * [查看 raid 信息](#查看-raid-信息)
+    * [MegaCli 管理工具](#megacli-管理工具)
+    * [RAID 日常运维](#raid-日常运维)
+        * [查看 RAID 信息](#查看-raid-信息)
         * [更换硬盘时需要注意地方](#更换硬盘时需要注意地方)
         * [RAID5 单块硬盘故障恢复方法](#raid5-单块硬盘故障恢复方法)
 
@@ -83,7 +83,7 @@ smartctl 可以查看磁盘的 SN，WWN 等信息。还有是否有磁盘坏道�
 ```
 $ smartctl -a -f brief /dev/sdb
 
-# 如果磁盘位于 raid 下面，比如 megaraid，可以使用如下命令
+# 如果磁盘位于 RAID 下面，比如 megaraid，可以使用如下命令
 # smartctl -a -f brief -d megaraid,1 /dev/sdb
 
 smartctl 5.43 2012-06-30 r3573 [x86_64-linux-3.12.21-1.el6.x86_64] (local build)
@@ -243,7 +243,7 @@ SSD 上剩余的保留空间，初始值为 100，表示 100%，阀值为 10，�
 
 ## 磁盘扩展
 
-### Linux 下 xfs 扩展
+### Linux 下 XFS 扩展
 
 XFS 是一个开源的（GPL）日志文件系统，最初由硅谷图形（SGI）开发，现在大多数的 Linux 发行版都支持。事实上，XFS 已被最新的 CentOS/RHEL 7 采用，成为其默认的文件系统。在其众多的特性中，包含了“在线调整大小”这一特性，使得现存的 XFS 文件系统在已经挂载的情况下可以进行扩展。
 
@@ -355,7 +355,7 @@ Striped 模式，把连续的数据分散懂啊多个磁盘上存取。速度快
 
 RAID 1 可以用于两个或 2xN 个磁盘，并使用 0 块或更多的备用磁盘，每次写数据时会同时写入镜像盘。这种阵列可靠性很高，但其有效容量减小到总容量的一半，同时这些磁盘的大小应该相等，否则总容量只具有最小磁盘的大小。
 
-### RAID5 分布式奇偶校验的独立磁盘结构
+### RAID 5 分布式奇偶校验的独立磁盘结构
 
 ![raid-5 图解](../../images/raid/raid-5.png)
 
@@ -363,12 +363,12 @@ RAID 1 可以用于两个或 2xN 个磁盘，并使用 0 块或更多的备用�
 
 raid0 over raid1
 
-## megacli 管理工具
+## MegaCli 管理工具
 
-[megacli_tui](https://github.com/BillWang139967/megacli_tui)
+[Megacli_tui](https://github.com/BillWang139967/megacli_tui)
 
-## raid 日常运维
-### 查看 raid 信息
+## RAID 日常运维
+### 查看 RAID 信息
 
     dmesg | grep -i raid
 
