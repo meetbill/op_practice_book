@@ -56,6 +56,8 @@
     * [变量赋值](#变量赋值)
 * [11 脚本的配置文件](#11-脚本的配置文件)
     * [步骤](#步骤)
+* [12 常用实例](#12-常用实例)
+    * [12.1 ssh 登录相关](#121-ssh-登录相关)
 
 <!-- vim-markdown-toc -->
 
@@ -1511,7 +1513,7 @@ helloworld
 ```
 
 ## 11 脚本的配置文件
-###步骤
+### 步骤
 -	(1) 定义文本文件，每行定义“name=value”
 -	(2) 在脚本中 source 此文件即可
 
@@ -1527,4 +1529,14 @@ bill
 source /tmp/config.test		#导入配置文件，脚本自身并未定义变量；
 
 echo $name				#引用的是配置文件中的变量 name
+```
+## 12 常用实例
+
+### 12.1 ssh 登录相关
+
+> * 可以使用 sshpass 进行直接传入密码
+>   * 一定要加 -o StrictHostKeyChecking=no 否则如果是第一次访问对应的机器，会执行无效
+```
+export WSSH="./tools/sshpass -p ${PASSWD} ssh -o StrictHostKeyChecking=no "
+export WSCP="./tools/sshpass -p ${PASSWD} scp -o StrictHostKeyChecking=no "
 ```
