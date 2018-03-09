@@ -50,8 +50,8 @@
 
 **环境配置**
 
-+ `git config user.name your_name` : 设置你的用户名，提交会显示
-+ `git config user.email your_email` : 设置你的邮箱
++ `git config --global user.name your_name` : 设置你的用户名，提交会显示
++ `git config --global user.email your_email` : 设置你的邮箱
 + `git config core.quotepath false` : 解决中文文件名显示为数字问题
 
 **基本操作**
