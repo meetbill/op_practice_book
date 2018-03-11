@@ -12,6 +12,7 @@
 * [数据库篇](doc/db/README.md)
     * [MySQL](doc/db/mysql.md)
     * [MongoDB](doc/db/mongodb.md)
+    * [Redis](doc/db/redis.md)
 * [Web 篇](doc/web/README.md)
     * [Nginx](doc/web/nginx.md)
     * [Django](doc/web/django.md)

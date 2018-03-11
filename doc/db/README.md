@@ -1,4 +1,6 @@
 #  数据库篇
 
-> * mysql
-> * mongodb
+> * MySQL
+> * MongoDB
+> * Redis
+
