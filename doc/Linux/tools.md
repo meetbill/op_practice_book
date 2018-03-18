@@ -241,6 +241,9 @@ fatal: HTTP request failed
 #git config --global http.sslVerify false
 
 ```
+**设置 Wiki 只能自己编写，其他人员只读** 
+
+在项目中的设置中勾选`Restrict editing to collaborators only`
 ### 1.2.3 Git tips
 
 ```
