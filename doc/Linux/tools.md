@@ -246,10 +246,17 @@ fatal: HTTP request failed
 在项目中的设置中勾选`Restrict editing to collaborators only`
 ### 1.2.3 Git tips
 
+(1) 命令简化
 ```
+cd git_repo(替换为项目名字)
 git remote add ${PWD##*/} git@github.com:BillWang139967/${PWD##*/}.git
 git push -u ${PWD##*/} master
 ```
+(2) 提升 git 使用体验
+
+> * [git 命令自动补全](https://github.com/BillWang139967/op_practice_code/tree/master/Linux/tools/git/git-completion) 
+> * [命令行显示 git 信息](https://github.com/BillWang139967/op_practice_code/tree/master/Linux/tools/git/git-ps1)
+
 # 2 运维相关
 ## 2.1 sed
 
