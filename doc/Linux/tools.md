@@ -42,7 +42,7 @@
 # 1 编程相关
 ## 1.1 vim IDE 工具
 
-* [VIM 一键 IDE](https://github.com/BillWang139967/Vim)
+* [VIM 一键 IDE](https://github.com/meetbill/Vim)
 
 ## 1.2 Git 分布式管理系统
 
@@ -230,9 +230,9 @@ Git 的核心数是很简单的，就是一个链表（或者一棵树更准确�
 使用 git clone 失败
 
 ```
-[root@localhost ~]# git clone https://github.com/BillWang139967/Vim.git
+[root@localhost ~]# git clone https://github.com/meetbill/Vim.git
 Initialized empty Git repository in /root/Vim/.git/
-error:  while accessing https://github.com/BillWang139967/Vim.git/info/refs
+error:  while accessing https://github.com/meetbill/Vim.git/info/refs
 
 fatal: HTTP request failed
 ```
@@ -249,13 +249,13 @@ fatal: HTTP request failed
 (1) 命令简化
 ```
 cd git_repo(替换为项目名字)
-git remote add ${PWD##*/} git@github.com:BillWang139967/${PWD##*/}.git
+git remote add ${PWD##*/} git@github.com:meetbill/${PWD##*/}.git
 git push -u ${PWD##*/} master
 ```
 (2) 提升 git 使用体验
 
-> * [git 命令自动补全](https://github.com/BillWang139967/op_practice_code/tree/master/Linux/tools/git/git-completion) 
-> * [命令行显示 git 信息](https://github.com/BillWang139967/op_practice_code/tree/master/Linux/tools/git/git-ps1)
+> * [git 命令自动补全](https://github.com/meetbill/op_practice_code/tree/master/Linux/tools/git/git-completion) 
+> * [命令行显示 git 信息](https://github.com/meetbill/op_practice_code/tree/master/Linux/tools/git/git-ps1)
 
 # 2 运维相关
 ## 2.1 sed
@@ -406,9 +406,9 @@ awk '{sum+=$5} END {print sum}'
 ```
 ## 2.3 排查 java CPU 性能问题
 
-[show-busy-java-threads.sh](https://github.com/BillWang139967/op_practice_code/blob/master/Linux/op/show-busy-java-threads.sh)
+[show-busy-java-threads.sh](https://github.com/meetbill/op_practice_code/blob/master/Linux/op/show-busy-java-threads.sh)
 ```
-curl -o show-busy-Java-threads.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/op/show-busy-java-threads.sh
+curl -o show-busy-Java-threads.sh https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/op/show-busy-java-threads.sh
 ```
 
 用于快速排查`Java`的`CPU`性能问题 (`top us`值过高），自动查出运行的`Java`进程中消耗`CPU`多的线程，并打印出其线程栈，从而确定导致性能问题的方法调用。
@@ -551,7 +551,7 @@ $ Ctrl + a ESC
 ### 3.1.2 开启 screen 状态栏
 
 ```
-#curl -o screen.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/tools/screen.sh
+#curl -o screen.sh https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/tools/screen.sh
 #sh screen.sh
 ```
 # 4 网络相关

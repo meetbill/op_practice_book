@@ -742,7 +742,7 @@ reset slave 将使 slave 忘记主从复制关系的位置信息。该语句将�
 在 5.6.3 版本以及以后 使用使用 RESET SLAVE ALL 来完全的清理复制连接参数信息。
 # mysql 工具
 
-* [mysql 日常定时备份](https://github.com/BillWang139967/mysql_tools)
+* [mysql 日常定时备份](https://github.com/meetbill/mysql_tools)
 
 # mysql 运维
 

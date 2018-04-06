@@ -58,6 +58,7 @@
     * [步骤](#步骤)
 * [12 常用实例](#12-常用实例)
     * [12.1 ssh 登录相关](#121-ssh-登录相关)
+* [13 日常使用库](#13-日常使用库)
 
 <!-- vim-markdown-toc -->
 
@@ -97,7 +98,7 @@ Example
 
 ### 1.2 Bash 编程
 
- > * bash 是弱类型编程，变量默认为字符型；
+> * bash 是弱类型编程，变量默认为字符型；
 > * 把所有要存储的数据统统当做字符进行存储；
 > * 变量不需要事先声明，可以在调用时直接赋值使用，参与运算会自动进行隐式类型转换；
 > * 不支持浮点数；
@@ -194,15 +195,15 @@ $#: 传递给脚本的参数的个数；
 ## 3 bash 的配置文件
 
 > * 全局配置：
->   *  /etc/profile
->      * /etc/profile.d/*.sh
+>   * /etc/profile
+>   * /etc/profile.d/*.sh
 >   * /etc/bashrc
 > * 用户配置：
 >   * ~/.bash_profile
 >   * ~/.bashrc
 
 ## 4 bash 中的算术运算符
-+，-，*，/，%，**
+`+，-，*，/，%，**`
 
 实现算术运算的方式：
 
@@ -229,14 +230,6 @@ $#: 传递给脚本的参数的个数；
     let var-=1
 
         let var--
-
-- Example
-```
-#!/bin/bash
-spaceline1=$(grep "^[[:space:]]*$" $1 | wc -l)
-spaceline2=$(grep "^[[:space:]]*$" $2 | wc -l)
-echo "The sum of space line:$[$spaceline1+$spaceline2]"
-```
 
 ## 5 条件测试
 判断某需求是否满足，需要有测试机制来实现；
@@ -272,15 +265,11 @@ echo "The sum of space line:$[$spaceline1+$spaceline2]"
 - 字符串测试：
 
 
- == : 是否等于；
-
- >: 是否大于；
-
- <: 是否小于；
-
- != ： 是否不等于；
-
- =~ ：左侧字符串是否能够被右侧的 PATTERN 所匹配；
+> * `==` : 是否等于；
+> * `>` : 是否大于；
+> * `<` : 是否小于；
+> * `!=` : 是否不等于；
+> * `=~` : 左侧字符串是否能够被右侧的 PATTERN 所匹配；
 
  - Note：此表达式一般用于 [[ ]] 中；
 
@@ -1539,4 +1528,27 @@ echo $name				#引用的是配置文件中的变量 name
 ```
 export WSSH="./tools/sshpass -p ${PASSWD} ssh -o StrictHostKeyChecking=no "
 export WSCP="./tools/sshpass -p ${PASSWD} scp -o StrictHostKeyChecking=no "
+```
+## 13 日常使用库
+
+```
+f_yellow='\e[00;33m'
+f_red='\e[00;31m'
+f_green='\e[00;32m'
+f_reset='\e[00;0m'
+
+function p_warn {
+    echo -e "${f_yellow}[WRN]${f_reset} ${1}"
+}
+
+function p_err {
+    echo -e "${f_red}[ERR]${f_reset} ${1}"   
+}
+
+function p_ok {
+    echo -e "${f_green}[OK ]${f_reset} ${1}"
+}
+
+ROOT_PATH=`S=\`readlink "$0"\`; [ -z "$S"  ] && S=$0; dirname $S`
+cd ${ROOT_PATH}
 ```

@@ -8,13 +8,13 @@
 <!-- vim-markdown-toc -->
 ## 快速安装
 
-> [物理机上安装](https://github.com/BillWang139967/zabbix_install/wiki/install)
-> [docker部署](https://github.com/BillWang139967/zabbix_install/wiki/docker)
+> [物理机上安装](https://github.com/meetbill/zabbix_install/wiki/install)
+> [docker部署](https://github.com/meetbill/zabbix_install/wiki/docker)
 
 ## zabbix 模板
 
-[zabbix_templates](https://github.com/BillWang139967/zabbix_templates)
+[zabbix_templates](https://github.com/meetbill/zabbix_templates)
 
 ## zabbix 管理工具
 
-[zabbix_manager](https://github.com/BillWang139967/zabbix_manager)
+[zabbix_manager](https://github.com/meetbill/zabbix_manager)

@@ -229,7 +229,7 @@ Monit 应该总是以后台的守护进程模式运行，如果你不指定该�
 
 ### 管理工具
 
-[monit_manager](https://github.com/BillWang139967/monit_manager)
+[monit_manager](https://github.com/meetbill/monit_manager)
 
 ------
 

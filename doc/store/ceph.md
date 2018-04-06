@@ -247,6 +247,6 @@ OSD crush weight
 
 ## ceph 安装及应用
 
-* [ceph 安装及应用](https://github.com/BillWang139967/ceph_practice)
+* [ceph 安装及应用](https://github.com/meetbill/ceph_practice)
 
 ceph 安装及应用部分目前更新在 `ceph 实践` 的 wiki 中

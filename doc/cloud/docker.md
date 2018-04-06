@@ -48,7 +48,7 @@ CentOS7 x86-64
 CentOS 7.3 离线安装 Docker-ce(1703)
 
 ```
-[root@meetbill ~]#curl -o docker_install.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/cloud/docker/docker_install.tar.gz
+[root@meetbill ~]#curl -o docker_install.tar.gz https://raw.githubusercontent.com/meetbill/op_practice_code/master/cloud/docker/docker_install.tar.gz
 [root@meetbill ~]#tar -zxvf docker_install.tar.gz
 [root@meetbill ~]#cd docker_install
 [root@meetbill ~]#sh install.sh

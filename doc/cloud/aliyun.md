@@ -40,7 +40,7 @@
 
 ## 2.1 使用 API 控制 ECS
 
-[工具及简单使用说明](https://github.com/BillWang139967/op_practice_code/tree/master/cloud/aliyun/ecs)
+[工具及简单使用说明](https://github.com/meetbill/op_practice_code/tree/master/cloud/aliyun/ecs)
 
 ## 2.2 克隆实例
 

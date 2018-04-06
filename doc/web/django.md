@@ -26,14 +26,7 @@ env
     * [在本项目其他应用中的 view.py 中调用 BLog](#在本项目其他应用中的-viewpy-中调用-blog)
     * [测试](#测试)
 * [django FAQ](#django-faq)
-* [uWSGI](#uwsgi)
-    * [开发环境生成 uWSGI 可执行文件](#开发环境生成-uwsgi-可执行文件)
-        * [环境](#环境)
-        * [开发环境生产 uWSGI 可执行文件](#开发环境生产-uwsgi-可执行文件)
-        * [测试](#测试-1)
-    * [uWSGI 配合 django 使用](#uwsgi-配合-django-使用)
-        * [下载工具包](#下载工具包)
-        * [使用工具包](#使用工具包)
+* [django 自用开发模板](#django-自用开发模板)
 
 <!-- vim-markdown-toc -->
 
@@ -317,7 +310,7 @@ __init__.py  models.py  tests.py  views.py
 
 ## 编写 log 程序
 ```
-curl -o BLog.py https://raw.githubusercontent.com/BillWang139967/MyPythonLib/master/log_utils/BLog/BLog.py
+curl -o BLog.py https://raw.githubusercontent.com/meetbill/MyPythonLib/master/log_utils/BLog/BLog.py
 ```
 ## 在本项目其他应用中的 view.py 中调用 BLog
 ```
@@ -361,79 +354,6 @@ django
   return render_to_response(’polls/detail.html’, {’poll’: p},
                     context_instance=RequestContext(request))
 ```
+# django 自用开发模板
 
-# uWSGI
-## 开发环境生成 uWSGI 可执行文件
-
-### 环境
-```
-CentOS 7.3
-```
-### 开发环境生产 uWSGI 可执行文件
-
-```
-$yum install python-devel
-$yum install gcc
-$curl http://uwsgi.it/install | bash -s default /tmp/uwsgi
-```
-这将会把 uWSGI 二进制安装到 /tmp/uwsgi
-
-### 测试
-在你的机器上写一个 test.py
-```
-# test.py
-def application(env, start_response):
-start_response('200 OK', [('Content-Type','text/html')])
-    return "Hello World"
-```
-然后执行 shell 命令：
-```
-uwsgi --http :8001 --wsgi-file test.py
-```
-访问网页：
-```
-http://IP:8001/
-```
-看在网页上是否有 Hello World
-
-## uWSGI 配合 django 使用
-
-### 下载工具包
-
-```
-$curl -o uwsgi.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/web/django/uwsgi.tar.gz
-
-```
-注意：此包适用于 CentOS7
-
-### 使用工具包
-
-```
-$tar -zxvf uwsgi.tar.gz
-$cd uwsgi
-$bash start.sh
-```
-**配置**
-
-(1) 配置项目路径
-
-修改 `/etc/init.d/uwsgid.service` 文件，CONFIGFILE=/root/mysite/$NAME.ini 修改为项目路径
-
-(2) 将 init 文件放在项目中
-
-> * 将`uwsgi.ini_tpl`重命名为 uwsgi.ini 放到 django 目录中，与 manage.py 放在同一个目录
-
-(3) 修改配置文件
-
-修改项目中的 uwsgi.ini 文件，
-
-> * 设置项目根目录`chdir = /root/mysite` 
-> * 修改 `mysite.wsgi` 为 `项目名称.wsgi`
-> * 如果由 `virtualenv` 时，需要设置`home= 虚拟目录`,否则设置为空
-
-(4) 启动服务
-
-```
-/etc/init.d/uwsgid.service start
-```
-
+[pine](https://github.com/meetbill/pine)

@@ -455,7 +455,7 @@ saws>aws s3api get-object --bucket bucket-name --key "start.sh" /root/start.sh2"
 
 在 Linux 上 安装 s3 客户端
 
-[下载 s3cmd](https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/cloud/aws/s3cmd-2.0.0.tar.gz)
+[下载 s3cmd](https://raw.githubusercontent.com/meetbill/op_practice_code/master/cloud/aws/s3cmd-2.0.0.tar.gz)
 
 下载后解压进入到目录中
 

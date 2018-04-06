@@ -329,7 +329,7 @@ RAID, Redundant Arrays of Inexpensive Disks, 容错式廉价磁盘阵列.RAID �
 
 RAID 动画演示
 
-[RAID 动画演示下载](https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/store/RAID/raid.exe)
+[RAID 动画演示下载](https://raw.githubusercontent.com/meetbill/op_practice_code/master/store/RAID/raid.exe)
 
 ## RAID 分类
 
@@ -365,7 +365,7 @@ raid0 over raid1
 
 ## MegaCli 管理工具
 
-[Megacli_tui](https://github.com/BillWang139967/megacli_tui)
+[Megacli_tui](https://github.com/meetbill/megacli_tui)
 
 ## RAID 日常运维
 ### 查看 RAID 信息

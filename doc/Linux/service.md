@@ -442,7 +442,7 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
 下载脚本
 
 ```
-#curl -o inotify_rsync.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/service/inotify_rsync.sh
+#curl -o inotify_rsync.sh https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/service/inotify_rsync.sh
 ```
 
 (3) 启动异地灾备程序
@@ -472,7 +472,7 @@ cat 一下这个文件，默认值是 8192，echo 8192000 > /proc/sys/fs/inotify
 ## 安装使用
 
 ```
-#curl -o telnet-server.tar.gz https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/service/telnet-server.tar.gz
+#curl -o telnet-server.tar.gz https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/service/telnet-server.tar.gz
 #tar -zxvf telnet-server.tar.gz
 #cd telnet-server*
 #sh start.sh
@@ -514,7 +514,7 @@ ftp 工作会启动两个通道：控制通道 ， 数据通道。在 ftp 协议
 ## 安装配置
 
 ```
-[root@meetbill ~]#curl -o ftptool.sh https://raw.githubusercontent.com/BillWang139967/op_practice_code/master/Linux/service/ftptool.sh
+[root@meetbill ~]#curl -o ftptool.sh https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/service/ftptool.sh
 [root@meetbill ~]#chmod +x ftptool.sh
 [root@meetbill ~]#./ftptool.sh install_server
 [root@meetbill ~]#./ftptool.sh add_user
