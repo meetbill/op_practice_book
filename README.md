@@ -1,5 +1,9 @@
 # 运维实践指南
 
+[![GitHub stars](https://img.shields.io/github/stars/meetbill/op_practice_book.svg?style=social&label=Star)](https://github.com/meetbill/op_practice_book/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/meetbill/op_practice_book.svg?style=social&label=Fork)](https://github.com/meetbill/op_practice_book/fork)
+[![GitHub watchers](https://img.shields.io/github/watchers/meetbill/op_practice_book.svg?style=social&label=Watch)](https://github.com/meetbill/op_practice_book/watchers)
+
 ![Screenshot](./images/ops.png)
 
 ## 阅读本书
