@@ -12,6 +12,7 @@
     * [2.6 查看状态](#26-查看状态)
         * [2.6.1 状态参数](#261-状态参数)
         * [2.6.2 状态实例](#262-状态实例)
+        * [2.6.3 使用 Python 获取 Twemproxy 状态](#263-使用-python-获取-twemproxy-状态)
 
 <!-- vim-markdown-toc -->
 ## 1 Redis
@@ -216,4 +217,21 @@ server stats:
     "uptime": 3160,          # 服务已经启动的时间（单位：秒
     "version": "0.2.4"
 }
+```
+#### 2.6.3 使用 Python 获取 Twemproxy 状态
+使用 curl 获取 Twemproxy 状态时，如果后端的 redis 或者 memcache 过多，将会导致获取状态内容失败，可以进行如下解决方法
+
+```
+def fetch_stats(ip, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((ip, port))
+    raw = ""
+    while True:
+        data = s.recv(1024)
+        if len(data) == 0:
+            break
+        raw += data
+    s.close()
+    stats = json.loads(raw)
+    return stats
 ```
