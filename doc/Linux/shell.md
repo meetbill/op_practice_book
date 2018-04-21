@@ -25,22 +25,15 @@
 * [7 流程控制](#7-流程控制)
     * [if 语句](#if-语句)
     * [for 循环](#for-循环)
-        * [Example 判断某路径下所有文件的类型](#example-判断某路径下所有文件的类型)
-        * [Example 使用 for 循环统计关于 tcp 端口监听状态](#example-使用-for-循环统计关于-tcp-端口监听状态)
-        * [Example 通过 ping 命令探测 192.168.0.1-254 范围内的所有主机的在线状态](#example-通过-ping-命令探测-19216801-254-范围内的所有主机的在线状态)
+        * [for 循环基础](#for-循环基础)
+        * [for 循环的特殊格式](#for-循环的特殊格式)
     * [while 循环](#while-循环)
-        * [Example 用 while 求 100 以内所有正整数之和](#example-用-while-求-100-以内所有正整数之和)
-        * [Example 用 while 添加 10 个用户](#example-用-while-添加-10-个用户)
-        * [Example 使用 while 循环 ping 指定网络内的所有主机](#example-使用-while-循环-ping-指定网络内的所有主机)
-        * [Example 利用 RANDOM 生成 10 个随机数字，输出这 10 个数字，并显示其中的最大者和最小者](#example-利用-random-生成-10-个随机数字输出这-10-个数字并显示其中的最大者和最小者)
-    * [创建死循环](#创建死循环)
-    * [while 循环遍历文件的每一行](#while-循环遍历文件的每一行)
-    * [for 循环的特殊格式](#for-循环的特殊格式)
-        * [Example 求 100 以内所有正整数之和](#example-求-100-以内所有正整数之和)
-        * [Example 菜单](#example-菜单)
+        * [while 基础](#while-基础)
+        * [创建死循环](#创建死循环)
+        * [while 循环遍历文件的每一行](#while-循环遍历文件的每一行)
     * [case 语句](#case-语句)
 * [8 函数](#8-函数)
-        * [Example 通过函数，创建 10 个用户](#example-通过函数创建-10-个用户)
+    * [函数基础](#函数基础)
         * [Example 编写一个服务启动关闭脚本](#example-编写一个服务启动关闭脚本)
     * [函数返回值](#函数返回值)
         * [Example 求 N 的阶乘](#example-求-n-的阶乘)
@@ -534,6 +527,7 @@ fi
 
 ### for 循环
 
+#### for 循环基础
 
 循环体：要执行的代码，可能要执行 n 遍；
 
@@ -599,7 +593,7 @@ done
 
         $@ , $*  -->所有向脚本传递的参数；
 
-#### Example 判断某路径下所有文件的类型
+**Example 判断某路径下所有文件的类型**
 
 ```
 #!/bin/bash
@@ -619,7 +613,7 @@ for file in $(ls /var);do #使用命令生成列表；
 done
 ```
 
-#### Example 使用 for 循环统计关于 tcp 端口监听状态
+**Example 使用 for 循环统计关于 tcp 端口监听状态**
 
 ```
 #!/bin/bash
@@ -645,7 +639,7 @@ echo "LISTEN:$listen"
 echo "Unknow:$other"
 ```
 
-#### Example 通过 ping 命令探测 192.168.0.1-254 范围内的所有主机的在线状态
+**Example 通过 ping 命令探测 192.168.0.1-254 范围内的所有主机的在线状态**
 
 ```
 #!/bin/bash
@@ -669,8 +663,37 @@ done
 echo "Up hosts:$uphosts."
 echo "Down hosts:$downhosts."
 ```
+#### for 循环的特殊格式
+```
+	for (（控制变量初始化；条件判断表达式；控制变量的修正表达式）)；do
+		循环体
+	done
+```
+此种格式和 C 语言等的格式是一样一样的，只是多了一对括号；
+
+控制变量初始化：仅在运行到循环代码段时执行一次；
+
+控制变量的修正表达式：每轮循环结束会先进行控制变量修正运算，而后再在条件判断；
+
+**Example 求 100 以内所有正整数之和**
+
+```
+#!/bin/bash
+#
+#for 循环，类似 C 语言格式，求 100 以内正整数之和；
+
+declare -i sum=0
+
+for ((i=1;i<=100;i++));do
+	let sum+=$i
+done
+
+echo "Sum:$sum."
+
+```
 
 ### while 循环
+#### while 基础
 语法：
 ```
  while CONDITION；do
@@ -686,7 +709,7 @@ CONDITION：循环控制条件；进入循环之前，先做一次判断；
 而此变量的值会在循环体不断地被修正，直到最终条件为 false，结束循环。
 ```
 
-#### Example 用 while 求 100 以内所有正整数之和
+**Example 用 while 求 100 以内所有正整数之和**
 
 ```
 #!/bin/bash
@@ -700,7 +723,7 @@ done
 echo $i
 echo "Summary:$sum."
 ```
-#### Example 用 while 添加 10 个用户
+**Example 用 while 添加 10 个用户**
 
 ```
 #!/bin/bash
@@ -721,7 +744,7 @@ echo "Add $users users."
 
 ```
 
-#### Example 使用 while 循环 ping 指定网络内的所有主机
+**Example 使用 while 循环 ping 指定网络内的所有主机**
 
 ```
 #!/bin/bash
@@ -747,7 +770,7 @@ echo "Up hosts:$uphosts."
 echo "Down hosts:$downhosts."
 ```
 
-#### Example 利用 RANDOM 生成 10 个随机数字，输出这 10 个数字，并显示其中的最大者和最小者
+**Example 利用 RANDOM 生成 10 个随机数字，输出这 10 个数字，并显示其中的最大者和最小者**
 
 ```
 #!/bin/bash
@@ -779,7 +802,7 @@ echo "MAX:$max."
 echo "MIN:$min."
 
 ```
-### 创建死循环
+#### 创建死循环
 
 ```
 while true;do
@@ -813,7 +836,7 @@ echo "$username logggen on." >> /tmp/user.log
 
 ```
 
-### while 循环遍历文件的每一行
+#### while 循环遍历文件的每一行
 ```
 	while read line;do
 		循环体
@@ -821,6 +844,13 @@ echo "$username logggen on." >> /tmp/user.log
 ```
 依次读取 /PATH/FROM/SOMEFILE 文件中的每一行，且将该行赋值给变量 line；
 
+另一种也很常见的用法【推荐】：
+```
+command | while read line
+do
+	...
+done
+```
 **Example 依次读取 /etc/passwd 文件中的每一行，找出其 ID 号为偶数的所有用户，显示其用户名、ID 号及默认 shell**
 
 ```
@@ -836,79 +866,6 @@ while read line;do
 done < /etc/passwd
 
 ```
-
-### for 循环的特殊格式
-```
-	for (（控制变量初始化；条件判断表达式；控制变量的修正表达式）)；do
-		循环体
-	done
-```
-此种格式和 C 语言等的格式是一样一样的，只是多了一对括号；
-
-控制变量初始化：仅在运行到循环代码段时执行一次；
-
-控制变量的修正表达式：每轮循环结束会先进行控制变量修正运算，而后再在条件判断；
-
-#### Example 求 100 以内所有正整数之和
-
-```
-#!/bin/bash
-#
-#for 循环，类似 C 语言格式，求 100 以内正整数之和；
-
-declare -i sum=0
-
-for ((i=1;i<=100;i++));do
-	let sum+=$i
-done
-
-echo "Sum:$sum."
-
-```
-
-#### Example 菜单
-(1)	显示一个如下菜单：
-```
-    cpu) show cpu information;
-    mem) show memory information;
-    disk) show disk information;
-    quit) quit
-```
-(2)	提示用户选择选项；
-
-(3)	显示用户选择的内容；
-
-```
-#!/bin/bash
-#
-#根据用户的选择，给用户显示相应的硬件信息；
-
-cat << EOF
-cpu) show cpu information;
-mem) show memory information;
-disk) show disk information;
-quit) quit
-#####################################
-EOF
-
-read -p "Enter a option:" option
-while [ "$option" != 'cpu' -a "$option" != 'mem' -a "$option" != 'disk' -a "$option" != 'quit' ];do
-	read -p "Wrong option,please Enter again:" option
-done
-
-if [ "$option" == 'cpu' ];then
-	lscpu
-elif [ "$option" == 'mem' ];then
-	cat /proc/meminfo
-elif [ "$option" == 'disk' ];then
-	fdisk -l
-else
-	echo "Quit"
-	exit 0
-fi
-
-```
-
 ### case 语句
 ```
 case 变量引用 in
@@ -969,6 +926,7 @@ esac
 
 
 ## 8 函数
+### 函数基础
 	函数的作用：
 	过程式编程：为实现代码重用
 	 	模块化编程
@@ -1002,7 +960,7 @@ f_name() {
 
 		1-255：失败
 
-#### Example 通过函数，创建 10 个用户
+**Example 通过函数，创建 10 个用户**
 
 ```
 #!/bin/bash
