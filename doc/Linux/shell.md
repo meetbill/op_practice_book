@@ -1,6 +1,7 @@
-# shell 基础及实例
+# Shell 基础及实例
 
 <!-- vim-markdown-toc GFM -->
+
 * [1 shell 编程环境](#1-shell-编程环境)
     * [1.1 编程基础知识](#11-编程基础知识)
         * [1.1.1 程序编程风格](#111-程序编程风格)
@@ -47,10 +48,15 @@
     * [查找并删除](#查找并删除)
     * [字符大小写转换](#字符大小写转换)
     * [变量赋值](#变量赋值)
-* [11 脚本的配置文件](#11-脚本的配置文件)
-    * [步骤](#步骤)
+* [11 Bash 命令自动补全](#11-bash-命令自动补全)
+    * [11.1 内置补全命令](#111-内置补全命令)
+    * [11.2 编写脚本](#112-编写脚本)
+        * [11.2.1 支持主选项](#1121-支持主选项)
+        * [11.2.2 支持子选项](#1122-支持子选项)
+        * [11.2.3 安装补全脚本](#1123-安装补全脚本)
 * [12 常用实例](#12-常用实例)
-    * [12.1 ssh 登录相关](#121-ssh-登录相关)
+    * [12.1 脚本的配置文件](#121-脚本的配置文件)
+    * [12.2 ssh 登录相关](#122-ssh-登录相关)
 * [13 日常使用库](#13-日常使用库)
 
 <!-- vim-markdown-toc -->
@@ -122,12 +128,12 @@ Example
 > * 局部变量：生效范围为当前 shell 进程中某代码片断（通常指函数）
 > * 位置变量：`$1, $2, ...` 来表示，用于让脚本在脚本代码中调用通过命令行传递给它的参数；
 > * 特殊变量：`$?, $0, $*, $@, $#`
->   * `$$`: 代表所在命令的PID(不常用)
->   * `$!`: 代表最后执行的后台命令的PID(不常用)
->   * `$?`: 上一条命令的执行状态结果 
+>   * `$$`: 代表所在命令的 PID（不常用）
+>   * `$!`: 代表最后执行的后台命令的 PID（不常用）
+>   * `$?`: 上一条命令的执行状态结果
 >   * `$0`: 命令本身
->   * `$*`: 传递给脚本的所有参数,以一对双引号给出参数列表
->   * `$@`: 传递给脚本的所有参数,将各个参数分别加双引号返回
+>   * `$*`: 传递给脚本的所有参数，以一对双引号给出参数列表
+>   * `$@`: 传递给脚本的所有参数，将各个参数分别加双引号返回
 >   * `$#` : 传递给脚本的参数的个数；
 
 #### 2.2.1 本地变量
@@ -165,7 +171,7 @@ a) 在赋值时，VALUE 可以使用以下引用：
 销毁环境变量：
    unset name
 ```
-Bash 中内建的环境变量:
+Bash 中内建的环境变量：
 > * PATH，SHELL，UID，HISTSIZE, HOME, PWD, OLD, HISTFILE, PS1
 
 #### 2.2.3 只读变量
@@ -201,7 +207,7 @@ $#: 传递给脚本的参数的个数；
 实现算术运算的方式：
 
     (1) let var= 算术表达式
-    (2) var=$[算术表达式]
+    (2) var=$『算术表达式』
     (3) var=$(（算术表达式）)
     (4) var=$(expr arg1 arg2 arg3...)
 乘法符号在有些场景中需要转义；
@@ -1458,10 +1464,138 @@ helloworld
 [root@bill scripts]# echo $test			# 变量值已修改；
 helloworld
 ```
+## 11 Bash 命令自动补全
 
-## 11 脚本的配置文件
-### 步骤
--	(1) 定义文本文件，每行定义“name=value”
+### 11.1 内置补全命令
+
+Bash 内置有两个补全命令，分别是 compgen 和 complete。compgen 命令根据不同的参数，生成匹配单词的候选补全列表，例如：
+```
+$ compgen -W 'hi hello how world' h
+hi
+hello
+how
+```
+compgen 最常用的选项是 -W，通过 -W 参数指定空格分隔的单词列表。h 即我们在命令行当前键入的单词，执行完后会输出候选的匹配列表，这里是以 h 开头的所有单词。
+
+complete 命令的参数有点类似 compgen，不过它的作用是说明命令如何进行补全，例如同样使用 -W 参数指定候选的单词列表：
+```
+$ complete -W 'word1 word2 word3 hello' foo
+$ foo w<Tab>
+$ foo word<Tab>
+word1  word2  word3
+```
+我们还可以通过 -F 参数指定一个补全函数：
+```
+$ complete -F _foo foo
+```
+现在键入 foo 命令后，会调用_foo 函数来生成补全的列表，完成补全的功能，这一点正是补全脚本实现的关键所在，我们会在后面介绍。
+
+补全相关的内置变量
+
+除了上面的两个补全命令外，Bash 还有几个内置的变量用来辅助补全功能，这里主要介绍其中三个：
+
+> * COMP_WORDS: 类型为数组，存放当前命令行中输入的所有单词；
+> * COMP_CWORD: 类型为整数，当前光标下输入的单词位于 COMP_WORDS 数组中的索引；
+> * COMPREPLY: 类型为数组，候选的补全结果；
+> * COMP_WORDBREAKS: 类型为字符串，表示单词之间的分隔符；
+> * COMP_LINE: 类型为字符串，表示当前的命令行输入；
+
+例如我们定义这样一个补全函数_foo：
+```
+$ function _foo()
+{
+     echo -e "\n"
+     declare -p COMP_WORDS
+     declare -p COMP_CWORD
+     declare -p COMP_LINE
+     declare -p COMP_WORDBREAKS
+}
+$ complete -F _foo foo
+```
+假设我们在命令行下输入以下内容，再按下 Tab 键补全：
+```
+$ foo b
+
+declare -a COMP_WORDS='([0]="foo" [1]="b")'
+declare -- COMP_CWORD="1"
+declare -- COMP_LINE="foo b"
+declare -- COMP_WORDBREAKS="
+\"'><=;|&(:"
+```
+对着上面的结果，我想应该比较容易理解这几个变量。当然正如我们之前据说，Bash-completion 包并非是必须的，补全功能是 Bash 自带的。
+
+### 11.2 编写脚本
+
+补全脚本分成两个部分：编写一个补全函数和使用 complete 命令应用补全函数。后者的难度几乎忽略不计，重点在如何写好补全函数。难点在，似乎网上很少与此相关的文档，但是事实上，Bash-completion 自带的补全脚本是最好的起点，可以挑几个简单的改改基本上就可以使用了。
+
+一般补全函数（假设这里依然为_foo) 都会定义以下两个变量：
+```
+local cur prev
+```
+其中 cur 表示当前光标下的单词，而 prev 则对应上一个单词：
+```
+cur="${COMP_WORDS[COMP_CWORD]}"
+prev="${COMP_WORDS[COMP_CWORD-1]}"
+```
+#### 11.2.1 支持主选项
+
+初始化相应的变量后，我们需要定义补全行为，即输入什么的情况下补全什么内容，例如当输入 - 开头的选项的时候，我们将所有的选项作为候选的补全结果：
+```
+local opts="-h --help -f --file -o --output"
+
+if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+fi
+```
+不过再给 COMPREPLY 赋值之前，最好将它重置清空，避免被其它补全函数干扰。
+
+现在完整的补全函数是这样的：
+```
+function _foo() {
+    local cur prev opts
+
+    COMPREPLY=()
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="-h --help -f --file -o --output"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+```
+现在在命令行下就可以对 foo 命令进行参数补全了：
+```
+$ complete -F _foo foo
+$ foo -
+-f        --file    -h        --help    -o        --output
+```
+
+#### 11.2.2 支持子选项
+当然，似乎我们这里的例子没有用到 prev 变量。用好 prev 变量可以让补全的结果更加完整，例如当输入 --file 之后，我们希望补全特殊的文件（假设以.sh 结尾的文件）：
+```
+    case "${prev}" in
+        -f|--file)
+            COMPREPLY=( $(compgen -o filenames -W "`ls *.sh`" -- ${cur}) )
+            ;;
+    esac
+```
+现在再执行 foo 命令，--file 参数的值也可以补全了：
+```
+$ foo --file<Tab>
+a.sh b.sh c.sh
+```
+#### 11.2.3 安装补全脚本
+
+如果安装了 Bash-completion 包，可以将补全脚本放在 /etc/bash_completion.d 目录下，或者放到~/.bash_completion 文件中。
+如果没有安装 Bash-completion 包，可以把补全脚本放到~/.bashrc 或者其它能被 shell 加载的初始化文件中。
+## 12 常用实例
+
+### 12.1 脚本的配置文件
+-	(1) 定义文本文件，每行定义"name=value"
 -	(2) 在脚本中 source 此文件即可
 
 ```
@@ -1477,12 +1611,10 @@ source /tmp/config.test		#导入配置文件，脚本自身并未定义变量；
 
 echo $name				#引用的是配置文件中的变量 name
 ```
-## 12 常用实例
-
-### 12.1 ssh 登录相关
+### 12.2 ssh 登录相关
 
 > * 可以使用 sshpass 进行直接传入密码
->   * 一定要加 -o StrictHostKeyChecking=no 否则如果是第一次访问对应的机器，会执行无效
+> * 一定要加 -o StrictHostKeyChecking=no 否则如果是第一次访问对应的机器，会执行无效
 ```
 export WSSH="./tools/sshpass -p ${PASSWD} ssh -o StrictHostKeyChecking=no "
 export WSCP="./tools/sshpass -p ${PASSWD} scp -o StrictHostKeyChecking=no "
@@ -1500,7 +1632,7 @@ function p_warn {
 }
 
 function p_err {
-    echo -e "${f_red}[ERR]${f_reset} ${1}"   
+    echo -e "${f_red}[ERR]${f_reset} ${1}"
 }
 
 function p_ok {
