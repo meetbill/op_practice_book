@@ -58,6 +58,8 @@
     * [12.1 脚本的配置文件](#121-脚本的配置文件)
     * [12.2 ssh 登录相关](#122-ssh-登录相关)
 * [13 日常使用库](#13-日常使用库)
+* [14 常用实例](#14-常用实例)
+    * [14.1 ping 文件列表中所有主机](#141-ping-文件列表中所有主机)
 
 <!-- vim-markdown-toc -->
 
@@ -645,30 +647,6 @@ echo "LISTEN:$listen"
 echo "Unknow:$other"
 ```
 
-**Example 通过 ping 命令探测 192.168.0.1-254 范围内的所有主机的在线状态**
-
-```
-#!/bin/bash
-#
-#通过 ping 命令探测 192.168.0.1-254 范围内的所有主机的在线状态
-net='192.168.0'
-uphosts=0
-donwhosts=0
-
-for i in {1..254};do
- ping -c 1 -w 1 ${net}.${i} &> /dev/null
- if [ $? -eq 0 ];then
-     echo "${net}.${i} is up."
-     let uphosts++
- else
-     echo "${net}.${i} is down."
-     let downhosts++
- fi
-done
-
-echo "Up hosts:$uphosts."
-echo "Down hosts:$downhosts."
-```
 #### for 循环的特殊格式
 ```
 	for (（控制变量初始化；条件判断表达式；控制变量的修正表达式）)；do
@@ -750,31 +728,6 @@ echo "Add $users users."
 
 ```
 
-**Example 使用 while 循环 ping 指定网络内的所有主机**
-
-```
-#!/bin/bash
-#
-#使用 while 循环 ping 指定网段内的所有主机；
-declare -i i=1
-declare -i uphosts=0
-declare -i downhosts=0
-net='172.16.250'
-
-while [ $i -le 254 ];do
- if ping -c 1 -w 1 ${net}.${i} &> /dev/null;then
-     echo "${net}.$i is up."
-     let uphosts++
- else
-     echo "${net}.$i is down."
-     let downhosts++
- fi
- let i++
-done
-
-echo "Up hosts:$uphosts."
-echo "Down hosts:$downhosts."
-```
 
 **Example 利用 RANDOM 生成 10 个随机数字，输出这 10 个数字，并显示其中的最大者和最小者**
 
@@ -1641,4 +1594,20 @@ function p_ok {
 
 ROOT_PATH=`S=\`readlink "$0"\`; [ -z "$S"  ] && S=$0; dirname $S`
 cd ${ROOT_PATH}
+```
+## 14 常用实例
+### 14.1 ping 文件列表中所有主机
+```
+#!/bin/bash
+file=$1
+
+[[ -z $file  ]] && exit 0
+cat $file| while read line;do
+    ping=`ping -c 1 $line|grep loss|awk '{print $6}'|awk -F "%" '{print $1}'`
+    if [ $ping -eq 100  ];then
+        echo ping $i fail
+    else
+        echo ping $i ok
+    fi
+done
 ```
