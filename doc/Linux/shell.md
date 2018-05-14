@@ -32,6 +32,9 @@
         * [while 基础](#while-基础)
         * [创建死循环](#创建死循环)
         * [while 循环遍历文件的每一行](#while-循环遍历文件的每一行)
+        * [while 与 for 的区别](#while-与-for-的区别)
+            * [行读取](#行读取)
+            * [ssh 命令操作](#ssh-命令操作)
     * [case 语句](#case-语句)
 * [8 函数](#8-函数)
     * [函数基础](#函数基础)
@@ -825,6 +828,24 @@ while read line;do
 done < /etc/passwd
 
 ```
+#### while 与 for 的区别
+
+##### 行读取
+
+> * while 循环
+>   * 以行读取文件
+> * for 循环
+>   * 以空格和回车符分割读取文件，也就是碰到空格和回车，都会执行循环体，所以需要以行读取的话，就要把文件行中的空格转换成其他字符。
+
+##### ssh 命令操作
+
+> * for 循环
+>   * for line in $(cat $file) 在循环体中进行 ssh 命令操作可以依次执行
+> * while 循环
+>   * 循环体内有 ssh、scp、sshpass 的时候会执行一次循环就退出的情况，解决该问题方法有如下两种
+>     * a、使用`ssh -n "command"` ；
+>     * b、将 while 循环内加入 null 重定向，如 `ssh "cmd" < /dev/null` 将 ssh 的输入重定向输入。
+
 ### case 语句
 ```
 case 变量引用 in
