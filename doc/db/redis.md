@@ -1,6 +1,8 @@
 <!-- vim-markdown-toc GFM -->
 
 * [1 Redis](#1-redis)
+    * [1.1 持久化](#11-持久化)
+        * [1.1.1 AOF 重写机制](#111-aof-重写机制)
 * [2 Redis twemproxy 集群](#2-redis-twemproxy-集群)
     * [2.1 Twemproxy 特性](#21-twemproxy-特性)
     * [2.2 环境说明](#22-环境说明)
@@ -22,6 +24,55 @@
 
 <!-- vim-markdown-toc -->
 ## 1 Redis
+
+### 1.1 持久化
+
+#### 1.1.1 AOF 重写机制
+
+AOF 重写触发条件
+
+AOF 重写可以由用户通过调用 BGREWRITEAOF 手动触发。
+服务器在 AOF 功能开启的情况下，会维持以下三个变量：
+
+> * 记录当前 AOF 文件大小的变量 aof_current_size。
+> * 记录最后一次 AOF 重写之后，AOF 文件大小的变量 aof_rewrite_base_size。
+> * 增长百分比变量 aof_rewrite_perc。
+
+每次当 serverCron（服务器周期性操作函数，在 src/redis.c 中）函数执行时，它会检查以下条件是否全部满足，如果全部满足的话，就触发自动的 AOF 重写操作：
+
+> * 没有 BGSAVE 命令（RDB 持久化）/AOF 持久化在执行；
+> * 没有 BGREWRITEAOF 在进行；
+> * auto-aof-rewrite-percentage 参数不为 0
+> * 当前 AOF 文件大小要大于 server.aof_rewrite_min_size（默认为 1MB）
+> * 当前 AOF 文件大小和最后一次重写后的大小之间的比率等于或者等于指定的增长百分比（在配置文件设置了 auto-aof-rewrite-percentage 参数，不设置默认为 100%）
+
+如果前面四个条件都满足，并且当前 AOF 文件大小比最后一次 AOF 重写时的大小要大于指定的百分比，那么触发自动 AOF 重写。
+
+源码如下：
+```
+ /* Trigger an AOF rewrite if needed */
+        // 触发 BGREWRITEAOF
+         if (server.rdb_child_pid == -1 &&
+             server.aof_child_pid == -1 &&
+             server.aof_rewrite_perc &&
+             // AOF 文件的当前大小大于执行 BGREWRITEAOF 所需的最小大小
+             server.aof_current_size > server.aof_rewrite_min_size)
+         {
+            // 上一次完成 AOF 写入之后，AOF 文件的大小
+            long long base = server.aof_rewrite_base_size ?
+                            server.aof_rewrite_base_size : 1;
+
+            // AOF 文件当前的体积相对于 base 的体积的百分比
+            long long growth = (server.aof_current_size*100/base) - 100;
+
+            // 如果增长体积的百分比超过了 growth ，那么执行 BGREWRITEAOF
+            if (growth >= server.aof_rewrite_perc) {
+                redisLog(REDIS_NOTICE,"Starting automatic rewriting of AOF on %lld%% growth",growth);
+                // 执行 BGREWRITEAOF
+                rewriteAppendOnlyFileBackground();
+            }
+         }
+```
 
 ## 2 Redis twemproxy 集群
 
