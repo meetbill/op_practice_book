@@ -4,7 +4,7 @@
 [![GitHub forks](https://img.shields.io/github/forks/meetbill/op_practice_book.svg?style=social&label=Fork)](https://github.com/meetbill/op_practice_book/fork)
 [![GitHub watchers](https://img.shields.io/github/watchers/meetbill/op_practice_book.svg?style=social&label=Watch)](https://github.com/meetbill/op_practice_book/watchers)
 
-![Screenshot](./images/ops.png)
+![Screenshot](./images/ops.jpg)
 
 ## 阅读本书
 
