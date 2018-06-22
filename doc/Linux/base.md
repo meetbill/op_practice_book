@@ -1,6 +1,7 @@
 ## Linux 基础
 
 <!-- vim-markdown-toc GFM -->
+
 * [安装](#安装)
     * [安装准备](#安装准备)
     * [安装 CentOS6.8](#安装-centos68)
@@ -618,7 +619,7 @@ cat: /etc/passwd.error: No such file or directory
 ```
 - 合并输出：
 
-     合并标准输出和错误输出为同一个数据流进行重定向；
+     合并标准输出和错误输出为同一个数据流进行重定向；(PS:重定向命令是倒序操作的，如 > file 2>&1 是先执行 2>&1 然后执行 > file)
 
          &> 合并覆盖重定向；
 
