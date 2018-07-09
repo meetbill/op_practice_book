@@ -1620,8 +1620,8 @@ echo $name				#引用的是配置文件中的变量 name
 > * 可以使用 sshpass 进行直接传入密码
 > * 一定要加 -o StrictHostKeyChecking=no 否则如果是第一次访问对应的机器，会执行无效
 ```
-export WSSH="./tools/sshpass -p ${PASSWD} ssh -o StrictHostKeyChecking=no "
-export WSCP="./tools/sshpass -p ${PASSWD} scp -o StrictHostKeyChecking=no "
+export WSSH="./tools/sshpass -p ${PASSWD} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
+export WSCP="./tools/sshpass -p ${PASSWD} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
 ```
 ## 13 日常使用库
 

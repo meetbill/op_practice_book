@@ -1,6 +1,7 @@
 # 常见服务架设
 
 <!-- vim-markdown-toc GFM -->
+
 * [NTP](#ntp)
     * [简介](#简介)
     * [ntpd](#ntpd)
@@ -25,6 +26,7 @@
     * [一些命令](#一些命令)
         * [常用命令](#常用命令)
         * [ssh 端口非默认 22 同步](#ssh-端口非默认-22-同步)
+        * [ssh 自动接受公钥和修改 known_hosts 文件](#ssh-自动接受公钥和修改-known_hosts-文件)
     * [inotify+rsync 实现实时文件同步](#inotifyrsync-实现实时文件同步)
         * [存储数据异地灾备](#存储数据异地灾备)
             * [需求背景](#需求背景)
@@ -341,6 +343,7 @@ __注：__ 在指定复制源时，路径是否有最后的 “/” 有不同的
 * `--numeric-ids` : 不映射 uid/gid 到 user/group 的名字
 * `-S, --sparse` : 对稀疏文件进行特殊处理以节省 DST 的空间（有空洞文件时使用）
 * `--delete` : 删除 DST 中 SRC 没有的文件，也就是所谓的镜像 [mirror] 备份
+* `-P` 等同于 `--partial` 保留那些因故没有完全传输的文件，以是加快随后的再次传输
 
 
 ## 一些命令
@@ -351,7 +354,7 @@ __注：__ 在指定复制源时，路径是否有最后的 “/” 有不同的
 #rsync -avzP --delete [SRC] [DEST]
 ```
 
-__注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能。
+__注：__ 日常传输时参数记不清楚时，只需要加 `-a` 参数即可，如果有稀疏文件，则添加 `-S` 选项可以提升传输性能。
 
 ```
 [tips]
@@ -386,6 +389,12 @@ __注：__ 如果有稀疏文件，则添加 `-S` 选项可以提升传输性能
 ```
 #rsync -avzP --delete  -e "ssh -p 22222" [USER@]HOST:SRC [DEST]
 ```
+### ssh 自动接受公钥和修改 known_hosts 文件
+
+```
+#rsync -a -e "ssh -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no" [USER@]HOST:SRC [DEST]
+```
+
 ## inotify+rsync 实现实时文件同步
 
 ### 存储数据异地灾备
