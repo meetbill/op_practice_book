@@ -21,6 +21,13 @@
         * [3.1.1 传统的取模方式](#311-传统的取模方式)
         * [3.1.2 一致性哈希方式](#312-一致性哈希方式)
         * [3.1.3 虚拟节点](#313-虚拟节点)
+    * [3.2 redis 过期数据存储方式以及删除方式](#32-redis-过期数据存储方式以及删除方式)
+        * [3.2.1 存储方式](#321-存储方式)
+        * [3.2.2 删除方式](#322-删除方式)
+            * [惰性删除](#惰性删除)
+            * [定期删除](#定期删除)
+        * [3.2.3 redis 主从删除过期 key 方式](#323-redis-主从删除过期-key-方式)
+        * [3.2.4 总结](#324-总结)
 
 <!-- vim-markdown-toc -->
 ## 1 Redis
@@ -358,3 +365,243 @@ def fetch_stats(ip, port):
 另外，这个时候如果只算出三个哈希值，那再跟数据的哈希值比较的时候，很容易分得不均衡，因此就引入了虚拟节点的概念，通过把三个节点加上 ID 后缀等方式，每个节点算出 n 个哈希值，均匀的放在哈希环上，这样对于数据算出的哈希值，能够比较散列的分布（详见下面代码中的 replica）
 
 通过这种算法做数据分布，在增减节点的时候，可以大大减少数据的迁移规模。
+
+### 3.2 redis 过期数据存储方式以及删除方式
+
+当你通过 expire 或者 pexpire 命令，给某个键设置了过期时间，那么它在服务器是怎么存储的呢？到达过期时间后，又是怎么删除的呢？
+<!--more-->
+
+#### 3.2.1 存储方式
+比如：
+```
+redis> EXPIRE book 5
+(integer) 1
+```
+首先我们知道，redis 维护了一个存储了所有的设置的 key->value 的字典。但是其实不止一个字典的。
+**redis 有一个包含过期事件的字典**
+每当有设置过期事件的 key 后，redis 会用当前的事件，加上过期的时间段，得到过期的标准时间，存储在 expires 字典中。
+![](./../../images/db/redis/key-expires-dict.png)
+从上图可以看出来，比如你给 book 设置过期事件，那么 expires 字典的 key 也为 book，值是当前的时间 +5s 后的 unix time。
+
+#### 3.2.2 删除方式
+如果一个键已经过期了，那么 redis 的如果删除它呢？redis 采用了 2 种删除方式；
+##### 惰性删除
+惰性删除的原理理是：放任键过期不管，但是每次从键空间获取键的时候，如果该键存在，再去 expires 字典判断这个键是不是超时。如果超时则返回空，并删除该键。过程如下：
+![](./../../images/db/redis/key-expires-delete.png)
+- 优点：惰性删除对 cpu 是友好的。保证在键必须删除的时候才会消耗 cpu
+- 缺点：惰性删除对内存特别不友好。虽然键过期，但是没有使用则一直存在内存中。
+
+##### 定期删除
+redis 架构中的时间事件，每隔一段时间后，在规定的时间内，会主动去检测 expires 字典中包含的 key 进行检测，发现过期的则删除。在 redis 的源码 redis.c/activeExpireCycle 函数中。
+下面分别是这个函数的源码与伪代码：
+
+
+```
+void  activeExpireCycle(int type) {
+    // 静态变量，用来累积函数连续执行时的数据
+    static  unsigned  int current_db =  0; /* Last DB tested. */
+    static  int timelimit_exit =  0; /* Time limit hit in previous call? */
+    static  long  long last_fast_cycle =  0; /* When last fast cycle ran. */
+
+    unsigned  int j, iteration =  0;
+    // 默认每次处理的数据库数量
+    unsigned  int dbs_per_call = REDIS_DBCRON_DBS_PER_CALL;
+    // 函数开始的时间
+    long  long start =  ustime(), timelimit;
+
+    // 快速模式
+    if (type == ACTIVE_EXPIRE_CYCLE_FAST) {
+        // 如果上次函数没有触发 timelimit_exit ，那么不执行处理
+        if (!timelimit_exit) return;
+        // 如果距离上次执行未够一定时间，那么不执行处理
+        if (start < last_fast_cycle + ACTIVE_EXPIRE_CYCLE_FAST_DURATION*2) return;
+        // 运行到这里，说明执行快速处理，记录当前时间
+        last_fast_cycle = start;
+    }
+
+    /*
+    * 一般情况下，函数只处理 REDIS_DBCRON_DBS_PER_CALL 个数据库，
+    * 除非：
+    * 当前数据库的数量小于 REDIS_DBCRON_DBS_PER_CALL
+    * 如果上次处理遇到了时间上限，那么这次需要对所有数据库进行扫描，
+    * 这可以避免过多的过期键占用空间
+    */
+    if (dbs_per_call > server.dbnum  || timelimit_exit)
+    dbs_per_call = server.dbnum;
+
+    // 函数处理的微秒时间上限
+    // ACTIVE_EXPIRE_CYCLE_SLOW_TIME_PERC 默认为 25 ，也即是 25 % 的 CPU 时间
+    timelimit =  1000000*ACTIVE_EXPIRE_CYCLE_SLOW_TIME_PERC/server.hz/100;
+    timelimit_exit =  0;
+    if (timelimit <=  0) timelimit =  1;
+
+    // 如果是运行在快速模式之下
+    // 那么最多只能运行 FAST_DURATION 微秒
+    // 默认值为 1000 （微秒）
+    if (type == ACTIVE_EXPIRE_CYCLE_FAST)
+    timelimit = ACTIVE_EXPIRE_CYCLE_FAST_DURATION; /* in microseconds. */
+
+    // 遍历数据库
+    for (j =  0; j < dbs_per_call; j++) {
+        int expired;
+        // 指向要处理的数据库
+        redisDb *db = server.db+(current_db % server.dbnum);
+
+        // 为 DB 计数器加一，如果进入 do 循环之后因为超时而跳出
+        // 那么下次会直接从下个 DB 开始处理
+        current_db++;
+
+        do {
+            unsigned  long num, slots;
+            long  long now, ttl_sum;
+            int ttl_samples;
+
+            // 获取数据库中带过期时间的键的数量
+            // 如果该数量为 0 ，直接跳过这个数据库
+            if ((num =  dictSize(db->expires)) ==  0) {
+                db->avg_ttl  =  0;
+                break;
+            }
+            // 获取数据库中键值对的数量
+            slots =  dictSlots(db->expires);
+            // 当前时间
+            now =  mstime();
+
+            // 这个数据库的使用率低于 1% ，扫描起来太费力了（大部分都会 MISS）
+            // 跳过，等待字典收缩程序运行
+            if (num && slots > DICT_HT_INITIAL_SIZE &&
+            (num*100/slots <  1)) break;
+
+            // 已处理过期键计数器
+            expired =  0;
+            // 键的总 TTL 计数器
+            ttl_sum =  0;
+            // 总共处理的键计数器
+            ttl_samples =  0;
+
+            // 每次最多只能检查 LOOKUPS_PER_LOOP 个键
+            if (num > ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP)
+            num = ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP;
+
+            // 开始遍历数据库
+            while (num--) {
+                dictEntry *de;
+                long  long ttl;
+
+                // 从 expires 中随机取出一个带过期时间的键
+                if ((de =  dictGetRandomKey(db->expires)) ==  NULL) break;
+                // 计算 TTL
+                ttl =  dictGetSignedIntegerVal(de)-now;
+                // 如果键已经过期，那么删除它，并将 expired 计数器增一
+                if (activeExpireCycleTryExpire(db,de,now)) expired++;
+                if (ttl <  0) ttl =  0;
+                // 累积键的 TTL
+                ttl_sum += ttl;
+                // 累积处理键的个数
+                ttl_samples++;
+            }
+
+            // 为这个数据库更新平均 TTL 统计数据
+            if (ttl_samples) {
+                // 计算当前平均值
+                long  long avg_ttl = ttl_sum/ttl_samples;
+                // 如果这是第一次设置数据库平均 TTL ，那么进行初始化
+                if (db->avg_ttl  ==  0) db->avg_ttl  = avg_ttl;
+                /* Smooth the value averaging with the previous one. */
+                // 取数据库的上次平均 TTL 和今次平均 TTL 的平均值
+                db->avg_ttl  = (db->avg_ttl+avg_ttl)/2;
+            }
+
+            // 我们不能用太长时间处理过期键，
+            // 所以这个函数执行一定时间之后就要返回
+
+            // 更新遍历次数
+            iteration++;
+
+            // 每遍历 16 次执行一次
+            if ((iteration &  0xf) ==  0  &&  /* check once every 16 iterations. */
+            (ustime()-start) > timelimit)
+            {
+                // 如果遍历次数正好是 16 的倍数
+                // 并且遍历的时间超过了 timelimit
+                // 那么断开 timelimit_exit
+                timelimit_exit =  1;
+            }
+
+            // 已经超时了，返回
+            if (timelimit_exit) return;
+
+            // 如果已删除的过期键占当前总数据库带过期时间的键数量的 25 %
+            // 那么不再遍历
+        } while (expired > ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP/4);
+    }
+}
+```
+**伪代码是：**
+```
+# 默认每次检测的数据库数量为 16
+DEFAULT_DB_NUMBERS = 16
+# 默认每次检测的键的数量最大为 20
+DEFAULT_KEY_NUMBERS = 20
+# 全局变量，记录当前检测的进度
+current_db = 0
+def activeExpireCycle():
+    # 初始化要检测的数据库数量
+    # 如果服务器的数据库数量小于 16，则以服务器的为准
+    if server.dbnumbers < DEFAULT_DB_NUMBERS:
+        db_numbers = server.dbnumbers
+    else
+        db_numbers = DEFAULT_DB_NUMBERS
+
+    # 遍历每次数据库
+    for i in range(db_numbers):
+        # 如果 current_db 的值等于服务器的数量，代表已经遍历全，则重新开始
+        if current_db = db_numbers:
+            current_db = 0
+
+        # 获取当前要处理的数据库
+        redisDb = server.db[current_db]
+
+        # 将数据库索引 +1，指向下一个数据库
+        current_db++
+
+        do
+            # 检测数据库中的键
+            for j in range(DEFAULT_KEY_NUMBERS):
+                # 如果数据库中没有过期键则跳过这个库
+                if redisDb.expires.size() == 0:break
+
+                # 随机获取一个带有过期事件的键
+                key_with_ttl = redisDb.expires.get_random_key()
+
+                # 检测键是不是过期了，如果过期则删除
+                if is_expired(key_with_ttl):
+                    delete_key(key_with_ttl)
+            # 已达到时间上限，则停止处理
+            if reach_time_limit(): retrun
+        while expired>ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP/4
+```
+对 activeExpireCycle 进行总结：
+- redis 默认 1s 调用 10 次，这个是 redis 的配置中的 hz 选项。hz 默认是 10，代表 1s 调用 10 次，每 100ms 调用一次。
+- hz 不能太大，太大的话，cpu 会花大量的时间消耗在判断过期的 key 上，对 cpu 不友好。但是如果你的 redis 过期数据过多，可以适当调大。
+- hz 不能太小，因为太小的话，一旦过期的 key 太多可能会过滤不完。
+- redis 执行定期删除函数，必须在一定时间内，超过该时间就 return。事件定义为`timelimit =  1000000*ACTIVE_EXPIRE_CYCLE_SLOW_TIME_PERC/server.hz/100` 可以看出该时间与 hz 成反比，hz 默认 10，timelimit 就为 25ms；hz 修改为 100，那么 timelimit 就为 2.5ms。
+- 抽取 20 个数据进行判断删除为一个轮训，每经过 16 个轮训才会去判断一次时间是不是超时。
+- 如果一个数据库，使用率低于 1%，则不去进行定期删除操作。
+- 如果对一个数据库，这次删除操作，已经删除了 25% 的过期 key，那么就跳过这个库。
+
+#### 3.2.3 redis 主从删除过期 key 方式
+当 redis 主从模型下，从服务器的删除过期 key 的动作是由主服务器控制的。
+- 1、主服务器在惰性删除、客户端主动删除、定期删除一个 key 的时候，会向从服务器发送一个 del 的命令，告诉从服务器需要删除这个 key。
+![](./../../images/db/redis/key-expires-delete-master.png)
+
+- 2、从服务器在执行客户端读取 key 的时候，如果该 key 已经过期，也不会将该 key 删除，而是返回一个 null
+![](./../../images/db/redis/key-expires-delete-slave.png)
+
+- 3、从服务器只有在接收到主服务器的 del 命令才会将一个 key 进行删除。
+
+#### 3.2.4 总结
+- 1、expires 字典的 key 指向数据库中的某个 key，而值记录了数据库中该 key 的过期时间，过期时间是一个以毫秒为单位的 unix 时间戳；
+- 2、redis 使用惰性删除和定期删除两种策略来删除过期的 key；惰性删除只会在碰到过期 key 才会删除；定期删除则每隔一段时间主动查找并删除过期键；
+- 3、当主服务器删除一个过期 key 后，会向所有的从服务器发送一条 del 命令，显式的删除过期 key；
+- 4、从服务器即使发现过期 key 也不会自作主张删除它，而是等待主服务器发送 del 命令，这种统一、中心化的过期 key 删除策略可以保证主从服务器的数据一致性。
