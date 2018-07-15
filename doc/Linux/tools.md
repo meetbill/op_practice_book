@@ -10,7 +10,7 @@
         * [1.2.3 其他操作](#123-其他操作)
             * [**解决 GitHub commit 次数过多.git 文件过大**](#解决-github-commit-次数过多git-文件过大)
             * [**HTTP request failed**](#http-request-failed)
-            * [**设置 Wiki 只能自己编写，其他人员只读**](#设置-wiki-只能自己编写其他人员只读)
+            * [设置 Wiki 只能自己编写，其他人员只读](#设置-wiki-只能自己编写其他人员只读)
             * [修改最后一次 commit 操作](#修改最后一次-commit-操作)
         * [1.2.4 Git tips](#124-git-tips)
 * [2 运维相关](#2-运维相关)
@@ -226,7 +226,7 @@ Git 的核心数是很简单的，就是一个链表（或者一棵树更准确�
 # rm -rf .git
 # git init
 # git add .
-# git cm "first commit"
+# git commit -a -m "[Update]合并之前所有 commit"
 # git remote add origin <your_github_repo_url>
 # git push -f -u origin master
 ```
@@ -246,7 +246,7 @@ fatal: HTTP request failed
 #git config --global http.sslVerify false
 
 ```
-#### **设置 Wiki 只能自己编写，其他人员只读** 
+#### 设置 Wiki 只能自己编写，其他人员只读
 
 在项目中的设置中勾选`Restrict editing to collaborators only`
 
