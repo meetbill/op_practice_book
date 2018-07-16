@@ -28,6 +28,9 @@
             * [定期删除](#定期删除)
         * [3.2.3 redis 主从删除过期 key 方式](#323-redis-主从删除过期-key-方式)
         * [3.2.4 总结](#324-总结)
+* [4 其他相关](#4-其他相关)
+    * [4.1 内核参数 overcommit](#41-内核参数-overcommit)
+        * [什么是 Overcommit 和 OOM](#什么是-overcommit-和-oom)
 
 <!-- vim-markdown-toc -->
 ## 1 Redis
@@ -605,3 +608,23 @@ def activeExpireCycle():
 - 2、redis 使用惰性删除和定期删除两种策略来删除过期的 key；惰性删除只会在碰到过期 key 才会删除；定期删除则每隔一段时间主动查找并删除过期键；
 - 3、当主服务器删除一个过期 key 后，会向所有的从服务器发送一条 del 命令，显式的删除过期 key；
 - 4、从服务器即使发现过期 key 也不会自作主张删除它，而是等待主服务器发送 del 命令，这种统一、中心化的过期 key 删除策略可以保证主从服务器的数据一致性。
+
+## 4 其他相关
+
+### 4.1 内核参数 overcommit
+它是 内存分配策略,可选值：0、1、2。
+> * 0， 表示内核将检查是否有足够的可用内存供应用进程使用；如果有足够的可用内存，内存申请允许；否则，内存申请失败，并把错误返回给应用进程。
+> * 1， 表示内核允许分配所有的物理内存，而不管当前的内存状态如何。
+> * 2， 表示内核允许分配超过所有物理内存和交换空间总和的内存
+
+#### 什么是 Overcommit 和 OOM
+
+Linux 对大部分申请内存的请求都回复"yes"，以便能跑更多更大的程序。因为申请内存后，并不会马上使用内存。这种技术叫做 Overcommit。当 linux 发现内存不足时，会发生 OOM killer(OOM=out-of-memory)。它会选择杀死一些进程（用户态进程，不是内核线程），以便释放内存。
+当 oom-killer 发生时，linux 会选择杀死哪些进程？选择进程的函数是 oom_badness 函数（在 mm/oom_kill.c 中），该函数会计算每个进程的点数 (0~1000)。点数越高，这个进程越有可能被杀死。每个进程的点数跟 oom_score_adj 有关，而且 oom_score_adj 可以被设置 (-1000 最低，1000 最高）。
+
+解决方法：
+    很简单，按提示的操作（将 vm.overcommit_memory 设为 1）即可:可以通过 ` cat /proc/sys/vm/overcommit_memory` 和 `sysctl -a | grep overcommit` 查看
+    有三种方式修改内核参数，但要有 root 权限：
+> * （1）编辑 /etc/sysctl.conf ，改 vm.overcommit_memory=1，然后 sysctl -p 使配置文件生效
+> * （2）sysctl vm.overcommit_memory=1
+> * （3）echo 1 > /proc/sys/vm/overcommit_memory
