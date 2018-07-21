@@ -38,5 +38,6 @@
     * [负载均衡](doc/HA/lb.md)
     * [LVS](doc/HA/lvs.md)
     * [高可用的 LVS 负载均衡集群](doc/HA/keepalived.md)
+    * [ZooKeeper](./doc/cluster/zookeeper.md)
 * [其他篇](doc/other/README.md)
     * [Windows 下服务](doc/other/windows.md)
