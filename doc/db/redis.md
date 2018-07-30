@@ -16,20 +16,24 @@
         * [2.6.1 状态参数](#261-状态参数)
         * [2.6.2 状态实例](#262-状态实例)
         * [2.6.3 使用 Python 获取 Twemproxy 状态](#263-使用-python-获取-twemproxy-状态)
-* [3 原理说明](#3-原理说明)
-    * [3.1 一致性 hash](#31-一致性-hash)
-        * [3.1.1 传统的取模方式](#311-传统的取模方式)
-        * [3.1.2 一致性哈希方式](#312-一致性哈希方式)
-        * [3.1.3 虚拟节点](#313-虚拟节点)
-    * [3.2 redis 过期数据存储方式以及删除方式](#32-redis-过期数据存储方式以及删除方式)
-        * [3.2.1 存储方式](#321-存储方式)
-        * [3.2.2 删除方式](#322-删除方式)
+* [3 redis cluster](#3-redis-cluster)
+    * [3.1 cluster 命令](#31-cluster-命令)
+    * [3.2 redis cluster 配置](#32-redis-cluster-配置)
+    * [3.3 redis cluster 状态](#33-redis-cluster-状态)
+* [4 原理说明](#4-原理说明)
+    * [4.1 一致性 hash](#41-一致性-hash)
+        * [4.1.1 传统的取模方式](#411-传统的取模方式)
+        * [4.1.2 一致性哈希方式](#412-一致性哈希方式)
+        * [4.1.3 虚拟节点](#413-虚拟节点)
+    * [4.2 redis 过期数据存储方式以及删除方式](#42-redis-过期数据存储方式以及删除方式)
+        * [4.2.1 存储方式](#421-存储方式)
+        * [4.2.2 删除方式](#422-删除方式)
             * [惰性删除](#惰性删除)
             * [定期删除](#定期删除)
-        * [3.2.3 redis 主从删除过期 key 方式](#323-redis-主从删除过期-key-方式)
-        * [3.2.4 总结](#324-总结)
-* [4 其他相关](#4-其他相关)
-    * [4.1 内核参数 overcommit](#41-内核参数-overcommit)
+        * [4.2.3 redis 主从删除过期 key 方式](#423-redis-主从删除过期-key-方式)
+        * [4.2.4 总结](#424-总结)
+* [5 其他相关](#5-其他相关)
+    * [5.1 内核参数 overcommit](#51-内核参数-overcommit)
         * [什么是 Overcommit 和 OOM](#什么是-overcommit-和-oom)
 
 <!-- vim-markdown-toc -->
@@ -302,11 +306,107 @@ def fetch_stats(ip, port):
     stats = json.loads(raw)
     return stats
 ```
-## 3 原理说明
 
-### 3.1 一致性 hash
 
-#### 3.1.1 传统的取模方式
+## 3 redis cluster
+
+### 3.1 cluster 命令
+
+> * 集群 (cluster)
+>   * cluster info                           打印集群的信息
+>   * cluster nodes                          列出集群当前已知的所有节点 (node)，以及这些节点的相关信息
+> * 节点 (node)
+>   * cluster meet <ip> <port>               将 ip 和 port 所指定的节点添加到集群当中，让它成为集群的一份子
+>   * cluster forget <node_id>               从集群中移除 node_id 指定的节点
+>   * cluster replicate <node_id>            将当前节点设置为 node_id 指定的节点的从节点
+>   * cluster saveconfig                     将节点的配置文件保存到硬盘里面
+>   * cluster slaves <node_id>               列出该 slave 节点的 master 节点
+>   * cluster set-config-epoch               强制设置 configEpoch
+> * 槽 (slot)
+>   * cluster addslots <slot> [slot ...]     将一个或多个槽 (slot) 指派 (assign) 给当前节点
+>   * cluster delslots <slot> [slot ...]     移除一个或多个槽对当前节点的指派
+>   * cluster flushslots                     移除指派给当前节点的所有槽，让当前节点变成一个没有指派任何槽的节点
+>   * cluster setslot <slot> node <node_id>        将槽 slot 指派给 node_id 指定的节点，如果槽已经指派给另一个节点，那么先让另一个节点删除该槽，然后再进行指派
+>   * cluster setslot <slot> migrating <node_id>   将本节点的槽 slot 迁移到 node_id 指定的节点中
+>   * cluster setslot <slot> importing <node_id>   从 node_id 指定的节点中导入槽 slot 到本节点
+>   * cluster setslot <slot> stable                取消对槽 slot 的导入 (import) 或者迁移 (migrate)
+> * 键 (key)
+>   * cluster keyslot <key>                        计算键 key 应该被放置在哪个槽上
+>   * cluster countkeysinslot <slot>               返回槽 slot 目前包含的键值对数量
+>   * cluster getkeysinslot <slot> <count>         返回 count 个 slot 槽中的键
+> * 其它
+>   * cluster myid                           返回节点的 ID
+>   * cluster slots                          返回节点负责的 slot
+>   * cluster reset                          重置集群，慎用
+
+### 3.2 redis cluster 配置
+```
+cluster-enabled yes
+```
+如果配置 yes 则开启集群功能，此 redis 实例作为集群的一个节点，否则，它是一个普通的单一的 redis 实例。
+
+```
+cluster-config-file nodes-6379.conf
+```
+虽然此配置的名字叫"集群配置文件"，但是此配置文件不能人工编辑，它是集群节点自动维护的文件，主要用于记录集群中有哪些节点、他们的状态以及一些持久化参数等，方便在重启时恢复这些状态。通常是在收到请求之后这个文件就会被更新。
+```
+cluster-node-timeout 15000
+```
+这是集群中的节点能够失联的最大时间，超过这个时间，该节点就会被认为故障。如果主节点超过这个时间还是不可达，则用它的从节点将启动故障迁移，升级成主节点。注意，任何一个节点在这个时间之内如果还是没有连上大部分的主节点，则此节点将停止接收任何请求。一般设置为 15 秒即可。
+```
+cluster-slave-validity-factor 10
+```
+如果设置成 0，则无论从节点与主节点失联多久，从节点都会尝试升级成主节点。如果设置成正数，则 cluster-node-timeout 乘以 cluster-slave-validity-factor 得到的时间，是从节点与主节点失联后，此从节点数据有效的最长时间，超过这个时间，从节点不会启动故障迁移。假设 cluster-node-timeout=5，cluster-slave-validity-factor=10，则如果从节点跟主节点失联超过 50 秒，此从节点不能成为主节点。注意，如果此参数配置为非 0，将可能出现由于某主节点失联却没有从节点能顶上的情况，从而导致集群不能正常工作，在这种情况下，只有等到原来的主节点重新回归到集群，集群才恢复运作。
+```
+cluster-migration-barrier 1
+```
+主节点需要的最小从节点数，只有达到这个数，主节点失败时，它从节点才会进行迁移。更详细介绍可以看本教程后面关于副本迁移到部分。
+```
+cluster-require-full-coverage yes
+```
+在部分 key 所在的节点不可用时，如果此参数设置为"yes"（默认值）, 则整个集群停止接受操作；如果此参数设置为”no”，则集群依然为可达节点上的 key 提供读操作。
+
+### 3.3 redis cluster 状态
+
+127.0.0.1:8001> cluster info
+> * cluster_state:ok
+>   * 如果当前 redis 发现有 failed 的 slots，默认为把自己 cluster_state 从 ok 个性为 fail, 写入命令会失败。如果设置 cluster-require-full-coverage 为 no, 则无此限制。
+> * cluster_slots_assigned:16384             #已分配的槽
+> * cluster_slots_ok:16384                   #槽的状态是 ok 的数目
+> * cluster_slots_pfail:0                    #可能失效的槽的数目
+> * cluster_slots_fail:0                     #已经失效的槽的数目
+> * cluster_known_nodes:6                    #集群中节点个数
+> * cluster_size:3                           #集群中设置的分片个数
+> * cluster_current_epoch:15                 #集群中的 currentEpoch 总是一致的，currentEpoch 越高，代表节点的配置或者操作越新，集群中最大的那个 node epoch
+> * cluster_my_epoch:12                      #当前节点的 config epoch，每个主节点都不同，一直递增，其表示某节点最后一次变成主节点或获取新 slot 所有权的逻辑时间。
+> * cluster_stats_messages_sent:270782059
+> * cluster_stats_messages_received:270732696
+
+
+```
+127.0.0.1:8001> cluster nodes
+25e8c9379c3db621da6ff8152684dc95dbe2e163 192.168.64.102:8002 master - 0 1490696025496 15 connected 5461-10922
+d777a98ff16901dffca53e509b78b65dd1394ce2 192.168.64.156:8001 slave 0b1f3dd6e53ba76b8664294af2b7f492dbf914ec 0 1490696027498 12 connected
+8e082ea9fe9d4c4fcca4fbe75ba3b77512b695ef 192.168.64.108:8000 master - 0 1490696025997 14 connected 0-5460
+0b1f3dd6e53ba76b8664294af2b7f492dbf914ec 192.168.64.170:8001 myself,master - 0 0 12 connected 10923-16383
+eb8adb8c0c5715525997bdb3c2d5345e688d943f 192.168.64.101:8002 slave 25e8c9379c3db621da6ff8152684dc95dbe2e163 0 1490696027498 15 connected
+4000155a787ddab1e7f12584dabeab48a617fc46 192.168.67.54:8000 slave 8e082ea9fe9d4c4fcca4fbe75ba3b77512b695ef 0 1490696026497 14 connected
+```
+> * 节点 ID：例如 25e8c9379c3db621da6ff8152684dc95dbe2e163
+> * ip:port：节点的 ip 地址和端口号，例如 192.168.64.102:8002
+> * flags：节点的角色 (master,slave,myself) 以及状态 (pfail,fail)
+> * 如果节点是一个从节点的话，那么跟在 flags 之后的将是主节点的节点 ID，例如 192.168.64.156:8001 主节点的 ID 就是 0b1f3dd6e53ba76b8664294af2b7f492dbf914ec
+> * 集群最近一次向节点发送 ping 命令之后，过了多长时间还没接到回复
+> * 节点最近一次返回 pong 回复的时间
+> * 节点的配置纪元 (config epoch)
+> * 本节点的网络连接情况
+> * 节点目前包含的槽，例如 192.168.64.102:8002 目前包含的槽为 5461-10922
+
+## 4 原理说明
+
+### 4.1 一致性 hash
+
+#### 4.1.1 传统的取模方式
 例如 10 条数据，3 个节点，如果按照取模的方式，那就是
 > * node a: 0,3,6,9
 > * node b: 1,4,7
@@ -321,7 +421,7 @@ def fetch_stats(ip, port):
 
 总结：数据 3,4,5,6,7,8,9 在增加节点的时候，都需要做搬迁，成本太高
 
-#### 3.1.2 一致性哈希方式
+#### 4.1.2 一致性哈希方式
 
 最关键的区别就是，对节点和数据，都做一次哈希运算，然后比较节点和数据的哈希值，数据取和节点最相近的节点做为存放节点。这样就保证当节点增加或者减少的时候，影响的数据最少。还是拿刚刚的例子，（用简单的字符串的 ascii 码做哈希 key）：
 
@@ -363,18 +463,18 @@ def fetch_stats(ip, port):
 
 这个时候只有 5 和 6 需要做迁移
 
-#### 3.1.3 虚拟节点
+#### 4.1.3 虚拟节点
 
 另外，这个时候如果只算出三个哈希值，那再跟数据的哈希值比较的时候，很容易分得不均衡，因此就引入了虚拟节点的概念，通过把三个节点加上 ID 后缀等方式，每个节点算出 n 个哈希值，均匀的放在哈希环上，这样对于数据算出的哈希值，能够比较散列的分布（详见下面代码中的 replica）
 
 通过这种算法做数据分布，在增减节点的时候，可以大大减少数据的迁移规模。
 
-### 3.2 redis 过期数据存储方式以及删除方式
+### 4.2 redis 过期数据存储方式以及删除方式
 
 当你通过 expire 或者 pexpire 命令，给某个键设置了过期时间，那么它在服务器是怎么存储的呢？到达过期时间后，又是怎么删除的呢？
 <!--more-->
 
-#### 3.2.1 存储方式
+#### 4.2.1 存储方式
 比如：
 ```
 redis> EXPIRE book 5
@@ -386,7 +486,7 @@ redis> EXPIRE book 5
 ![](./../../images/db/redis/key-expires-dict.png)
 从上图可以看出来，比如你给 book 设置过期事件，那么 expires 字典的 key 也为 book，值是当前的时间 +5s 后的 unix time。
 
-#### 3.2.2 删除方式
+#### 4.2.2 删除方式
 如果一个键已经过期了，那么 redis 的如果删除它呢？redis 采用了 2 种删除方式；
 ##### 惰性删除
 惰性删除的原理理是：放任键过期不管，但是每次从键空间获取键的时候，如果该键存在，再去 expires 字典判断这个键是不是超时。如果超时则返回空，并删除该键。过程如下：
@@ -593,7 +693,7 @@ def activeExpireCycle():
 - 如果一个数据库，使用率低于 1%，则不去进行定期删除操作。
 - 如果对一个数据库，这次删除操作，已经删除了 25% 的过期 key，那么就跳过这个库。
 
-#### 3.2.3 redis 主从删除过期 key 方式
+#### 4.2.3 redis 主从删除过期 key 方式
 当 redis 主从模型下，从服务器的删除过期 key 的动作是由主服务器控制的。
 - 1、主服务器在惰性删除、客户端主动删除、定期删除一个 key 的时候，会向从服务器发送一个 del 的命令，告诉从服务器需要删除这个 key。
 ![](./../../images/db/redis/key-expires-delete-master.png)
@@ -603,16 +703,16 @@ def activeExpireCycle():
 
 - 3、从服务器只有在接收到主服务器的 del 命令才会将一个 key 进行删除。
 
-#### 3.2.4 总结
+#### 4.2.4 总结
 - 1、expires 字典的 key 指向数据库中的某个 key，而值记录了数据库中该 key 的过期时间，过期时间是一个以毫秒为单位的 unix 时间戳；
 - 2、redis 使用惰性删除和定期删除两种策略来删除过期的 key；惰性删除只会在碰到过期 key 才会删除；定期删除则每隔一段时间主动查找并删除过期键；
 - 3、当主服务器删除一个过期 key 后，会向所有的从服务器发送一条 del 命令，显式的删除过期 key；
 - 4、从服务器即使发现过期 key 也不会自作主张删除它，而是等待主服务器发送 del 命令，这种统一、中心化的过期 key 删除策略可以保证主从服务器的数据一致性。
 
-## 4 其他相关
+## 5 其他相关
 
-### 4.1 内核参数 overcommit
-它是 内存分配策略,可选值：0、1、2。
+### 5.1 内核参数 overcommit
+它是 内存分配策略，可选值：0、1、2。
 > * 0， 表示内核将检查是否有足够的可用内存供应用进程使用；如果有足够的可用内存，内存申请允许；否则，内存申请失败，并把错误返回给应用进程。
 > * 1， 表示内核允许分配所有的物理内存，而不管当前的内存状态如何。
 > * 2， 表示内核允许分配超过所有物理内存和交换空间总和的内存
@@ -623,7 +723,7 @@ Linux 对大部分申请内存的请求都回复"yes"，以便能跑更多更大
 当 oom-killer 发生时，linux 会选择杀死哪些进程？选择进程的函数是 oom_badness 函数（在 mm/oom_kill.c 中），该函数会计算每个进程的点数 (0~1000)。点数越高，这个进程越有可能被杀死。每个进程的点数跟 oom_score_adj 有关，而且 oom_score_adj 可以被设置 (-1000 最低，1000 最高）。
 
 解决方法：
-    很简单，按提示的操作（将 vm.overcommit_memory 设为 1）即可:可以通过 ` cat /proc/sys/vm/overcommit_memory` 和 `sysctl -a | grep overcommit` 查看
+    很简单，按提示的操作（将 vm.overcommit_memory 设为 1）即可：可以通过 ` cat /proc/sys/vm/overcommit_memory` 和 `sysctl -a | grep overcommit` 查看
     有三种方式修改内核参数，但要有 root 权限：
 > * （1）编辑 /etc/sysctl.conf ，改 vm.overcommit_memory=1，然后 sysctl -p 使配置文件生效
 > * （2）sysctl vm.overcommit_memory=1
