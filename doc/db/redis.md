@@ -3,6 +3,11 @@
 * [1 Redis](#1-redis)
     * [1.1 持久化](#11-持久化)
         * [1.1.1 AOF 重写机制](#111-aof-重写机制)
+    * [1.2 Redis bug](#12-redis-bug)
+        * [1.2.1 AOF 句柄泄露 bug](#121-aof-句柄泄露-bug)
+            * [表现](#表现)
+            * [分析](#分析)
+            * [解决](#解决)
 * [2 Redis twemproxy 集群](#2-redis-twemproxy-集群)
     * [2.1 Twemproxy 特性](#21-twemproxy-特性)
     * [2.2 环境说明](#22-环境说明)
@@ -87,6 +92,119 @@ AOF 重写可以由用户通过调用 BGREWRITEAOF 手动触发。
             }
          }
 ```
+### 1.2 Redis bug
+
+#### 1.2.1 AOF 句柄泄露 bug
+##### 表现
+日志中提示
+```
+* Residual parent diff successfully flushed to the rewritten AOF (329.83 MB)
+* Background AOF rewrite finished successfully
+* Starting automatic rewriting of AOF on 100% growth
+# Can't rewrite append only file in background: fork: Cannot allocate memory
+* Starting automatic rewriting of AOF on 100% growth
+# Can't rewrite append only file in background: fork: Cannot allocate memory
+* Starting automatic rewriting of AOF on 100% growth
+# Can't rewrite append only file in background: fork: Cannot allocate memory
+* Starting automatic rewriting of AOF on 100% growth
+# Error opening /setting AOF rewrite IPC pipes: Numerical result out of range
+* Starting automatic rewriting of AOF on 100% growth
+# Error opening /setting AOF rewrite IPC pipes: Numerical result out of range
+# Error registering fd event for the new client: Numerical result out of range (fd=10128)
+# Error registering fd event for the new client: Numerical result out of range (fd=10128)
+```
+使用 lsof 命令检查 fd 数，发现当时进程打开的 fd 数已经达到 10128 个，而其中大部分基本都是 pipe. 在 Redis 中，pipe 主要用于父子进程间通信，如 AOF 重写、基于 socket 的 RDB 持久化等场景。
+
+##### 分析
+
+**fd 限制**
+
+首先，我们定位到 client 连接报错的主要调用链为 networking.c/acceptCommonHandler => networking.c/createClient => ae.c/aeCreateFileEvent：
+```
+static void acceptCommonHandler(int fd, int flags, char *ip) {
+    client *c;
+    if ((c = createClient(fd)) == NULL) {
+        serverLog(LL_WARNING,
+            "Error registering fd event for the new client: %s (fd=%d)",
+            strerror(errno),fd);
+        close(fd); /* May be already closed, just ignore errors */
+        return;
+    }
+    //……
+}
+int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
+        aeFileProc *proc, void *clientData)
+{
+    if (fd >= eventLoop->setsize) {
+        errno = ERANGE;
+        return AE_ERR;
+    }
+//……
+}
+```
+而 eventLoop->setsize 则是在 server.c/initServer 中被初始化和设置的，大小为 maxclient+128 个。而我们 maxclient 采用 Redis 默认配置 10000 个，所以当 fd=10128 时就出错了。
+```
+server.el = aeCreateEventLoop(server.maxclients+CONFIG_FDSET_INCR);
+
+```
+
+
+**aof 重写子进程启动失败为何不关闭 pipe**
+
+aof 重写过程由 server.c/serverCron 定时时间事件处理函数触发，调用 aof.c/rewriteAppendOnlyFileBackground 启动 aof 重写子进程。在 rewriteAppendOnlyFileBackground 方法中我们注意到如果 fork 失败，过程就直接退出了。
+
+```
+int rewriteAppendOnlyFileBackground(void) {
+    //……
+    if (aofCreatePipes() != C_OK) return C_ERR; // 创建 pipe
+    //……
+    if ((childpid = fork()) == 0) {
+        /* Child */
+        //……
+    } else {
+        /* Parent */
+        // 子进程启动出错处理
+        if (childpid == -1) {
+            serverLog(LL_WARNING,
+                "Can't rewrite append only file in background: fork: %s",
+                strerror(errno)); // 最初内存不足正是这里打出的错误 log
+            return C_ERR;
+        }
+    //……
+    }
+}
+```
+而关闭 pipe 的方法，是在 server.c/serverCron => aof.c/backgroundRewriteDoneHandler 中发现 AOF 重写子进程退出后被调用：
+```
+//……
+    /* Check if a background saving or AOF rewrite in progress terminated. */
+    if (server.rdb_child_pid != -1 || server.aof_child_pid != -1 ||
+        ldbPendingChildren())
+    {
+        //……
+        // 任意子进程退出时执行
+        if ((pid = wait3(&statloc,WNOHANG,NULL)) != 0) {
+            //……
+            if (pid == -1) {
+                serverLog(……);
+            } else if (pid == server.rdb_child_pid) {
+                backgroundSaveDoneHandler(exitcode,bysignal);
+            } else if (pid == server.aof_child_pid) { // 发现是 aof 重写子进程完成
+                backgroundRewriteDoneHandler(exitcode,bysignal); // 执行后续工作，包括关闭 pipe
+            }
+            //……
+        }
+    }
+//……
+```
+
+由此可见，如果 aof 重写子进程没有启动，则 pipe 将不会被关闭。而下次尝试启动 aof 重写时，又会调用 aof.c/aofCreatePipes 创建新的 pipe。
+
+##### 解决
+
+> * 2015 年就被两次在社区上报（参考 https://github.com/antirez/redis/issues/2857
+> * 2016 年有开发者提交代码修复此问题，直至 2017 年 2 月相关修复才被合入主干（参考 https://github.com/antirez/redis/pull/3408）
+> * 这只长寿的 bug 在 3.2.9 版本已修复
 
 ## 2 Redis twemproxy 集群
 
