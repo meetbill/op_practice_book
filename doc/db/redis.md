@@ -470,7 +470,6 @@ def fetch_stats(ip, port):
     return stats
 ```
 
-
 ## 3 redis cluster
 
 ### 3.1 cluster 命令
@@ -658,7 +657,7 @@ redis> EXPIRE book 5
 
 ##### 惰性删除
 
-惰性删除的原理理是：放任键过期不管，但是每次从键空间获取键的时候，如果该键存在，再去 expires 字典判断这个键是不是超时。如果超时则返回空，并删除该键。过程如下：
+惰性删除的原理是：放任键过期不管，但是每次从键空间获取键的时候，如果该键存在，再去 expires 字典判断这个键是不是过期。如果过期则返回空，并删除该键。过程如下：
 
 ![](./../../images/db/redis/key-expires-delete.png)
 
