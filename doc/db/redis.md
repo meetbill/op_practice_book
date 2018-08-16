@@ -3,8 +3,9 @@
 * [1 Redis](#1-redis)
     * [1.1 持久化](#11-持久化)
         * [1.1.1 AOF 重写机制](#111-aof-重写机制)
-    * [1.2 Redis bug](#12-redis-bug)
-        * [1.2.1 AOF 句柄泄露 bug](#121-aof-句柄泄露-bug)
+    * [1.2 主从同步](#12-主从同步)
+    * [1.3 Redis bug](#13-redis-bug)
+        * [1.3.1 AOF 句柄泄露 bug](#131-aof-句柄泄露-bug)
             * [表现](#表现)
             * [分析](#分析)
             * [解决](#解决)
@@ -92,9 +93,44 @@ AOF 重写可以由用户通过调用 BGREWRITEAOF 手动触发。
             }
          }
 ```
-### 1.2 Redis bug
+### 1.2 主从同步
 
-#### 1.2.1 AOF 句柄泄露 bug
+主从同步
+
+分别启动 master 和 slave 后，会自动启动同步
+slave 出现如下类似日志，则同步已完成：
+```
+[4611] 24 Aug 19:11:46.843 * MASTER <-> SLAVE sync started
+[4611] 24 Aug 19:11:46.844 * Non blocking connect for SYNC fired the event.
+[4611] 24 Aug 19:11:46.844 * Master replied to PING, replication can continue...
+[4611] 24 Aug 19:11:46.844 * Partial resynchronization not possible (no cached master)
+[4611] 24 Aug 19:11:46.844 * Full resync from master: 0629e2e6e79c13c21ff38b638b6009183140939a:1
+[4611] 24 Aug 19:13:55.662 * MASTER <-> SLAVE sync: receiving 5774276835 bytes from master
+[4611] 24 Aug 19:14:45.578 * MASTER <-> SLAVE sync: Flushing old data
+[4611] 24 Aug 19:16:57.509 * MASTER <-> SLAVE sync: Loading DB in memory
+[4611] 24 Aug 19:19:44.191 * MASTER <-> SLAVE sync: Finished with success
+```
+若 slave 日志出现如下行：
+```
+# Timeout receiving bulk data from MASTER... If the problem persists try to set the    'repl-timeout' parameter in redis.conf to a larger value.
+```
+调整 slave 的 redis.conf 参数：
+```
+repl-timeout 60  # 将数值设得更大
+```
+若 slave 日志出现如下行：
+```
+# I/O error reading bulk count from MASTER: Resource temporarily unavailable
+# I/O error trying to sync with MASTER: connection lost
+```
+调整 master 分配给 slave client buffer：
+```
+client-output-buffer-limit slave 256mb 64mb 60 # 256mb 表示超过这个数值 master 将断开与 slave 的连接，后面两个数值表示持续 60s 超过 64mb 将断开连接；将数值设得更大，或者全部设为 0，取消限制。
+```
+
+### 1.3 Redis bug
+
+#### 1.3.1 AOF 句柄泄露 bug
 ##### 表现
 日志中提示
 ```
@@ -270,8 +306,6 @@ mkdir -p /opt/local/twemproxy/{run,conf,logs}
 ln -s /opt/local/twemproxy/sbin/nutcracker /usr/bin/
 ```
 
-
-
 ### 2.4 配置 Twemproxy
 
 cd /opt/local/twemproxy/conf/
@@ -408,6 +442,7 @@ server stats:
 }
 ```
 #### 2.6.3 使用 Python 获取 Twemproxy 状态
+
 使用 curl 获取 Twemproxy 状态时，如果后端的 redis 或者 memcache 过多，将会导致获取状态内容失败，可以进行如下解决方法
 
 ```
@@ -601,14 +636,18 @@ redis> EXPIRE book 5
 首先我们知道，redis 维护了一个存储了所有的设置的 key->value 的字典。但是其实不止一个字典的。
 **redis 有一个包含过期事件的字典**
 每当有设置过期事件的 key 后，redis 会用当前的事件，加上过期的时间段，得到过期的标准时间，存储在 expires 字典中。
+
 ![](./../../images/db/redis/key-expires-dict.png)
+
 从上图可以看出来，比如你给 book 设置过期事件，那么 expires 字典的 key 也为 book，值是当前的时间 +5s 后的 unix time。
 
 #### 4.2.2 删除方式
 如果一个键已经过期了，那么 redis 的如果删除它呢？redis 采用了 2 种删除方式；
 ##### 惰性删除
 惰性删除的原理理是：放任键过期不管，但是每次从键空间获取键的时候，如果该键存在，再去 expires 字典判断这个键是不是超时。如果超时则返回空，并删除该键。过程如下：
+
 ![](./../../images/db/redis/key-expires-delete.png)
+
 - 优点：惰性删除对 cpu 是友好的。保证在键必须删除的时候才会消耗 cpu
 - 缺点：惰性删除对内存特别不友好。虽然键过期，但是没有使用则一直存在内存中。
 
@@ -814,9 +853,11 @@ def activeExpireCycle():
 #### 4.2.3 redis 主从删除过期 key 方式
 当 redis 主从模型下，从服务器的删除过期 key 的动作是由主服务器控制的。
 - 1、主服务器在惰性删除、客户端主动删除、定期删除一个 key 的时候，会向从服务器发送一个 del 的命令，告诉从服务器需要删除这个 key。
+
 ![](./../../images/db/redis/key-expires-delete-master.png)
 
 - 2、从服务器在执行客户端读取 key 的时候，如果该 key 已经过期，也不会将该 key 删除，而是返回一个 null
+
 ![](./../../images/db/redis/key-expires-delete-slave.png)
 
 - 3、从服务器只有在接收到主服务器的 del 命令才会将一个 key 进行删除。
