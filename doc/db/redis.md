@@ -4,6 +4,8 @@
     * [1.1 持久化](#11-持久化)
         * [1.1.1 AOF 重写机制](#111-aof-重写机制)
     * [1.2 主从同步](#12-主从同步)
+        * [repl-timeout](#repl-timeout)
+        * [写入量太大超出 output-buffer](#写入量太大超出-output-buffer)
     * [1.3 Redis bug](#13-redis-bug)
         * [1.3.1 AOF 句柄泄露 bug](#131-aof-句柄泄露-bug)
             * [表现](#表现)
@@ -110,6 +112,7 @@ slave 出现如下类似日志，则同步已完成：
 [4611] 24 Aug 19:16:57.509 * MASTER <-> SLAVE sync: Loading DB in memory
 [4611] 24 Aug 19:19:44.191 * MASTER <-> SLAVE sync: Finished with success
 ```
+#### repl-timeout
 若 slave 日志出现如下行：
 ```
 # Timeout receiving bulk data from MASTER... If the problem persists try to set the    'repl-timeout' parameter in redis.conf to a larger value.
@@ -118,15 +121,22 @@ slave 出现如下类似日志，则同步已完成：
 ```
 repl-timeout 60  # 将数值设得更大
 ```
+#### 写入量太大超出 output-buffer
+
 若 slave 日志出现如下行：
 ```
 # I/O error reading bulk count from MASTER: Resource temporarily unavailable
 # I/O error trying to sync with MASTER: connection lost
 ```
+
 调整 master 分配给 slave client buffer：
 ```
-client-output-buffer-limit slave 256mb 64mb 60 # 256mb 表示超过这个数值 master 将断开与 slave 的连接，后面两个数值表示持续 60s 超过 64mb 将断开连接；将数值设得更大，或者全部设为 0，取消限制。
+client-output-buffer-limit slave 256mb 64mb 60
+# 256mb 是一个硬性限制，当 output-buffer 的大小大于 256mb 之后就会断开连接
+# 64mb 60 是一个软限制，当 output-buffer 的大小大于 64mb 并且超过了 60 秒的时候就会断开连接
+# 或者全部设为 0，取消限制。
 ```
+
 
 ### 1.3 Redis bug
 
@@ -625,7 +635,6 @@ eb8adb8c0c5715525997bdb3c2d5345e688d943f 192.168.64.101:8002 slave 25e8c9379c3db
 ### 4.2 redis 过期数据存储方式以及删除方式
 
 当你通过 expire 或者 pexpire 命令，给某个键设置了过期时间，那么它在服务器是怎么存储的呢？到达过期时间后，又是怎么删除的呢？
-<!--more-->
 
 #### 4.2.1 存储方式
 比如：
@@ -634,7 +643,9 @@ redis> EXPIRE book 5
 (integer) 1
 ```
 首先我们知道，redis 维护了一个存储了所有的设置的 key->value 的字典。但是其实不止一个字典的。
+
 **redis 有一个包含过期事件的字典**
+
 每当有设置过期事件的 key 后，redis 会用当前的事件，加上过期的时间段，得到过期的标准时间，存储在 expires 字典中。
 
 ![](./../../images/db/redis/key-expires-dict.png)
@@ -642,8 +653,11 @@ redis> EXPIRE book 5
 从上图可以看出来，比如你给 book 设置过期事件，那么 expires 字典的 key 也为 book，值是当前的时间 +5s 后的 unix time。
 
 #### 4.2.2 删除方式
+
 如果一个键已经过期了，那么 redis 的如果删除它呢？redis 采用了 2 种删除方式；
+
 ##### 惰性删除
+
 惰性删除的原理理是：放任键过期不管，但是每次从键空间获取键的时候，如果该键存在，再去 expires 字典判断这个键是不是超时。如果超时则返回空，并删除该键。过程如下：
 
 ![](./../../images/db/redis/key-expires-delete.png)
