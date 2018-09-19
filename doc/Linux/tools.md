@@ -20,6 +20,7 @@
         * [2.2.2 脚本](#222-脚本)
         * [2.2.3 运算与编程](#223-运算与编程)
         * [2.2.4 AWK 中输出外部变量](#224-awk-中输出外部变量)
+        * [2.2.5 AWK if](#225-awk-if)
     * [2.3 排查 java CPU 性能问题](#23-排查-java-cpu-性能问题)
         * [2.3.1 用法](#231-用法)
         * [2.3.2 示例](#232-示例)
@@ -226,7 +227,7 @@ Git 的核心数是很简单的，就是一个链表（或者一棵树更准确�
 # rm -rf .git
 # git init
 # git add .
-# git commit -a -m "[Update]合并之前所有 commit"
+# git commit -a -m "[Update] 合并之前所有 commit"
 # git remote add origin <your_github_repo_url>
 # git push -f -u origin master
 ```
@@ -263,13 +264,13 @@ $ git commit --amend -m 'new commit'
 
 (1) 命令简化
 ```
-cd git_repo(替换为项目名字)
+cd git_repo（替换为项目名字）
 git remote add ${PWD##*/} git@github.com:meetbill/${PWD##*/}.git
 git push -u ${PWD##*/} master
 ```
 (2) 提升 git 使用体验
 
-> * [git 命令自动补全](https://github.com/meetbill/op_practice_code/tree/master/Linux/tools/git/git-completion) 
+> * [git 命令自动补全](https://github.com/meetbill/op_practice_code/tree/master/Linux/tools/git/git-completion)
 > * [命令行显示 git 信息](https://github.com/meetbill/op_practice_code/tree/master/Linux/tools/git/git-ps1)
 
 # 2 运维相关
@@ -328,7 +329,7 @@ FILENAME	当前输入文件的名字
 **模式**
 
 ```
-~ 表示模式开始
+~ 表示模式开始，与 == 相比不是精确比较
 / / 中是模式
 ! 模式取反
 ```
@@ -425,6 +426,24 @@ awk '{sum+=$5} END {print sum}'
 ```
 wang="hello"
 echo meetbill | awk '{print "'$wang' " $1}'
+```
+### 2.2.5 AWK if
+
+必须用在{}中，且比较内容用 () 扩起来
+```
+awk -F: '{if($1~/mail/) print $1}'    /etc/passwd                           // 简写
+awk -F: '{if($1~/mail/) {print $1}}'  /etc/passwd                           // 全写
+awk -F: '{if($1~/mail/) {print $1} else {print $2}}' /etc/passwd            //if...else...
+```
+
+> * 条件表达式
+>   * `==   !=   >   >=`
+> * 逻辑运算符
+>   * `&& ||`
+如：查看使用了 CPU 0 核的进程
+```
+# ps -eF，其中 PSR 就是 (processor that process is currently assigned to.) 或者 ps -eo pid,command,args,psr
+ps -eF |awk '{if($7==0) print $0}'
 ```
 ## 2.3 排查 java CPU 性能问题
 
@@ -590,7 +609,7 @@ GET 和 POST 是 HTTP 请求的两种基本方法，最直观的区别就是 GET
 发生，交通规则 HTTP 诞生了。HTTP 给汽车运输设定了好几个服务类别，
 有 GET, POST, PUT, DELETE 等等，HTTP 规定，当执行 GET 请求的时候，
 要给汽车贴上 GET 的标签（设置 method 为 GET)，而且要求把传送的数
-据放在车顶上 (url) 以方便记录。如果是 POST 请求，就要在车上贴上 
+据放在车顶上 (url) 以方便记录。如果是 POST 请求，就要在车上贴上
 POST 的标签，并把货物放在车厢里。
 
     当然，你也可以在 GET 的时候往车厢内偷偷藏点货物，但是这是很不
@@ -635,9 +654,9 @@ curl httpbin.org
 **post**
 
 > * curl --data "args" "protocol://address:port/url"
->   * -d/--data <data>   HTTP POST方式传送数据
->　 * --data-ascii <data>  以ascii的方式post数据
->   * --data-binary <data> 以二进制的方式post数据
+>   * -d/--data <data>   HTTP POST 方式传送数据
+>　 * --data-ascii <data>  以 ascii 的方式 post 数据
+>   * --data-binary <data> 以二进制的方式 post 数据
 
 使用 `--request` 指定请求类型， `--data` 指定数据，例如：
 
@@ -1055,7 +1074,7 @@ nc 检测端口更方便，同时批量进行检测端口的话是非常好的�
 
 ### 4.3.1 语法
 
-nc [-hlnruz][-g《网关...>][-G《指向器数目》][-i《延迟秒数》][-o《输出文件》][-p《通信端口》][-s《来源位址》][-v...][-w《超时秒数》][主机名称][通信端口...]
+nc [-hlnruz][-g《网关...>][-G《指向器数目》][-i《延迟秒数》][-o《输出文件》][-p《通信端口》][-s《来源位址》][-v...][-w《超时秒数》][主机名称]『通信端口...]
     ```
     参数说明：
     -g《网关》 设置路由器跃程通信网关，最丢哦可设置 8 个。
@@ -1106,16 +1125,16 @@ sed -n '/2018-03-06 15:25:00/,/2018-03-06 15:30:00/p' access.log >25-30.log
 ```
 awk 'pattern { action  };pattern { action  };'
 ```
-凡是被 {} 包裹的, 就是 action, 凡是没有被{}包裹的, 就是pattern,
+凡是被 {} 包裹的，就是 action, 凡是没有被{}包裹的，就是 pattern,
 
-文件d.txt如下内容
+文件 d.txt 如下内容
 ```
 ggg 1
 portals: 192.168.5.41:3260
 werew 2
 portals: 192.168.5.43:3260
 ```
-如何把文件d.txt内容变为如下内容
+如何把文件 d.txt 内容变为如下内容
 
 ```
 ggg 192.168.5.41:3260
@@ -1123,10 +1142,10 @@ werew 192.168.5.43:3260
 ```
 方法
 ```
-awk '/port/{print a" "$2}{a=$1}' d.txt 
+awk '/port/{print a" "$2}{a=$1}' d.txt
 ```
-处理第一行的时候，以port开头吗？很明显，不以port开头，所以那个pattern不匹配，action不执行。但执行了后面的a=$1
+处理第一行的时候，以 port 开头吗？很明显，不以 port 开头，所以那个 pattern 不匹配，action 不执行。但执行了后面的 a=$1
 
-处理第二行的时候，以port开头，打印出来a和本行$2，再处理就是个循环过程。
+处理第二行的时候，以 port 开头，打印出来 a 和本行 $2，再处理就是个循环过程。
 
 总之，编写模式匹配时候，匹配的模式为第二行中的内容
