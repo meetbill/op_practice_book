@@ -1623,6 +1623,8 @@ echo $name				#引用的是配置文件中的变量 name
 export WSSH="./tools/sshpass -p ${PASSWD} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
 export WSCP="./tools/sshpass -p ${PASSWD} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
 ```
+对已经互信的机器 ssh 可以使用加-o NumberOfPasswordPrompts=0 参数,规避没有信任关系挂死的问题，当对应的机器需要输入密码时，会直接返回异常（异常返回码为255），而不是阻塞在输入密码页面
+
 ## 13 日常使用库
 
 ```
