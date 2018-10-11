@@ -1,6 +1,7 @@
 # nginx
 
 <!-- vim-markdown-toc GFM -->
+
 * [安装](#安装)
     * [安装依赖](#安装依赖)
     * [下载](#下载)
@@ -52,6 +53,7 @@
         * [测试 myServer1 的访问](#测试-myserver1-的访问)
         * [测试 myServer2 的访问](#测试-myserver2-的访问)
     * [使用缓存](#使用缓存)
+    * [使用 location 反向代理到已有网站](#使用-location-反向代理到已有网站)
     * [其他](#其他)
         * [ngx_http_sub_module 替换响应中内容](#ngx_http_sub_module-替换响应中内容)
         * [配置 http 强制跳转 https](#配置-http-强制跳转-https)
@@ -637,16 +639,16 @@ $openssl genrsa  -out server.key 1024
 $ openssl req -new -key server.key -out server.csr
 
 ...
-Country Name:CN------------证书持有者所在国家
-State or Province Name:BJ--证书持有者所在州或省份（可省略不填）
-Locality Name:BJ-----------证书持有者所在城市（可省略不填）
-Organization Name:SC-------证书持有者所属组织或公司
-Organizational Unit Name:.-证书持有者所属部门（可省略不填）
-Common Name :ceshi.com-----域名
-Email Address:-------------邮箱（可省略不填）
+Country Name:CN------------ 证书持有者所在国家
+State or Province Name:BJ-- 证书持有者所在州或省份（可省略不填）
+Locality Name:BJ----------- 证书持有者所在城市（可省略不填）
+Organization Name:SC------- 证书持有者所属组织或公司
+Organizational Unit Name:.- 证书持有者所属部门（可省略不填）
+Common Name :ceshi.com----- 域名
+Email Address:------------- 邮箱（可省略不填）
 
-A challenge password:------直接回车
-An optional company name:--直接回车
+A challenge password:------ 直接回车
+An optional company name:-- 直接回车
 
 
 3. 生成证书文件 (crt 文件）
@@ -658,7 +660,7 @@ $ openssl x509 -req -days 1000 -in server.csr -signkey server.key -out server.cr
 
 **配置 nginx**
 
-在 nginx 的 server 区域内添加如下 
+在 nginx 的 server 区域内添加如下
 
 ```
 listen 443 ssl;
@@ -1005,7 +1007,7 @@ http://192.168.0.254:8082/server2/location2/
 创建缓存目录
 
 ```
-mkdir  /tmp/nginx_proxy_cache2 
+mkdir  /tmp/nginx_proxy_cache2
 chmod 777 /tmp/nginx_proxy_cache2
 ```
 
@@ -1016,19 +1018,28 @@ chmod 777 /tmp/nginx_proxy_cache2
 proxy_cache_path /tmp/nginx_proxy_cache2 levels=1 keys_zone=cache_one:512m inactive=60s max_size=1000m;
 
 # server 区域下添加缓存配置
-#缓存相应的文件(静态文件)
+#缓存相应的文件（静态文件）
 location ~ \.(gif|jpg|png|htm|html|css|js|flv|ico|swf)(.*) {
-     proxy_pass http://IP:端口;               #如果没有缓存则通过proxy_pass转向请求
+     proxy_pass http://IP: 端口；#如果没有缓存则通过 proxy_pass 转向请求
      proxy_redirect off;
      proxy_set_header Host $host;
      proxy_cache cache_one;
-     proxy_cache_valid 200 302 1h;            #对不同的HTTP状态码设置不同的缓存时间,h小时,d天数
+     proxy_cache_valid 200 302 1h;            #对不同的 HTTP 状态码设置不同的缓存时间，h 小时，d 天数
      proxy_cache_valid 301 1d;
      proxy_cache_valid any 1m;
      expires 30d;
 }
 ```
 
+## 使用 location 反向代理到已有网站
+
+```
+location ~/bianque/(.*)$ {
+        proxy_pass http://127.0.0.1:8888/$1/?$args;
+    }
+```
+> * 加内置变量 $args 是保障 nginx 正则捕获 get 请求时不丢失，如果只是 post 请求，`$args`是非必须的
+> * `$1` 取自正则表达式部分()里的内容
 
 ## 其他
 
@@ -1042,5 +1053,5 @@ location ~ \.(gif|jpg|png|htm|html|css|js|flv|ico|swf)(.*) {
 ```
 if ($scheme = 'http') {
     rewrite ^(.*)$ https://$host$uri;
-}  
+}
 ```
