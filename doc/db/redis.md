@@ -6,6 +6,7 @@
     * [1.2 主从同步](#12-主从同步)
         * [repl-timeout](#repl-timeout)
         * [写入量太大超出 output-buffer](#写入量太大超出-output-buffer)
+        * [repl-backlog-size 太小导致失败](#repl-backlog-size-太小导致失败)
     * [1.3 Redis bug](#13-redis-bug)
         * [1.3.1 AOF 句柄泄露 bug](#131-aof-句柄泄露-bug)
             * [表现](#表现)
@@ -97,6 +98,16 @@ AOF 重写可以由用户通过调用 BGREWRITEAOF 手动触发。
 ```
 ### 1.2 主从同步
 
+主从同步相关参数
+
+> * repl-backlog-size: 增量重传 buf
+> * repl-timeout: 主动超时
+> * client-output-buffer-limit（和写入量有关）
+>   * 这个参数分为 3 部分，第二部分涉及 slave
+>   * slave 部分默认值：256M 64M 60 秒
+>   * output-buffer 缓冲区里放的是主库待同步给从库的操作数据。
+>   * 如果 output-buffer>256M 则从节点需要重新全同步，如果 256>output-buffer>64 且持续时间 60 秒，则从节点需要重新全同步。
+
 主从同步
 
 分别启动 master 和 slave 后，会自动启动同步
@@ -120,6 +131,7 @@ slave 出现如下类似日志，则同步已完成：
 调整 slave 的 redis.conf 参数：
 ```
 repl-timeout 60  # 将数值设得更大
+如：config set repl-timeout 600
 ```
 #### 写入量太大超出 output-buffer
 
@@ -135,7 +147,17 @@ client-output-buffer-limit slave 256mb 64mb 60
 # 256mb 是一个硬性限制，当 output-buffer 的大小大于 256mb 之后就会断开连接
 # 64mb 60 是一个软限制，当 output-buffer 的大小大于 64mb 并且超过了 60 秒的时候就会断开连接
 # 或者全部设为 0，取消限制。
+
+如：config set client-output-buffer-limit "slave 0 0 0"
 ```
+#### repl-backlog-size 太小导致失败
+
+当 master-slave 复制连接断开，server 端会释放连接相关的数据结构。replication buffer 中的数据也就丢失，当断开的 slave 重新连接上 master 的时候，slave 将会发送 psync 命令（包含复制的偏移量 offset），请求 partial resync。如果请求的 offset 不存在，那么执行全量的 sync 操作，相当于重新建立主从复制。
+
+```
+Unable to partial resync with slave $slaveip:6379 for lack of backlog (Slave request was: 5974421660).
+```
+调整 repl-backlog-size 大小
 
 
 ### 1.3 Redis bug
