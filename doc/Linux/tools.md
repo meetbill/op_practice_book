@@ -75,8 +75,9 @@
 **分支**
 
 + `git branch <branch-name>` : 基于当前 commit 新建一个分支，但是不切换到新分支
++ `git branch -r` : 查看远程的所有分支（常用）
 + `git checkout -b <branch-name>` : 新建并切换分支
-+ `git checkout <branch-name>` : 切换分支
++ `git checkout <branch-name>` : 切换分支(常用)
 + `git branch -d <branch-name>` : 删除分支
 + `git push origin <branch-name>` : 推送本地分支
 + `git checkout -b <local-branch-name> origin/<origin-branch-name>` : 基于某个远程分支新建一个分支开发
