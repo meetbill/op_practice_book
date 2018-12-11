@@ -1,6 +1,7 @@
 ## Linux 安全
 
 <!-- vim-markdown-toc GFM -->
+
 * [1 禁止 ping](#1-禁止-ping)
 * [2 禁止密码登陆](#2-禁止密码登陆)
 * [3 ssh 防暴力破解及提高 ssh 安全](#3-ssh-防暴力破解及提高-ssh-安全)
@@ -37,8 +38,9 @@
         * [6.4.1 查看 iptables 规则](#641-查看-iptables-规则)
         * [6.4.2 清除 iptables 规则](#642-清除-iptables-规则)
         * [6.4.3 保存 iptables 规则](#643-保存-iptables-规则)
-    * [6.5 其他内容](#65-其他内容)
+    * [6.5 常用操作](#65-常用操作)
         * [6.5.1 使用 ip6tables 禁用 ipv6](#651-使用-ip6tables-禁用-ipv6)
+        * [6.5.2 配置 iptables 允许部分端口同行，其他全部阻止](#652-配置-iptables-允许部分端口同行其他全部阻止)
 
 <!-- vim-markdown-toc -->
 
@@ -133,18 +135,18 @@ $google-authenticator
 Do you want me to update your "~/.google_authenticator" file (y/n):y
 应急码的保存路径
 
-Do you want to disallow multiple uses of the same authentication token? 
-This restricts you to one login about every 30s, 
+Do you want to disallow multiple uses of the same authentication token?
+This restricts you to one login about every 30s,
 but it increases your chances to notice or even prevent man-in-the-middle attacks (y/n)
 是否禁止一个口令多用，自然也是答 y
 
-By default, tokens are good for 30 seconds and in order to compensate for possible time-skew between the client and the server, 
+By default, tokens are good for 30 seconds and in order to compensate for possible time-skew between the client and the server,
 we allow an extra token before and after the current time. If you experience problems with poor time synchronization, you can increase the window from its default size of 1:30min to about 4min. Do you want to do so (y/n)
 问是否打开时间容错以防止客户端与服务器时间相差太大导致认证失败。
 这个可以根据实际情况来。如果一些 Android 平板电脑不怎么连网的，可以答 y 以防止时间错误导致认证失败。
 
-If the computer that you are logging into isn't hardened against brute-force login attempts, 
-you can enable rate-limiting for the authentication module. 
+If the computer that you are logging into isn't hardened against brute-force login attempts,
+you can enable rate-limiting for the authentication module.
 By default, this limits attackers to no more than 3 login attempts every 30s.Do you want to enable rate-limiting (y/n)
 选择是否打开尝试次数限制（防止暴力攻击），自然答 y
 ```
@@ -273,7 +275,8 @@ iptables 是与 Linux 内核集成的 IP 信息包过滤系统，该系统有利
 > * -p 表示协议类型（--protocol），后面可以是 tcp, udp, udplite, icmp, esp, ah, sctp, all，其中 all 表示所有的协议。
 > * --sport 表示源端口（--source-port），后面可以是一个端口（80）、一系列端口（80:90，从 80 到 90 之间的所有端口），一般在 OUTPUT 链使用。
 > * --dport 表示目的端口（--destination-port），后面可以是一个端口（80）、一系列端口（80:90，从 80 到 90 之间的所有端口）。
-> * -j 表示 iptables 规则的目标（--jump），即一个符合目标的数据包来了之后怎么去处理它。常用的有 ACCEPT, DROP, REJECT, REDIRECT, LOG, DNAT, SNAT。(“就好象骗子给你打电话，ACCEPT 是接收，drop 就是直接拒收，reject 的话，相当于你还给骗子回个电话。”)
+> * -j 表示 iptables 规则的目标（--jump），即一个符合目标的数据包来了之后怎么去处理它。常用的有 ACCEPT, DROP, REJECT, REDIRECT, LOG, DNAT, SNAT。
+>   * (“就好象骗子给你打电话，ACCEPT 是接收，drop 就是直接拒收，reject 的话，相当于你还给骗子回个电话。”)
 
 ```
 # iptables -A INPUT -p tcp --dport 80 -j DROP
@@ -423,6 +426,7 @@ iptables-save 命令是以原命令格式列出所有规则，可以 -t 指定�
 ```
 
 > * -F 代表 --flush，清除规则，其后面可以跟着链名，默认是将指定表里所有的链规则都清除。
+>   * （警告：如果已经配置过默认规则为 deny 的环境，即 iptables -P INPUT DROP ，直接命令行执行 iptables -F 将使系统的所有网络访问中断，此坑已踩过）
 
 #### 6.4.3 保存 iptables 规则
 
@@ -432,7 +436,7 @@ iptables-save 命令是以原命令格式列出所有规则，可以 -t 指定�
 
 该命令会将 iptables 规则保存到 /etc/sysconfig/iptables 文件里面，如果 iptable 有开机启动的话，开机时会自动将这些规则添加到机器上。
 
-### 6.5 其他内容
+### 6.5 常用操作
 iptables 命令中的很多选项前面都可以加"!"，意思是“非”。如"! -s 10.0.0.0/8"表示除这个网段以外的源地址，"! --dport 80"表示除 80 以外的其他端口。
 
 #### 6.5.1 使用 ip6tables 禁用 ipv6
@@ -458,4 +462,34 @@ COMMIT
 ```
 [root@meetbill ~]# ping6 -I eth0 fe80::20c:29ff:febc:8aab
 
+```
+#### 6.5.2 配置 iptables 允许部分端口同行，其他全部阻止
+
+将下列内容放到脚本中，然后执行脚本即可，此脚本可以重复执行
+```
+#!/bin/bash
+iptables -F /* 清除所有规则 */
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT /*允许包从 22 端口进入*/
+iptables -A OUTPUT -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT /*允许从 22 端口进入的包返回*/
+iptables -A INPUT -s 127.0.0.1 -d 127.0.0.1 -j ACCEPT /*允许本机访问本机*/
+iptables -A OUTPUT -s 127.0.0.1 -d 127.0.0.1 -j ACCEPT
+iptables -A INPUT -p tcp -s 0/0 --dport 80 -j ACCEPT /*允许所有 IP 访问 80 端口*/
+iptables -A OUTPUT -p tcp --sport 80 -m state --state ESTABLISHED -j ACCEPT
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT DROP
+#iptables-save > /etc/sysconfig/iptables /*保存配置*/
+iptables -L /* 显示 iptables 列表 */
+```
+（警告：如果已经配置过默认规则为 deny 的环境，即 iptables -P INPUT DROP ，直接命令行执行 iptables -F 将使系统的所有网络访问中断，此坑已踩过）
+
+如何清除配置尼（-P 为默认规则）
+```
+#!/bin/bash
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -F
+#iptables-save > /etc/sysconfig/iptables
+iptables -L
 ```
