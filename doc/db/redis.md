@@ -12,6 +12,8 @@
             * [表现](#表现)
             * [分析](#分析)
             * [解决](#解决)
+    * [1.4 redis 日志](#14-redis-日志)
+        * [1.4.1 日常日志](#141-日常日志)
 * [2 Redis twemproxy 集群](#2-redis-twemproxy-集群)
     * [2.1 Twemproxy 特性](#21-twemproxy-特性)
     * [2.2 环境说明](#22-环境说明)
@@ -273,6 +275,18 @@ int rewriteAppendOnlyFileBackground(void) {
 > * 2015 年就被两次在社区上报（参考 https://github.com/antirez/redis/issues/2857
 > * 2016 年有开发者提交代码修复此问题，直至 2017 年 2 月相关修复才被合入主干（参考 https://github.com/antirez/redis/pull/3408）
 > * 这只长寿的 bug 在 3.2.9 版本已修复
+
+### 1.4 redis 日志
+
+#### 1.4.1 日常日志
+```
+DB 0: 1 keys (0 volatile) in 4 slots HT
+```
+> * Redis 中的 DB 是相互独立存在的，所以可以出现重复的 key。好处一是，对小型项目可以做如下设置： 1 号 DB 做开发，2 号 DB 做测试等等。
+>   * Redis Cluster 方案只允许使用 0 号数据库
+> * 0 volatile: 目前 0 号 DB 中没有 volatile key，volatile key 的意思是 过特定的时间就被 REDIS 自动删除，在做缓存时有用。
+> * 4 slots HT: 目前 0 号 DB 的 hash table 只有 4 个 slots(buckets)
+>   * //todo
 
 ## 2 Redis twemproxy 集群
 
