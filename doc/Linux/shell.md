@@ -46,6 +46,7 @@
         * [Example 求 N 的阶乘](#example-求-n-的阶乘)
 * [9 数组](#9-数组)
     * [数组](#数组)
+        * [定义](#定义)
     * [引用数组中的元素](#引用数组中的元素)
 * [10 bash 的字符串处理工具](#10-bash-的字符串处理工具)
     * [字符串切片](#字符串切片)
@@ -219,7 +220,7 @@ $#: 传递给脚本的参数的个数；
 如要去掉 `^M`
 
 `echo ${variable}|tr -d '\r'`
- 
+
 ## 3 bash 的配置文件
 
 > * 全局配置：
@@ -1136,54 +1137,37 @@ fact 5
 ## 9 数组
 ### 数组
 
-	变量：存储单个元素的内存空间；
+> * 变量：存储单个元素的内存空间；
+> * 数组：存储多个元素的连续的内存空间；
+>   * 索引：编号从 0 开始，属于数值索引；
+>   * 注意：索引页可支持使用自定义的格式，而不仅仅是数值格式；bash 的数组支持稀疏格式；
+
+#### 定义
+
+在 Shell 中，用括号来表示数组，数组元素用“空格”符号分割开。定义数组的一般形式为：
 ```
-	数组：存储多个元素的连续的内存空间；
-		数组名
-		索引：编号从 0 开始，属于数值索引；
-			注意：索引页可支持使用自定义的格式，而不仅仅是数值格式；
-				bash 的数组支持稀疏格式；
+array_name=(value1 ... valuen)
 ```
-
-- 引用数组中的元素： ${ARRAY_NAME[INDEX]}
-
-- 声明数组：
-
-	declare –a ARRAY_NAME
-
-	declare –A ARRAY_NAME : 关联数组；
-
-- 数组元素的赋值：
-
-	(1)	一次只赋值一个元素；
-
-		ARRAY_NAME[INDEX]=VALUE
+例如：
+```
+array_name=(value0 value1 value2 value3)
+```
+或者
+```
+array_name=(
+value0
+value1
+value2
+value3
+)
+```
+还可以单独定义数组的各个分量：
+```
+array_name[0]=value0
+array_name[1]=value1
+array_name[2]=value2
 
 ```
-	例如：
-			weekdays[0]="Sunday"
-			weekdays[4]="Thursday"
-```
-
-	(2)	一次赋值全部元素：
-
-			ARRAY_NAME=("VAL1" "VAL2" "VAL3" ...)
-
-	(3)	只赋值特定元素：
-
-			ARRAY_NAME=([0]="VAL1" [3]="VAL2" ...)
-
-	(4)	read -a ARRAY
-
-- 引用数组元素：${ARRAY_NAME[INDEX]}
-
-	注意：省略 [INDEX] 表示引用下标为 0 的元素；
-
-- 数组的长度（数组中元素的个数）：
-
-	${#ARRAY_NAME[*]}
-
-	${#ARRAY_NAME[@]}
 
 **Example 生成 10 个随机数保存于数组中，并找出其最大值和最小值**
 
@@ -1260,8 +1244,6 @@ echo "Lines:$lines."
 [root@bill scripts]# array[0]=5
 [root@bill scripts]# echo $array
 5
-[root@bill scripts]#
-
 ```
 
 ```
@@ -1270,8 +1252,6 @@ echo "Lines:$lines."
 [root@bill scripts]# array=($str)
 [root@bill scripts]# echo $array
 1
-[root@bill scripts]#
-
 ```
 
 ```
@@ -1308,8 +1288,6 @@ echo "Lines:$lines."
 	for i in "${array[@]}";do
 		echo $i;
 	done
-
-
 
 ## 10 bash 的字符串处理工具
 
@@ -1623,7 +1601,7 @@ echo $name				#引用的是配置文件中的变量 name
 export WSSH="./tools/sshpass -p ${PASSWD} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
 export WSCP="./tools/sshpass -p ${PASSWD} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
 ```
-对已经互信的机器 ssh 可以使用加-o NumberOfPasswordPrompts=0 参数,规避没有信任关系挂死的问题，当对应的机器需要输入密码时，会直接返回异常（异常返回码为255），而不是阻塞在输入密码页面
+对已经互信的机器 ssh 可以使用加 -o NumberOfPasswordPrompts=0 参数，规避没有信任关系挂死的问题，当对应的机器需要输入密码时，会直接返回异常（异常返回码为 255），而不是阻塞在输入密码页面
 
 ## 13 日常使用库
 
