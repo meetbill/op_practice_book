@@ -65,9 +65,11 @@
     * [12.1 推荐添加内容](#121-推荐添加内容)
     * [12.2 脚本的配置文件](#122-脚本的配置文件)
     * [12.3 ssh 登录相关](#123-ssh-登录相关)
+    * [12.4 ping 文件列表中所有主机](#124-ping-文件列表中所有主机)
+    * [12.5 shell 模板变量替换](#125-shell-模板变量替换)
+        * [应用场景](#应用场景)
+        * [使用方式](#使用方式)
 * [13 日常使用库](#13-日常使用库)
-* [14 常用实例](#14-常用实例)
-    * [14.1 ping 文件列表中所有主机](#141-ping-文件列表中所有主机)
 
 <!-- vim-markdown-toc -->
 
@@ -1602,6 +1604,48 @@ export WSSH="./tools/sshpass -p ${PASSWD} ssh -o StrictHostKeyChecking=no -o Use
 export WSCP="./tools/sshpass -p ${PASSWD} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
 ```
 对已经互信的机器 ssh 可以使用加 -o NumberOfPasswordPrompts=0 参数，规避没有信任关系挂死的问题，当对应的机器需要输入密码时，会直接返回异常（异常返回码为 255），而不是阻塞在输入密码页面
+### 12.4 ping 文件列表中所有主机
+```
+#!/bin/bash
+file=$1
+
+[[ -z $file  ]] && exit 0
+cat $file| while read line;do
+    ping=`ping -c 1 $line|grep loss|awk '{print $6}'|awk -F "%" '{print $1}'`
+    if [ $ping -eq 100  ];then
+        echo ping $i fail
+    else
+        echo ping $i ok
+    fi
+done
+```
+### 12.5 shell 模板变量替换
+
+#### 应用场景
+
+双引号是 json 的标准，如果一个服务的配置文件是 json 的，使用特定的配置（模板）生成对应的配置文件时。要是使用 shell，这样也可以做到：
+
+#### 使用方式
+
+模板文件
+```
+{
+   "test_ip" : ${test_ip},
+   "test_port" : ${test_port},
+}
+```
+脚本
+```
+test_host="127.0.0.1"
+test_port=9099
+
+content=$(cat ./config_tpl)
+content_new=$(eval "cat <<EOF
+$content
+EOF")
+
+echo $content_new
+```
 
 ## 13 日常使用库
 
@@ -1625,20 +1669,4 @@ function p_ok {
 
 ROOT_PATH=`S=\`readlink "$0"\`; [ -z "$S"  ] && S=$0; dirname $S`
 cd ${ROOT_PATH}
-```
-## 14 常用实例
-### 14.1 ping 文件列表中所有主机
-```
-#!/bin/bash
-file=$1
-
-[[ -z $file  ]] && exit 0
-cat $file| while read line;do
-    ping=`ping -c 1 $line|grep loss|awk '{print $6}'|awk -F "%" '{print $1}'`
-    if [ $ping -eq 100  ];then
-        echo ping $i fail
-    else
-        echo ping $i ok
-    fi
-done
 ```
