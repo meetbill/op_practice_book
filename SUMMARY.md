@@ -15,6 +15,7 @@
     * [Redis](doc/db/redis.md)
     * [MemCache](doc/db/memcache.md)
 * [Web 篇](doc/web/README.md)
+    * [Web 基础](doc/web/web_base.md)
     * [Nginx](doc/web/nginx.md)
     * [Django](doc/web/django.md)
 * [监控篇](doc/monitor/README.md)
