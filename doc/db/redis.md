@@ -12,6 +12,10 @@
             * [表现](#表现)
             * [分析](#分析)
             * [解决](#解决)
+        * [1.3.2 在 AOF 文件 rewrite 期间如果设置 config set appendonly no，会导致 redis 进程一直死循环不间断触发 rewrite AOF](#132-在-aof-文件-rewrite-期间如果设置-config-set-appendonly-no会导致-redis-进程一直死循环不间断触发-rewrite-aof)
+            * [根因](#根因)
+        * [1.3.3 redis slots 迁移的时候，永不过期的 key 因为 ttl>0 而过期，导致迁移丢失数据](#133-redis-slots-迁移的时候永不过期的-key-因为-ttl0-而过期导致迁移丢失数据)
+            * [根因](#根因-1)
     * [1.4 redis 日志](#14-redis-日志)
         * [1.4.1 日常日志](#141-日常日志)
 * [2 Redis twemproxy 集群](#2-redis-twemproxy-集群)
@@ -275,6 +279,83 @@ int rewriteAppendOnlyFileBackground(void) {
 > * 2015 年就被两次在社区上报（参考 https://github.com/antirez/redis/issues/2857
 > * 2016 年有开发者提交代码修复此问题，直至 2017 年 2 月相关修复才被合入主干（参考 https://github.com/antirez/redis/pull/3408）
 > * 这只长寿的 bug 在 3.2.9 版本已修复
+
+#### 1.3.2 在 AOF 文件 rewrite 期间如果设置 config set appendonly no，会导致 redis 进程一直死循环不间断触发 rewrite AOF
+
+此 BUG 在 4.0.7 版本修复 (2018.1 月）
+
+https://github.com/antirez/redis/commit/a18e4c964e9248008e0fba7efc1cad9ba9b8b1c3
+
+##### 根因
+
+redis 在 AOF rewrite 期间设置了 appendonly no，会 kill 子进程，设置 server.aof_fd = -1，但是并未更新 server.aof_rewrite_base_size。
+
+在 serverCron 中触发 AOF rewrite 时未判断当前 appendonly 是否为 yes，只判断了 server.aof_current_size 和 server.aof_rewrite_base_size 增长是否超过阈值
+
+AOF rewrite 重写完成后发现 server.aof_fd=-1 也未更新 server.aof_rewrite_base_size，导致 serverCron 中一直触发 AOF rewrite。
+
+#### 1.3.3 redis slots 迁移的时候，永不过期的 key 因为 ttl>0 而过期，导致迁移丢失数据
+
+详细见博客 https://blog.csdn.net/doc_sgl/article/details/53825892
+
+对应 PR: https://github.com/antirez/redis/pull/3673/files
+
+在 4.0rc2 版本中进行修复
+
+##### 根因
+
+所有丢失 key 的 ttl 因为没有处理而使用了前一个 key 的 ttl！
+
+问题出在下面代码的 for 循环，对于不过期的 key,ttl 应该是 0，但是如果前面有过期的 key,ttl>0. 那么在下一个处理不过期 key 时，expireat=-1，不会进入 if，ttl 还是使用前一个 ttl，导致一个永不过期的 key 因为 ttl>0 而过期。
+
+```
+/* MIGRATE host port key dbid timeout [COPY | REPLACE]
+ *
+ * On in the multiple keys form:
+ *
+ * MIGRATE host port "" dbid timeout [COPY | REPLACE] KEYS key1 key2 ... keyN */
+void migrateCommand(client *c) {
+    long long ttl, expireat;
+    ttl = 0;
+    ...
+
+    /* Create RESTORE payload and generate the protocol to call the command. */
+    /*
+        问题出在这个 for 循环，对于不过期的 key,ttl 应该是 0，但是如果前面有过期的 key,ttl>0. 在处理不过期 key 时，expireat=-1，导致 ttl 还是使用前一个 ttl.
+        导致一个永不过期的 key 因为 ttl>0 而过期。
+    */
+    for (j = 0; j < num_keys; j++) {
+        /
+        expireat = getExpire(c->db,kv[j]);
+        if (expireat != -1) {
+            ttl = expireat-mstime();
+            if (ttl < 1) ttl = 1;
+        }
+        serverAssertWithInfo(c,NULL,rioWriteBulkCount(&cmd,'*',replace ? 5 : 4));
+        if (server.cluster_enabled)
+            serverAssertWithInfo(c,NULL,
+                rioWriteBulkString(&cmd,"RESTORE-ASKING",14));
+        else
+            serverAssertWithInfo(c,NULL,rioWriteBulkString(&cmd,"RESTORE",7));
+        serverAssertWithInfo(c,NULL,sdsEncodedObject(kv[j]));
+        serverAssertWithInfo(c,NULL,rioWriteBulkString(&cmd,kv[j]->ptr,
+                sdslen(kv[j]->ptr)));
+        serverAssertWithInfo(c,NULL,rioWriteBulkLongLong(&cmd,ttl));
+
+        /* Emit the payload argument, that is the serialized object using
+         * the DUMP format. */
+        createDumpPayload(&payload,ov[j]);
+        serverAssertWithInfo(c,NULL,
+            rioWriteBulkString(&cmd,payload.io.buffer.ptr,
+                               sdslen(payload.io.buffer.ptr)));
+        sdsfree(payload.io.buffer.ptr);
+
+        /* Add the REPLACE option to the RESTORE command if it was specified
+         * as a MIGRATE option. */
+        if (replace)
+            serverAssertWithInfo(c,NULL,rioWriteBulkString(&cmd,"REPLACE",7));
+    }
+```
 
 ### 1.4 redis 日志
 
