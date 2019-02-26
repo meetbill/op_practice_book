@@ -6,3 +6,4 @@
 > * KVM
 > * Docker
 > * OpenStack
+> * K8s

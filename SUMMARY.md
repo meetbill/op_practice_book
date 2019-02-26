@@ -35,6 +35,7 @@
     * [KVM](doc/cloud/kvm.md)
     * [Docker](doc/cloud/docker.md)
     * [OpenStack](doc/cloud/openstack.md)
+    * [K8s](doc/cloud/k8s.md)
 * [集群应用篇](doc/HA/README.md)
     * [负载均衡](doc/HA/lb.md)
     * [LVS](doc/HA/lvs.md)
