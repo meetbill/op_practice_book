@@ -30,6 +30,10 @@
         * [设置 service](#设置-service)
         * [压测服务](#压测服务)
         * [删除自动扩容策略](#删除自动扩容策略)
+* [5 K8s 日常调试](#5-k8s-日常调试)
+    * [5.1 查看 Pod 生命周期的事件](#51-查看-pod-生命周期的事件)
+    * [5.2 查看资源 (CPU/Memory) 使用情况](#52-查看资源-cpumemory-使用情况)
+    * [5.3 如何摘下某个 Pod 进行 Debug](#53-如何摘下某个-pod-进行-debug)
 
 <!-- vim-markdown-toc -->
 ## 1 Kubernetes 概述
@@ -389,5 +393,28 @@ mypython-deployment-8dc88bc89-rxmrd   1/1       Running   0          8m
 ```
 horizontalpodautoscaler.autoscaling "mypython-deployment" deleted
 ```
+## 5 K8s 日常调试
+
+### 5.1 查看 Pod 生命周期的事件
+通过如下命令，看命令末尾 events 一节，查看 kubelet 给 APIServer 发送的 Pod 生命周期里发生的事件
+
+> kubectl describe pod podname
+
+### 5.2 查看资源 (CPU/Memory) 使用情况
+资源使用最多的节点
+> $ kubectl top nodes
+
+资源使用最多的 Pod
+> $ kubectl top pods
+
+### 5.3 如何摘下某个 Pod 进行 Debug
+使用 label 机制，对 Pod 进行标记。在 Service 定义中，我们添加 status: serving 字段。当需要摘下某个 Pod 做 Debug，而又不影响整个服务，可以：
+
+> $ kubectl get pods --selector="status=serving"
+> $ kubectl label pods webserver-rc-lxag2 --overwrite status=debuging
+
+此时 kubelet 就会把这个 Pod 从 Service 的后端列表中删掉。等到 Debug 完，想恢复？再改回去就好了：
+
+> $ kubectl label pods webserver-rc-lxag2 --overwrite status=serving
 
 
