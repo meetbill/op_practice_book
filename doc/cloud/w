@@ -24,12 +24,8 @@
         * [创建 2 个 deployment](#创建-2-个-deployment)
         * [创建访问节点](#创建访问节点)
     * [4.4 自动扩容](#44-自动扩容)
-        * [清空之前环境](#清空之前环境)
         * [创建 deployment](#创建-deployment)
         * [设置自动扩容规则](#设置自动扩容规则)
-        * [设置 service](#设置-service)
-        * [压测服务](#压测服务)
-        * [删除自动扩容策略](#删除自动扩容策略)
 
 <!-- vim-markdown-toc -->
 ## 1 Kubernetes 概述
@@ -305,14 +301,6 @@ spec:
 ```
 ### 4.4 自动扩容
 
-#### 清空之前环境
-
-删除 service
-> kubectl delete service -l app=mypython --namespace=meetbill
-
-删除 deployment
-> kubectl delete deployment mypython-deployment --namespace=meetbill
-
 #### 创建 deployment
 
 创建 deployment，包含一个有资源限制的 pod
@@ -353,41 +341,15 @@ spec:
 
 > kubectl autoscale deployment mypython-deployment --min=1 --max=3 --cpu-percent=2 --namespace=meetbill
 
-设置该 deployment 中 pod cpu 超过 2% 进行自动扩容，最多扩容 3 个
+设置该 deployment中pod cpu超过2%进行自动扩容，最多扩容3个
 
-#### 设置 service
-> kubectl create -f services/mypython-svc.yaml 创建一个 service，使得这个 pod 可以被访问到
-
-通过下面方式也可以获取到 service 的端口，如下 32410 即要访问的端口
-> kubectl get service --namespace=meetbill
-```
-NAME           TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
-mypython-svc   NodePort   172.16.244.116   <none>        8080:32410/TCP   26s
-```
-
-#### 压测服务
-> ab -c 100 -n 100000 "http://$VM_IP:$NODE_PORT/"
-
-使用 ab 进行压测
-
-> watch -n 1 'kubectl top pod --namespace=meetbill'
-
-使用 kubectl top 命令查看 pod 资源利用状态，可以看到 cpu 超过 200m 时，自动扩容至 3 个 pod
-
-> kubectl get pod --namespace=meetbill
-```
-NAME                                  READY     STATUS    RESTARTS   AGE
-mypython-deployment-8dc88bc89-5kml8   1/1       Running   0          1m
-mypython-deployment-8dc88bc89-6m5tz   1/1       Running   0          1m
-mypython-deployment-8dc88bc89-rxmrd   1/1       Running   0          8m
-```
-
-#### 删除自动扩容策略
-
-> kubectl delete horizontalpodautoscaler.autoscaling/mypython-deployment --namespace=meetbill
-
-```
-horizontalpodautoscaler.autoscaling "mypython-deployment" deleted
-```
-
+#### 设置 sevice
+$kubectl create -f services/mynode-svc.yaml创建一个service，使得这个pod可以被访问到
+$export NODE_PORT=$(kubectl get services/mynode-svc -o go-template='{{(index .spec.ports 0).nodePort}}' --namespace=xxx)获得NODE_PORT
+$ab -c 100 -n 100000 "http://$VM_IP:$NODE_PORT/"
+     使用ab进行压测
+     $watch -n 1 'kubectl top pod --namespace=xxx’
+     使用kubectl top命令查看pod资源利用状态，可以看到cpu超过200m时，自动扩容至3个pod
+     $kubectl delete horizontalpodautoscaler.autoscaling/mynode-deployment --namespace=xxx
+     删除自动扩容策略
 
