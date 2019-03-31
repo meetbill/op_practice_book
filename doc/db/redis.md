@@ -379,11 +379,15 @@ DB 0: 1 keys (0 volatile) in 4 slots HT
 
 ### 1.5 redis 协议说明
 
+Redis 的客户端和服务端之间采取了一种独立名为 RESP(REdis Serialization Protocol) 的协议
+
 Redis 协议在以下几点之间做出了折衷：
 
 > * 简单的实现
 > * 快速地被计算机解析
 > * 简单得可以能被人工解析
+
+注意：RESP 虽然是为 Redis 设计的，但是同样也可以用于其他 C/S 的软件。
 
 #### 网络层
 
@@ -422,9 +426,9 @@ Redis 接收由不同参数组成的命令。一旦收到命令，将会立刻�
 上面的命令看上去像是单引号字符串，所以可以在查询中看到每个字节的准确值：
 
 ```
-"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
+    "*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
 ```
-在 Redis 的回复中也使用这样的格式。批量回复时，这种格式用于每个参数 $6\r\nmydata\r\n。 
+在 Redis 的回复中也使用这样的格式。批量回复时，这种格式用于每个参数 $6\r\nmydata\r\n。
 
 实际的统一请求协议是 Redis 用于返回列表项，并调用 Multi-bulk 回复。 仅仅是 N 个以以`*\r\n` 为前缀的不同批量回复，是紧随的参数（批量回复）数目。
 
@@ -437,12 +441,24 @@ Redis 用不同的回复类型回复命令。它可能从服务器发送的第�
     批量回复，回复的第一个字节将是“$”
     多个批量回复，回复的第一个字节将是“*”
 ```
+通俗点讲，则如下
+
+> * (+) 表示一个正确的状态信息，具体信息是当前行 + 后面的字符。
+> * (-)  表示一个错误信息，具体信息是当前行－后面的字符。
+> * (`*`) 表示消息体总共有多少行，不包括当前行，`*`后面是具体的行数。
+> * ($) 表示下一行数据长度，不包括换行符长度 `\r\n`,$ 后面则是对应的长度的数据。
+> * (:) 表示返回一个数值，：后面是相应的数字节符。
 
 (1)Simple Strings
 
 状态回复（或者单行回复）以“+”开始以“\r\n”结尾的单行字符串形式。例如：
 ```
 "+OK\r\n"
+
+127.0.0.1:6379> set name meetbill
++OK\r\n  # 服务端实际返回
+-------------------
+OK       # redis-cli 客户端显示
 ```
 客户端库将在“+”后面返回所有数据，正如上例中字符串“OK”一样。
 
@@ -452,6 +468,13 @@ Redis 用不同的回复类型回复命令。它可能从服务器发送的第�
 错误回复发送类似于状态回复。唯一的不同是第一个字节用“-”代替“+”。
 
 错误回复仅仅在一些意料之外的事情发生时发送，例如：如果你试图执行一个操作来应付错误的数据类型，或者如果命令不存在等等。所以当收到一个错误回复时，客户端将会出现一个异常。
+
+```
+127.0.0.1:6379> meetbill
+-ERR unknown command 'meetbill'\r\n  # 服务端实际返回，下同
+---
+(error) ERR unknown command 'meetbill'  # redis-cli 客户端显示，下同
+```
 
 
 (3)Integers
@@ -465,6 +488,33 @@ Redis 用不同的回复类型回复命令。它可能从服务器发送的第�
 其它命令像 SADD、SREM 和 SETNX 如果操作实际完成了的话将返回 1，否则返回 0。
 
 接下来的命令将回复一个整型回复：SETNX、DEL、EXISTS、INCR、INCRBY、DECR、DECRBY、DBSIZE、LASTSAVE、RENAMENX、MOVE、LLEN、SADD、SREM、SISMEMBER、SCARD。
+
+```
+27.0.0.1:6379> LPUSH info meetbill hello
+:2\r\n  # 服务端实际返回，下同
+---
+(integer) 2  # redis-cli 客户端显示，下同
+
+127.0.0.1:6379> LLEN info
+:2\r\n
+---
+(integer) 2
+
+127.0.0.1:6379> EXISTS info
+:1\r\n
+---
+(integer) 1
+
+127.0.0.1:6379> DEL info
+:1\r\n
+---
+(integer) 1
+
+127.0.0.1:6379> EXISTS info
+:0\r\n
+---
+(integer) 0
+```
 
 
 (4)Bulk Strings
@@ -488,6 +538,37 @@ S: $-1
 ```
 当请求的对象不存在时，客户端库 API 不会返回空字符串，而会返回空对象。例如：Ruby 库返回‘nil’，而 C 库返回 NULL（或者在回复的对象里设置指定的标志）等等。
 
+```
+127.0.0.1:6379> set site moelove.info
++OK\r\n  # 服务端实际返回，下同
+---
+OK   # redis-cli 客户端显示，下同
+
+127.0.0.1:6379> get site
+$12\r\nmoelove.info\r\n
+---
+"moelove.info"
+
+127.0.0.1:6379> del site
+:1\r\n
+---
+(integer) 1
+
+127.0.0.1:6379> get site
+$-1\r\n
+---
+(nil)
+
+127.0.0.1:6379> set site ''
++OK\r\n
+---
+OK
+
+127.0.0.1:6379> get site
+$0\r\n\r\n
+---
+""
+```
 
 (5)Arrays
 
@@ -524,6 +605,34 @@ S: $-1
     S: *-1
 ```
 当这种情况发生时，客户端库 API 将返回空 nil 对象，且不是一个空列表。这必须有别于空列表和错误条件（例如：BLPOP 命令的超时条件）。
+
+```
+    127.0.0.1:6379> LPUSH info TaoBeier moelove.info
+    :2\r\n   # 服务端实际返回，下同
+    ---
+    (integer) 2  # redis-cli 客户端显示，下同
+
+    127.0.0.1:6379> LRANGE info 0 -1
+    *2\r\n$12\r\nmoelove.info\r\n$8\r\nTaoBeier\r\n
+    ---
+    1) "moelove.info"
+    2) "TaoBeier"
+
+    127.0.0.1:6379> LPOP info
+    $12\r\nmoelove.info\r\n
+    ---
+    "moelove.info"
+
+    127.0.0.1:6379> LPOP info
+    $8\r\nTaoBeier\r\n
+    ---
+    "TaoBeier"
+
+    127.0.0.1:6379> LRANGE info 0 -1
+    *0\r\n
+    ---
+    (empty list or set)
+```
 
 #### 多批量回复中的 Nil 元素
 多批量回复的单元素长度可能是 -1，为了发出信号这个元素被丢失且不是空字符串。这种情况发送在 SORT 命令时，此时使用 GET 模式选项且指定的键丢失。一个多批量回复包含一个空元素的例子如下：
