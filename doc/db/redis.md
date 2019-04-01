@@ -43,6 +43,11 @@
     * [3.1 cluster 命令](#31-cluster-命令)
     * [3.2 redis cluster 配置](#32-redis-cluster-配置)
     * [3.3 redis cluster 状态](#33-redis-cluster-状态)
+    * [3.4 redis cluster 的 failover 机制](#34-redis-cluster-的-failover-机制)
+        * [故障 failover](#故障-failover)
+            * [探测阶段](#探测阶段)
+            * [准备阶段](#准备阶段)
+            * [执行阶段](#执行阶段)
 * [4 原理说明](#4-原理说明)
     * [4.1 一致性 hash](#41-一致性-hash)
         * [4.1.1 传统的取模方式](#411-传统的取模方式)
@@ -1009,6 +1014,52 @@ eb8adb8c0c5715525997bdb3c2d5345e688d943f 192.168.64.101:8002 slave 25e8c9379c3db
 > * 节点的配置纪元 (config epoch)
 > * 本节点的网络连接情况
 > * 节点目前包含的槽，例如 192.168.64.102:8002 目前包含的槽为 5461-10922
+
+
+### 3.4 redis cluster 的 failover 机制
+
+failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之一。failover 支持两种模式：
+> * 故障 failover：自动恢复集群的可用性
+> * 人为 failover：支持集群的可运维操作
+
+#### 故障 failover
+
+故障 failover 表现在一个 master 分片故障后，slave 接管 master 的过程。
+
+分为如下 3 个阶段：
+> * 探测阶段
+> * 准备阶段
+> * 执行阶段
+
+##### 探测阶段
+集群中的所有分片通过 gossip 协议传递。探测步骤为：
+> * （1）在 cron 中非遍历 cluster nodes 做 ping 发送，随机从 5 个节点中选出最老 pong_recv 的节点发送 ping，再遍历节点中 pong_recv > timeout/2 的节点发送 ping。
+> * （2）再遍历每个节点从发出 ping 包后超时没有收到 pong 包的时间，超时将对应的分片设置为 pfail 状态，在跟其他节点的 gossip 包过程中，每个节点会带上被标记为 pfail 状态的包。
+> * （3）每个正常分片收到 ping 包后，统计集群中 maste 分片将故障节点设置为 pfail， 超过一半以上的节点设置为 pfail， 则将节点设置为 fail 状态。如果这个分片属于故障节点的 slave 节点，则主动广播故障节点为 fail 状态。
+
+##### 准备阶段
+
+在 cron 函数中，slave 节点获取到 master 节点状态为 fail，主动发起一次 failover 操作，该操作并不是立即执行，而是设计了多个限制：
+> * （1）过期的超时不执行。如何判断是够过期？ 
+>   * data_age = 当前时间点 - 上次 master 失联的时间点 - 超时时间
+>   * 如果 data_age > `master 到 slave 的 ping 间隔时间 + 超时时间*cluster_slave_validity_factor`， 则认为过期。cluster_slave_validity_factor 是一个配置项，cluster_slave_validity_factor 设置的越小越不容易触发 failover。
+> * （2）计算出一个延迟执行的时间 failover_auth_time， failover_auth_time = 当前时间 + 500ms + 0-500ms 的随机值 + 当前 slave 的 rank * 1s,  rank 按已同步的 offset 计算，offset 同步的越延迟，rank 值越大，该 slave 就越推迟触发 failover 的时间，以此来避免多个 slave 同时 failover。只有当前时间到 failover_auth_time 的时间点才会执行 failover。
+
+##### 执行阶段
+> * （1）将 currentEpoch 自增，再赋值给 failover_auth_epoch
+> * （2）向其他 master 分片发起 failover 投票，等待投票结果
+> * （3）其他 master 分片收到 CLUSTERMSG_TYPE_FAILOVER_AUTH_REQUEST 请求后，会判断是否符合以下情况：
+>   * epoch 必须 >= 所有集群视图的 master 节点的 epoch
+>   * 发起者是 slave
+>   * slave 的 master 已是 fail 状态
+>   * 在相同 epoch 内只投票一次
+>   * 在超时时间（cluster_node_timeout） * 2 的时间内只投票一次
+> * （4）其他 master 回复 CLUSTERMSG_TYPE_FAILOVER_AUTH_ACK，slave 端收到后做统计
+> * （5）在 cron 中判断统计超过一半以上 master 回复，开始执行 failover
+> * （6）标记自身节点为 master
+> * （7）清理复制链路
+> * （8）重置集群拓扑结构信息
+> * （9）向集群内所有节点广播
 
 ## 4 原理说明
 
