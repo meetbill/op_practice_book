@@ -48,6 +48,10 @@
             * [探测阶段](#探测阶段)
             * [准备阶段](#准备阶段)
             * [执行阶段](#执行阶段)
+        * [人为 failover](#人为-failover)
+            * [缺省](#缺省)
+            * [force](#force)
+            * [takeover](#takeover)
 * [4 原理说明](#4-原理说明)
     * [4.1 一致性 hash](#41-一致性-hash)
         * [4.1.1 传统的取模方式](#411-传统的取模方式)
@@ -1040,7 +1044,7 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 ##### 准备阶段
 
 在 cron 函数中，slave 节点获取到 master 节点状态为 fail，主动发起一次 failover 操作，该操作并不是立即执行，而是设计了多个限制：
-> * （1）过期的超时不执行。如何判断是够过期？ 
+> * （1）过期的超时不执行。如何判断是够过期？
 >   * data_age = 当前时间点 - 上次 master 失联的时间点 - 超时时间
 >   * 如果 data_age > `master 到 slave 的 ping 间隔时间 + 超时时间*cluster_slave_validity_factor`， 则认为过期。cluster_slave_validity_factor 是一个配置项，cluster_slave_validity_factor 设置的越小越不容易触发 failover。
 > * （2）计算出一个延迟执行的时间 failover_auth_time， failover_auth_time = 当前时间 + 500ms + 0-500ms 的随机值 + 当前 slave 的 rank * 1s,  rank 按已同步的 offset 计算，offset 同步的越延迟，rank 值越大，该 slave 就越推迟触发 failover 的时间，以此来避免多个 slave 同时 failover。只有当前时间到 failover_auth_time 的时间点才会执行 failover。
@@ -1060,6 +1064,32 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 > * （7）清理复制链路
 > * （8）重置集群拓扑结构信息
 > * （9）向集群内所有节点广播
+
+#### 人为 failover
+人为 failover 支持三种模式的 failover：缺省、force、takeover。
+
+##### 缺省
+```
+（1）由 salve 给 master 发送 CLUSTERMSG_TYPE_MFSTART
+（2）master 收到后设置 clients_pause_end_time = 当前时间 + 5s*2，clients_paused =1 , 客户端暂停所有请求，新建请求会被加到 block client list。
+（3）master 在 ping 包中带上 repl_offset 的信息
+（4）slave 检查 master 的 repl_offset，确认同步已完成
+（5）设置 mf_can_start = 1，在 cron 中开始正常的 failover 流程，不需要像故障 failover 设置推迟执行而是立即执行操作，而且其他 master 投票时不需要考虑 master 是否为 fail 状态。
+```
+日志:如下为主实例日志
+```
+5484:M 01 Apr 18:31:07.572 # Manual failover requested by slave db1e03f2158f48019cddd680764a17635b3901c5.
+5484:M 01 Apr 18:31:07.796 # Failover auth granted to db1e03f2158f48019cddd680764a17635b3901c5 for epoch 122
+5484:M 01 Apr 18:31:07.797 # Connection with slave 【slave1_ip:slave1_port】 lost.
+5484:M 01 Apr 18:32:08.509 # Disconnecting timedout slave: 【slave2_ip:slave2_port】
+5484:M 01 Apr 18:32:08.509 # Connection with slave 【slave2_ip:slave2_port】 lost.
+5484:M 01 Apr 18:32:08.509 # Disconnecting timedout slave: 【slave3_ip:slave3_port】
+5484:M 01 Apr 18:32:08.509 # Connection with slave 【slave3_ip:slave3_port】 lost.
+```
+##### force
+忽略主备同步的状态，设置 mf_can_start = 1，标记 failover 开始。
+##### takeover
+直接执行故障 failover 的第 6-9 步，忽略主备同步，忽略集群其他 master 的投票。
 
 ## 4 原理说明
 
