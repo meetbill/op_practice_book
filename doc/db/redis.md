@@ -39,6 +39,8 @@
         * [2.6.1 状态参数](#261-状态参数)
         * [2.6.2 状态实例](#262-状态实例)
         * [2.6.3 使用 Python 获取 Twemproxy 状态](#263-使用-python-获取-twemproxy-状态)
+    * [2.7 其他](#27-其他)
+        * [2.7.1 发送信号修改日志级别以及重新打开日志文件](#271-发送信号修改日志级别以及重新打开日志文件)
 * [3 redis cluster](#3-redis-cluster)
     * [3.1 cluster 命令](#31-cluster-命令)
     * [3.2 redis cluster 配置](#32-redis-cluster-配置)
@@ -924,6 +926,22 @@ def fetch_stats(ip, port):
     stats = json.loads(raw)
     return stats
 ```
+### 2.7 其他
+
+#### 2.7.1 发送信号修改日志级别以及重新打开日志文件
+
+日志只有在编译安装的时候启用（ --enable-debug=log)，默认情况下日志写到 stderr. 可以使用 -o 或者 --output 命令指定输出文件，使用 -v 标记日志级别
+
+```
+# 提高日志级别（级别越高越详细）
+kill -SIGTTIN <pid>
+
+# 降低日志级别
+kill -SIGTTOUT <pid>
+
+# 重新打开日志文件
+kill -SIGHUP <pid>
+```
 
 ## 3 redis cluster
 
@@ -1076,7 +1094,7 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 （4）slave 检查 master 的 repl_offset，确认同步已完成
 （5）设置 mf_can_start = 1，在 cron 中开始正常的 failover 流程，不需要像故障 failover 设置推迟执行而是立即执行操作，而且其他 master 投票时不需要考虑 master 是否为 fail 状态。
 ```
-日志:如下为主实例日志
+日志：如下为主实例日志
 ```
 5484:M 01 Apr 18:31:07.572 # Manual failover requested by slave db1e03f2158f48019cddd680764a17635b3901c5.
 5484:M 01 Apr 18:31:07.796 # Failover auth granted to db1e03f2158f48019cddd680764a17635b3901c5 for epoch 122
