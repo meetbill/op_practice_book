@@ -1,9 +1,35 @@
 ## Mongodb
 <!-- vim-markdown-toc GFM -->
-* [Mongodb 备份](#mongodb-备份)
+
+* [1 安装](#1-安装)
+* [2 常见问题](#2-常见问题)
+    * [(1) 启动异常](#1-启动异常)
+* [3 Mongodb 备份](#3-mongodb-备份)
 
 <!-- vim-markdown-toc -->
-### Mongodb 备份
+## 1 安装
+配置
+```
+fork = true
+port = 27017
+quiet = true
+dbpath = data
+logpath = mongod.log
+logappend = true
+journal = true
+```
+mongod -f mongodb.conf
+
+## 2 常见问题
+### (1) 启动异常
+```
+Failed global initialization: BadValue Invalid or no user locale set. Please ensure LANG and/or LC_* environment variables are set correctly.
+```
+
+设置环境变量
+> export LC_ALL=C
+
+## 3 Mongodb 备份
 Mongodb 用的是可以热备份的 mongodump 和对应恢复的 mongorestore, 在 linux 下面使用 shell 脚本写的定时备份，代码如下
 
 1. 定时备份
