@@ -5,6 +5,8 @@
 * [2 常见问题](#2-常见问题)
     * [(1) 启动异常](#1-启动异常)
 * [3 Mongodb 备份](#3-mongodb-备份)
+* [4 原理](#4-原理)
+    * [4.1 选举机制](#41-选举机制)
 
 <!-- vim-markdown-toc -->
 ## 1 安装
@@ -95,3 +97,8 @@ Mongodb 用的是可以热备份的 mongodump 和对应恢复的 mongorestore, �
   10 02 * * * /shell/mongobakdelete.sh 1>/var/log/crontab_mongo_delete.log &
 ```
 每天凌晨 4 点 10 开始进行备份，2 点 10 分删除旧的备份
+
+## 4 原理
+
+### 4.1 选举机制
+mongodb 副本集故障转移功能得益于它的选举机制。选举机制采用了 Bully 算法。
