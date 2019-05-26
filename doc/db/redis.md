@@ -70,6 +70,13 @@
 * [5 其他相关](#5-其他相关)
     * [5.1 内核参数 overcommit](#51-内核参数-overcommit)
         * [什么是 Overcommit 和 OOM](#什么是-overcommit-和-oom)
+* [6 数据迁移](#6-数据迁移)
+    * [6.1 目标](#61-目标)
+    * [6.2 怎么实现](#62-怎么实现)
+    * [6.3 问题](#63-问题)
+        * [6.3.1 aof 不是幂等的](#631-aof-不是幂等的)
+        * [6.3.2 切流量时的不一致](#632-切流量时的不一致)
+    * [6.4 实现](#64-实现)
 
 <!-- vim-markdown-toc -->
 ## 1 Redis
@@ -1458,3 +1465,82 @@ Linux 对大部分申请内存的请求都回复"yes"，以便能跑更多更大
 > * （1）编辑 /etc/sysctl.conf ，改 vm.overcommit_memory=1，然后 sysctl -p 使配置文件生效
 > * （2）sysctl vm.overcommit_memory=1
 > * （3）echo 1 > /proc/sys/vm/overcommit_memory
+
+## 6 数据迁移
+
+### 6.1 目标
+
+从 A 集群热迁移到 B 集群
+
+### 6.2 怎么实现
+
+mysql 的主从同步是基于 binlog, redis 主从是一个 op buf, mongo 主从同步是 oplog.
+
+redis 里的 aof 就是类似 binlog, 记录每个操作的 log
+
+所以，我们可以利用 aof, 把它当作 binlog, 用于做迁移，分三步：
+
+> * 迁移基准数据
+> * 追增量
+> * 追上后，上层切流量。
+
+redis 的 aof 包含了基准数据和增量，所以我们只需要把旧集群中 redis 实例上的 aof 重放到新集群，重放追上时修改上层，把入口换为新集群即可。
+
+### 6.3 问题
+#### 6.3.1 aof 不是幂等的
+
+aof 不像 binlog 那样可以重做 redolog, binlog 记录的操作是幂等 (idempotent) 的，意味着如果失败了，可以重做一次。
+
+这是因为 binlog 记录的是操作的结果，比如：
+```
+op                  log
+---------------------------
+set x 0             x = 0
+incr x              x = 1
+incr x              x = 2
+```
+但是 redis 的 aof 记录的是操作：
+```
+op                  log
+---------------------------
+set x 0             x = 0
+incr x              incr x
+incr x              incr x
+```
+这就是说，如果我们在重放 aof 的过程中出错（比如网络中断）:
+
+不能继续（不好找到上次同步到哪）,
+也不能重新重放一次，(incr 两次，值就错了）
+只能清除目标集群的数据重新迁移一次
+
+不过，好在 redis 单实例的 afo 数据都不大，一般 10G 左右，重放大约 20min 就能完成，出错的概率也很小。（这也是 redis 可以这样做，而其他持久存储比如 mysql, mongo 必须支持断点同步的原因）
+
+#### 6.3.2 切流量时的不一致
+前面说的步骤是：
+
+> * 追 aof
+> * 追上后，切流量。
+追 aof 是一个动态的过程，追上后，新的写操作马上就来，所以这里追上的意思是说，新的写入马上会被消化掉。
+
+但是考虑这样一种场景：
+
+假设 client 上做对 x 做两次 set（一个机器上做两次，或者两个 app-server 上分别做）:
+```
+client          old_cluster         new_cluster
+-----------------------------------------------
+set x 1(a)      set x 1（客户操作）
+-----------------------------------------------> 切流量到 new_cluster
+set x 2(b)                          set x 2 （客户操作）
+                                    set x 1 (b 操作被重放到 new_cluster)
+```
+a 操作还没同步到 new_cluster, 流量就已经切到了 new_cluster, 这时候对同一个 key 的更新，会被老集群上的操作覆盖掉。
+
+解决：
+
+这个短暂的不一致，对多数业务，是能容忍的（很少有业务会高速更新同一个 key)
+如果非要达到一致，当追 aof 追上后，app-server 停写，等待彻底追上（此时老集群的 aof 不会有更新了）, 然后再切流量。
+
+### 6.4 实现
+
+[redis-replay-aof](https://github.com/meetbill/redis-replay-aof)
+
