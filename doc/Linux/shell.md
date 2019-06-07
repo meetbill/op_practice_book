@@ -1609,11 +1609,7 @@ export WSCP="./tools/sshpass -p ${PASSWD} scp ${ssh_option}"
 > * NumberOfPasswordPrompts=0       规避没有信任关系挂死的问题，当对应的机器需要输入密码时，会直接返回异常（异常返回码为 255），而不是阻塞在输入密码页面
 > * ConnectTimeout=3                连接超时时间，3秒
 > * ConnectionAttempts=3            连接失败后重试次数，3次
---------------------- 
-作者：DemonHunter211 
-来源：CSDN 
-原文：https://blog.csdn.net/kwame211/article/details/79076513 
-版权声明：本文为博主原创文章，转载请附上博文链接！
+
 ### 12.4 ping 文件列表中所有主机
 ```
 #!/bin/bash
@@ -1679,4 +1675,7 @@ function p_ok {
 
 ROOT_PATH=`S=\`readlink "$0"\`; [ -z "$S"  ] && S=$0; dirname $S`
 cd ${ROOT_PATH}
+
+
+ssh_option="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o NumberOfPasswordPrompts=0 -o ConnectTimeout=3 -o ConnectionAttempts=3"
 ```

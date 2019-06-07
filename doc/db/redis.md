@@ -945,7 +945,7 @@ def fetch_stats(ip, port):
 kill -SIGTTIN <pid>
 
 # 降低日志级别
-kill -SIGTTOUT <pid>
+kill -SIGTTOU <pid>
 
 # 重新打开日志文件
 kill -SIGHUP <pid>
