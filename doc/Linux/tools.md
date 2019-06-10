@@ -21,9 +21,8 @@
         * [2.2.3 运算与编程](#223-运算与编程)
         * [2.2.4 AWK 中输出外部变量](#224-awk-中输出外部变量)
         * [2.2.5 AWK if](#225-awk-if)
-    * [2.3 排查 java CPU 性能问题](#23-排查-java-cpu-性能问题)
-        * [2.3.1 用法](#231-用法)
-        * [2.3.2 示例](#232-示例)
+    * [2.3 find](#23-find)
+        * [2.3.1 linux 文件查找指定时间段的文件](#231-linux-文件查找指定时间段的文件)
 * [3 系统相关](#3-系统相关)
     * [3.1 screen](#31-screen)
         * [3.1.1 screen 使用](#311-screen-使用)
@@ -43,6 +42,10 @@
 * [5 日志相关操作](#5-日志相关操作)
     * [5.1 截取某段时间内的日志](#51-截取某段时间内的日志)
     * [5.2 处理日志文件中上下关联的两行](#52-处理日志文件中上下关联的两行)
+* [6 应用服务相关](#6-应用服务相关)
+    * [6.1 排查 java CPU 性能问题](#61-排查-java-cpu-性能问题)
+        * [2.3.1 用法](#231-用法)
+        * [2.3.2 示例](#232-示例)
 
 <!-- vim-markdown-toc -->
 
@@ -77,7 +80,7 @@
 + `git branch <branch-name>` : 基于当前 commit 新建一个分支，但是不切换到新分支
 + `git branch -r` : 查看远程的所有分支（常用）
 + `git checkout -b <branch-name>` : 新建并切换分支
-+ `git checkout <branch-name>` : 切换分支(常用)
++ `git checkout <branch-name>` : 切换分支（常用）
 + `git branch -d <branch-name>` : 删除分支
 + `git push origin <branch-name>` : 推送本地分支
 + `git checkout -b <local-branch-name> origin/<origin-branch-name>` : 基于某个远程分支新建一个分支开发
@@ -446,95 +449,19 @@ awk -F: '{if($1~/mail/) {print $1} else {print $2}}' /etc/passwd            //if
 # ps -eF，其中 PSR 就是 (processor that process is currently assigned to.) 或者 ps -eo pid,command,args,psr
 ps -eF |awk '{if($7==0) print $0}'
 ```
-## 2.3 排查 java CPU 性能问题
+## 2.3 find
 
-[show-busy-java-threads.sh](https://github.com/meetbill/op_practice_code/blob/master/Linux/op/show-busy-java-threads.sh)
+### 2.3.1 linux 文件查找指定时间段的文件
+
 ```
-curl -o show-busy-Java-threads.sh https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/op/show-busy-java-threads.sh
+touch -t 201710241800 t1
+touch -t 201710252100 t2
+
+
+查找排序（先旧后新），结果写到文件
+
+find ./ -type f -name "*.aof" -newer ./t1 ! -newer ./t2  |xargs ls -lrt  > /sdcard/amr/sort.txt
 ```
-
-用于快速排查`Java`的`CPU`性能问题 (`top us`值过高），自动查出运行的`Java`进程中消耗`CPU`多的线程，并打印出其线程栈，从而确定导致性能问题的方法调用。
-
-PS，如何操作可以参见 [@bluedavy](http://weibo.com/bluedavy) 的《分布式 Java 应用》的【5.1.1 cpu 消耗分析】一节，说得很详细：
-
-1. `top`命令找出有问题`Java`进程及线程`id`：
-    1. 开启线程显示模式
-    1. 按`CPU`使用率排序
-    1. 记下`Java`进程`id`及其`CPU`高的线程`id`
-1. 用进程`id`作为参数，`jstack`有问题的`Java`进程
-1. 手动转换线程`id`成十六进制（可以用`printf %x 1234`）
-1. 查找十六进制的线程`id`（可以用`grep`）
-1. 查看对应的线程栈
-
-查问题时，会要多次这样操作以确定问题，上面过程**太繁琐太慢了**。
-
-### 2.3.1 用法
-
-```bash
-show-busy-java-threads.sh
-# 从 所有的 Java 进程中找出最消耗 CPU 的线程（缺省 5 个），打印出其线程栈。
-
-show-busy-java-threads.sh -c 《要显示的线程栈数》
-
-show-busy-java-threads.sh -c 《要显示的线程栈数》 -p 《指定的 Java Process>
-
-##############################
-# 注意：
-##############################
-# 如果 Java 进程的用户 与 执行脚本的当前用户 不同，则 jstack 不了这个 Java 进程。
-# 为了能切换到 Java 进程的用户，需要加 sudo 来执行，即可以解决：
-sudo show-busy-java-threads.sh
-```
-
-### 2.3.2 示例
-
-```bash
-$ show-busy-java-threads.sh
-[1] Busy(57.0%) thread(23355/0x5b3b) stack of java process(23269) under user(admin):
-"pool-1-thread-1" prio=10 tid=0x000000005b5c5000 nid=0x5b3b runnable [0x000000004062c000]
-   java.lang.Thread.State: RUNNABLE
-    at java.text.DateFormat.format(DateFormat.java:316)
-    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:41)
-    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:127)
-    at com.xxx.foo.services.common.utils.AliTimer$2.run(AliTimer.java:128)
-    at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
-    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
-    at java.lang.Thread.run(Thread.java:662)
-
-[2] Busy(26.1%) thread(24018/0x5dd2) stack of java process(23269) under user(admin):
-"pool-1-thread-2" prio=10 tid=0x000000005a968800 nid=0x5dd2 runnable [0x00000000420e9000]
-   java.lang.Thread.State: RUNNABLE
-    at java.util.Arrays.copyOf(Arrays.java:2882)
-    at java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:100)
-    at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:572)
-    at java.lang.StringBuffer.append(StringBuffer.java:320)
-    - locked <0x00000007908d0030> (a java.lang.StringBuffer)
-    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:890)
-    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:869)
-    at java.text.DateFormat.format(DateFormat.java:316)
-    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:41)
-    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:126)
-    at com.xxx.foo.services.common.utils.AliTimer$2.run(AliTimer.java:128)
-    at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
-    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
-...
-```
-
-上面的线程栈可以看出，`CPU`消耗最高的 2 个线程都在执行`java.text.DateFormat.format`，业务代码对应的方法是`shared.monitor.schedule.AppMonitorDataAvgScheduler.run`。可以基本确定：
-
-- `AppMonitorDataAvgScheduler.run`调用`DateFormat.format`次数比较频繁。
-- `DateFormat.format`比较慢。（这个可以由`DateFormat.format`的实现确定。）
-
-多个执行几次`show-busy-java-threads.sh`，如果上面情况高概率出现，则可以确定上面的判定。
-\# 因为调用越少代码执行越快，则出现在线程栈的概率就越低。
-
-分析`shared.monitor.schedule.AppMonitorDataAvgScheduler.run`实现逻辑和调用方式，以优化实现解决问题。
-
-- [oldratlee](https://github.com/oldratlee)
-- [silentforce](https://github.com/silentforce) 改进此脚本，增加对环境变量`JAVA_HOME`的判断。 #15
-- [liuyangc3](https://github.com/liuyangc3)
-    - 优化性能，通过`read -a`简化反复的`awk`操作 #51
-    - 发现并解决`jstack`非当前用户`Java`进程的问题 #50
 
 # 3 系统相关
 ## 3.1 screen
@@ -1150,3 +1077,95 @@ awk '/port/{print a" "$2}{a=$1}' d.txt
 处理第二行的时候，以 port 开头，打印出来 a 和本行 $2，再处理就是个循环过程。
 
 总之，编写模式匹配时候，匹配的模式为第二行中的内容
+
+# 6 应用服务相关
+
+## 6.1 排查 java CPU 性能问题
+
+[show-busy-java-threads.sh](https://github.com/meetbill/op_practice_code/blob/master/Linux/op/show-busy-java-threads.sh)
+```
+curl -o show-busy-Java-threads.sh https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/op/show-busy-java-threads.sh
+```
+
+用于快速排查`Java`的`CPU`性能问题 (`top us`值过高），自动查出运行的`Java`进程中消耗`CPU`多的线程，并打印出其线程栈，从而确定导致性能问题的方法调用。
+
+PS，如何操作可以参见 [@bluedavy](http://weibo.com/bluedavy) 的《分布式 Java 应用》的【5.1.1 cpu 消耗分析】一节，说得很详细：
+
+1. `top`命令找出有问题`Java`进程及线程`id`：
+    1. 开启线程显示模式
+    1. 按`CPU`使用率排序
+    1. 记下`Java`进程`id`及其`CPU`高的线程`id`
+1. 用进程`id`作为参数，`jstack`有问题的`Java`进程
+1. 手动转换线程`id`成十六进制（可以用`printf %x 1234`）
+1. 查找十六进制的线程`id`（可以用`grep`）
+1. 查看对应的线程栈
+
+查问题时，会要多次这样操作以确定问题，上面过程**太繁琐太慢了**。
+
+### 2.3.1 用法
+
+```bash
+show-busy-java-threads.sh
+# 从 所有的 Java 进程中找出最消耗 CPU 的线程（缺省 5 个），打印出其线程栈。
+
+show-busy-java-threads.sh -c 《要显示的线程栈数》
+
+show-busy-java-threads.sh -c 《要显示的线程栈数》 -p 《指定的 Java Process>
+
+##############################
+# 注意：
+##############################
+# 如果 Java 进程的用户 与 执行脚本的当前用户 不同，则 jstack 不了这个 Java 进程。
+# 为了能切换到 Java 进程的用户，需要加 sudo 来执行，即可以解决：
+sudo show-busy-java-threads.sh
+```
+
+### 2.3.2 示例
+
+```bash
+$ show-busy-java-threads.sh
+[1] Busy(57.0%) thread(23355/0x5b3b) stack of java process(23269) under user(admin):
+"pool-1-thread-1" prio=10 tid=0x000000005b5c5000 nid=0x5b3b runnable [0x000000004062c000]
+   java.lang.Thread.State: RUNNABLE
+    at java.text.DateFormat.format(DateFormat.java:316)
+    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:41)
+    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:127)
+    at com.xxx.foo.services.common.utils.AliTimer$2.run(AliTimer.java:128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
+    at java.lang.Thread.run(Thread.java:662)
+
+[2] Busy(26.1%) thread(24018/0x5dd2) stack of java process(23269) under user(admin):
+"pool-1-thread-2" prio=10 tid=0x000000005a968800 nid=0x5dd2 runnable [0x00000000420e9000]
+   java.lang.Thread.State: RUNNABLE
+    at java.util.Arrays.copyOf(Arrays.java:2882)
+    at java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:100)
+    at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:572)
+    at java.lang.StringBuffer.append(StringBuffer.java:320)
+    - locked <0x00000007908d0030> (a java.lang.StringBuffer)
+    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:890)
+    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:869)
+    at java.text.DateFormat.format(DateFormat.java:316)
+    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:41)
+    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:126)
+    at com.xxx.foo.services.common.utils.AliTimer$2.run(AliTimer.java:128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
+...
+```
+
+上面的线程栈可以看出，`CPU`消耗最高的 2 个线程都在执行`java.text.DateFormat.format`，业务代码对应的方法是`shared.monitor.schedule.AppMonitorDataAvgScheduler.run`。可以基本确定：
+
+- `AppMonitorDataAvgScheduler.run`调用`DateFormat.format`次数比较频繁。
+- `DateFormat.format`比较慢。（这个可以由`DateFormat.format`的实现确定。）
+
+多个执行几次`show-busy-java-threads.sh`，如果上面情况高概率出现，则可以确定上面的判定。
+\# 因为调用越少代码执行越快，则出现在线程栈的概率就越低。
+
+分析`shared.monitor.schedule.AppMonitorDataAvgScheduler.run`实现逻辑和调用方式，以优化实现解决问题。
+
+- [oldratlee](https://github.com/oldratlee)
+- [silentforce](https://github.com/silentforce) 改进此脚本，增加对环境变量`JAVA_HOME`的判断。 #15
+- [liuyangc3](https://github.com/liuyangc3)
+    - 优化性能，通过`read -a`简化反复的`awk`操作 #51
+    - 发现并解决`jstack`非当前用户`Java`进程的问题 #50
