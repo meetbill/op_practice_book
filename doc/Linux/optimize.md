@@ -63,19 +63,19 @@
 
 我们只需要简单的工具就可以对 Linux 的性能进行监控，以下常用的工具：
 
-|     工具    |      简介                         |
-|:-:|---|
-|  top        |  查看进程活动状态以及一些系统状况 |
-|  vmstat     |  查看系统状态、硬件和系统信息等   |
-|  iostat     |  查看 CPU 负载、硬盘状况          |
-|  sar        |  综合工具，查看系统状况           |
-|  mpstat     |  查看多处理器状况                 |
-|  netstat    |  查看网络状况                     |
-|  iptraf     |  实时网络状态监测【推荐】 比如网卡打满时，查看哪个 port 流量比较高  |
-|  tcpdump    |  抓取网络数据包，详细分析         |
-|  tcptrace   |  网络包分析工具                   |
-|  netperf    |  网络带宽工具                     |
-|  dstat      |  综合了 vmstat、iostat、ifstat、netstat 等多个信息  |
+|     工具    |      简介                         | 备注|
+|:-:|---|---|
+|  top        |  查看进程活动状态以及一些系统状况 | |
+|  vmstat     |  查看系统状态、硬件和系统信息等   | |
+|  iostat     |  查看 CPU 负载、硬盘状况          | |
+|  sar        |  综合工具，查看系统状况           | |
+|  mpstat     |  查看多处理器状况                 | |
+|  netstat    |  查看网络状况|日常工作中推荐使用 ss 命令以替代 netstat     |
+|  iptraf     |  实时网络状态监测|【推荐】 比如网卡打满时，查看哪个 port 流量比较高  |
+|  tcpdump    |  抓取网络数据包，详细分析         | |
+|  tcptrace   |  网络包分析工具                   | |
+|  netperf    |  网络带宽工具                     | |
+|  dstat      |  综合了 vmstat、iostat、ifstat、netstat 等多个信息  | |
 
 本系列将按照 CPU、内存、磁盘 IO、网络这几个方面分别介绍
 
