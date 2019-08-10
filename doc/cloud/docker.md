@@ -1,6 +1,7 @@
 # Docker
 
 <!-- vim-markdown-toc GFM -->
+
 * [1 CentOS7 安装 Docker](#1-centos7-安装-docker)
     * [1.1 准备](#11-准备)
     * [1.2 安装 Docker](#12-安装-docker)
@@ -373,6 +374,15 @@ meetbill@Linux:~/mysql$ docker run -d \
 > * -p 3306:3306：将容器的 3306 端口映射到主机的 3306 端口
 > * -v $PWD/data:/var/lib/mysql：将主机当前目录下的 data 目录挂载到容器的 /mysql_data
 > * -e MYSQL_ROOT_PASSWORD=123456：初始化 root 用户的密码
+
+**(3)进入 mysql 容器**
+
+```
+$docker ps
+$docker exec -it 775c7c9ee1e1 /bin/bash
+or
+$docker exec -it mymysql /bin/bash
+```
 
 # 5 其他
 
