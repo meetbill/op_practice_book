@@ -38,7 +38,7 @@
     * [2.6 查看状态](#26-查看状态)
         * [2.6.1 状态参数](#261-状态参数)
         * [2.6.2 状态实例](#262-状态实例)
-        * [2.6.3 使用 Python 获取 Twemproxy 状态](#263-使用-python-获取-twemproxy-状态)
+        * [2.6.3 获取 Twemproxy 状态](#263-获取-twemproxy-状态)
     * [2.7 其他](#27-其他)
         * [2.7.1 发送信号修改日志级别以及重新打开日志文件](#271-发送信号修改日志级别以及重新打开日志文件)
 * [3 redis cluster](#3-redis-cluster)
@@ -916,10 +916,11 @@ server stats:
     "version": "0.2.4"
 }
 ```
-#### 2.6.3 使用 Python 获取 Twemproxy 状态
+#### 2.6.3 获取 Twemproxy 状态
 
-使用 curl 获取 Twemproxy 状态时，如果后端的 redis 或者 memcache 过多，将会导致获取状态内容失败，可以进行如下解决方法
+使用 curl 获取 Twemproxy 状态时，如果后端的 redis 或者 memcache 过多，将会导致获取状态内容失败，这个是因为 proxy 的状态端口返回的不是 HTTP 数据包，可以进行如下解决方法
 
+> Python 程序
 ```
 def fetch_stats(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -933,6 +934,11 @@ def fetch_stats(ip, port):
     s.close()
     stats = json.loads(raw)
     return stats
+```
+
+> nc
+```
+nc ip stat_port
 ```
 ### 2.7 其他
 
