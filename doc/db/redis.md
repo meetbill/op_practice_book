@@ -4,9 +4,9 @@
     * [1.1 持久化](#11-持久化)
         * [1.1.1 AOF 重写机制](#111-aof-重写机制)
     * [1.2 主从同步](#12-主从同步)
-        * [repl-timeout](#repl-timeout)
-        * [写入量太大超出 output-buffer](#写入量太大超出-output-buffer)
-        * [repl-backlog-size 太小导致失败](#repl-backlog-size-太小导致失败)
+        * [1.2.1 repl-timeout](#121-repl-timeout)
+        * [1.2.2 写入量太大超出 output-buffer](#122-写入量太大超出-output-buffer)
+        * [1.2.3 repl-backlog-size 太小导致失败](#123-repl-backlog-size-太小导致失败)
     * [1.3 Redis bug](#13-redis-bug)
         * [1.3.1 AOF 句柄泄露 bug](#131-aof-句柄泄露-bug)
             * [表现](#表现)
@@ -19,13 +19,38 @@
     * [1.4 redis 日志](#14-redis-日志)
         * [1.4.1 日常日志](#141-日常日志)
     * [1.5 redis 协议说明](#15-redis-协议说明)
-        * [网络层](#网络层)
-        * [请求](#请求)
-        * [新的统一请求协议](#新的统一请求协议)
-        * [回复](#回复)
-        * [多批量回复中的 Nil 元素](#多批量回复中的-nil-元素)
-        * [多命令和管道](#多命令和管道)
-        * [旧协议发送命令](#旧协议发送命令)
+        * [1.5.1 网络层](#151-网络层)
+        * [1.5.2 请求](#152-请求)
+        * [1.5.3 新的统一请求协议](#153-新的统一请求协议)
+        * [1.5.4 回复](#154-回复)
+        * [1.5.6 多批量回复中的 Nil 元素](#156-多批量回复中的-nil-元素)
+        * [1.5.7 多命令和管道](#157-多命令和管道)
+        * [1.5.8 旧协议发送命令](#158-旧协议发送命令)
+    * [1.6 Redis RDB 文件格式](#16-redis-rdb-文件格式)
+        * [1.6.1 解析 RDB 的高层算法](#161-解析-rdb-的高层算法)
+            * [魔术数](#魔术数)
+            * [RDB 版本号](#rdb-版本号)
+            * [数据库选择器](#数据库选择器)
+            * [键值对](#键值对)
+                * [键保存期限时间戳](#键保存期限时间戳)
+                * [值类型](#值类型)
+                * [键](#键)
+                * [值](#值)
+        * [1.6.2 长度编码](#162-长度编码)
+        * [1.6.3 字符串编码](#163-字符串编码)
+            * [长度前缀字符串](#长度前缀字符串)
+            * [整数作为字符串](#整数作为字符串)
+            * [压缩字符串](#压缩字符串)
+        * [1.6.4 List 编码](#164-list-编码)
+        * [1.6.5 Set 编码](#165-set-编码)
+        * [1.6.6 Sorted Set 编码](#166-sorted-set-编码)
+        * [1.6.7 Hash 编码](#167-hash-编码)
+        * [1.6.8 Zipmap 编码](#168-zipmap-编码)
+        * [1.6.9 Ziplist 编码](#169-ziplist-编码)
+        * [1.6.10 Intset 编码](#1610-intset-编码)
+        * [1.6.11 以 Ziplist 编码的 Sorted Set](#1611-以-ziplist-编码的-sorted-set)
+        * [1.6.12 Ziplist 编码的 Hashmap](#1612-ziplist-编码的-hashmap)
+            * [CRC32 校验和](#crc32-校验和)
 * [2 Redis twemproxy 集群](#2-redis-twemproxy-集群)
     * [2.1 Twemproxy 特性](#21-twemproxy-特性)
     * [2.2 环境说明](#22-环境说明)
@@ -46,11 +71,11 @@
     * [3.2 redis cluster 配置](#32-redis-cluster-配置)
     * [3.3 redis cluster 状态](#33-redis-cluster-状态)
     * [3.4 redis cluster 的 failover 机制](#34-redis-cluster-的-failover-机制)
-        * [故障 failover](#故障-failover)
+        * [3.4.1 故障 failover](#341-故障-failover)
             * [探测阶段](#探测阶段)
             * [准备阶段](#准备阶段)
             * [执行阶段](#执行阶段)
-        * [人为 failover](#人为-failover)
+        * [3.4.2 人为 failover](#342-人为-failover)
             * [缺省](#缺省)
             * [force](#force)
             * [takeover](#takeover)
@@ -79,11 +104,11 @@
     * [6.4 实现](#64-实现)
 
 <!-- vim-markdown-toc -->
-## 1 Redis
+# 1 Redis
 
-### 1.1 持久化
+## 1.1 持久化
 
-#### 1.1.1 AOF 重写机制
+### 1.1.1 AOF 重写机制
 
 AOF 重写触发条件
 
@@ -129,7 +154,7 @@ AOF 重写可以由用户通过调用 BGREWRITEAOF 手动触发。
             }
          }
 ```
-### 1.2 主从同步
+## 1.2 主从同步
 
 主从同步相关参数
 
@@ -156,7 +181,7 @@ slave 出现如下类似日志，则同步已完成：
 [4611] 24 Aug 19:16:57.509 * MASTER <-> SLAVE sync: Loading DB in memory
 [4611] 24 Aug 19:19:44.191 * MASTER <-> SLAVE sync: Finished with success
 ```
-#### repl-timeout
+### 1.2.1 repl-timeout
 若 slave 日志出现如下行：
 ```
 # Timeout receiving bulk data from MASTER... If the problem persists try to set the    'repl-timeout' parameter in redis.conf to a larger value.
@@ -166,7 +191,7 @@ slave 出现如下类似日志，则同步已完成：
 repl-timeout 60  # 将数值设得更大
 如：config set repl-timeout 600
 ```
-#### 写入量太大超出 output-buffer
+### 1.2.2 写入量太大超出 output-buffer
 
 若 slave 日志出现如下行：
 ```
@@ -183,7 +208,7 @@ client-output-buffer-limit slave 256mb 64mb 60
 
 如：config set client-output-buffer-limit "slave 0 0 0"
 ```
-#### repl-backlog-size 太小导致失败
+### 1.2.3 repl-backlog-size 太小导致失败
 
 当 master-slave 复制连接断开，server 端会释放连接相关的数据结构。replication buffer 中的数据也就丢失，当断开的 slave 重新连接上 master 的时候，slave 将会发送 psync 命令（包含复制的偏移量 offset），请求 partial resync。如果请求的 offset 不存在，那么执行全量的 sync 操作，相当于重新建立主从复制。
 
@@ -193,10 +218,10 @@ Unable to partial resync with slave $slaveip:6379 for lack of backlog (Slave req
 调整 repl-backlog-size 大小
 
 
-### 1.3 Redis bug
+## 1.3 Redis bug
 
-#### 1.3.1 AOF 句柄泄露 bug
-##### 表现
+### 1.3.1 AOF 句柄泄露 bug
+#### 表现
 日志中提示
 ```
 * Residual parent diff successfully flushed to the rewritten AOF (329.83 MB)
@@ -216,7 +241,7 @@ Unable to partial resync with slave $slaveip:6379 for lack of backlog (Slave req
 ```
 使用 lsof 命令检查 fd 数，发现当时进程打开的 fd 数已经达到 10128 个，而其中大部分基本都是 pipe. 在 Redis 中，pipe 主要用于父子进程间通信，如 AOF 重写、基于 socket 的 RDB 持久化等场景。
 
-##### 分析
+#### 分析
 
 **fd 限制**
 
@@ -301,19 +326,19 @@ int rewriteAppendOnlyFileBackground(void) {
 
 由此可见，如果 aof 重写子进程没有启动，则 pipe 将不会被关闭。而下次尝试启动 aof 重写时，又会调用 aof.c/aofCreatePipes 创建新的 pipe。
 
-##### 解决
+#### 解决
 
 > * 2015 年就被两次在社区上报（参考 https://github.com/antirez/redis/issues/2857
 > * 2016 年有开发者提交代码修复此问题，直至 2017 年 2 月相关修复才被合入主干（参考 https://github.com/antirez/redis/pull/3408）
 > * 这只长寿的 bug 在 3.2.9 版本已修复
 
-#### 1.3.2 在 AOF 文件 rewrite 期间如果设置 config set appendonly no，会导致 redis 进程一直死循环不间断触发 rewrite AOF
+### 1.3.2 在 AOF 文件 rewrite 期间如果设置 config set appendonly no，会导致 redis 进程一直死循环不间断触发 rewrite AOF
 
 此 BUG 在 4.0.7 版本修复 (2018.1 月）
 
 https://github.com/antirez/redis/commit/a18e4c964e9248008e0fba7efc1cad9ba9b8b1c3
 
-##### 根因
+#### 根因
 
 redis 在 AOF rewrite 期间设置了 appendonly no，会 kill 子进程，设置 server.aof_fd = -1，但是并未更新 server.aof_rewrite_base_size。
 
@@ -321,7 +346,7 @@ redis 在 AOF rewrite 期间设置了 appendonly no，会 kill 子进程，设�
 
 AOF rewrite 重写完成后发现 server.aof_fd=-1 也未更新 server.aof_rewrite_base_size，导致 serverCron 中一直触发 AOF rewrite。
 
-#### 1.3.3 redis slots 迁移的时候，永不过期的 key 因为 ttl>0 而过期，导致迁移丢失数据
+### 1.3.3 redis slots 迁移的时候，永不过期的 key 因为 ttl>0 而过期，导致迁移丢失数据
 
 详细见博客 https://blog.csdn.net/doc_sgl/article/details/53825892
 
@@ -329,7 +354,7 @@ AOF rewrite 重写完成后发现 server.aof_fd=-1 也未更新 server.aof_rewri
 
 在 4.0rc2 版本中进行修复
 
-##### 根因
+#### 根因
 
 所有丢失 key 的 ttl 因为没有处理而使用了前一个 key 的 ttl！
 
@@ -384,9 +409,9 @@ void migrateCommand(client *c) {
     }
 ```
 
-### 1.4 redis 日志
+## 1.4 redis 日志
 
-#### 1.4.1 日常日志
+### 1.4.1 日常日志
 ```
 DB 0: 1 keys (0 volatile) in 4 slots HT
 ```
@@ -396,7 +421,7 @@ DB 0: 1 keys (0 volatile) in 4 slots HT
 > * 4 slots HT: 目前 0 号 DB 的 hash table 只有 4 个 slots(buckets)
 >   * //todo
 
-### 1.5 redis 协议说明
+## 1.5 redis 协议说明
 
 Redis 的客户端和服务端之间采取了一种独立名为 RESP(REdis Serialization Protocol) 的协议
 
@@ -408,17 +433,17 @@ Redis 协议在以下几点之间做出了折衷：
 
 注意：RESP 虽然是为 Redis 设计的，但是同样也可以用于其他 C/S 的软件。
 
-#### 网络层
+### 1.5.1 网络层
 
 Redis 在 TCP 端口 6379 上监听到来的连接，客户端连接到来时，Redis 服务器为此创建一个 TCP 连接。
 
 在客户端与服务器端之间传输的每个 Redis 命令或者数据都以、r\n 结尾。
 
-#### 请求
+### 1.5.2 请求
 
 Redis 接收由不同参数组成的命令。一旦收到命令，将会立刻被处理，并回复给客户端。
 
-#### 新的统一请求协议
+### 1.5.3 新的统一请求协议
 
 新的统一协议已在 Redis 1.2 中引入，但是在 Redis 2.0 中，这就成为了与 Redis 服务器通讯的标准方式。
 
@@ -451,7 +476,7 @@ Redis 接收由不同参数组成的命令。一旦收到命令，将会立刻�
 
 实际的统一请求协议是 Redis 用于返回列表项，并调用 Multi-bulk 回复。 仅仅是 N 个以以`*\r\n` 为前缀的不同批量回复，是紧随的参数（批量回复）数目。
 
-#### 回复
+### 1.5.4 回复
 Redis 用不同的回复类型回复命令。它可能从服务器发送的第一个字节开始校验回复类型：
 ```
     用单行回复，回复的第一个字节将是“+”
@@ -653,7 +678,7 @@ $0\r\n\r\n
     (empty list or set)
 ```
 
-#### 多批量回复中的 Nil 元素
+### 1.5.6 多批量回复中的 Nil 元素
 多批量回复的单元素长度可能是 -1，为了发出信号这个元素被丢失且不是空字符串。这种情况发送在 SORT 命令时，此时使用 GET 模式选项且指定的键丢失。一个多批量回复包含一个空元素的例子如下：
 
 ```
@@ -668,13 +693,13 @@ $0\r\n\r\n
 ```
     ["foo",nil,"bar"]
 ```
-#### 多命令和管道
+### 1.5.7 多命令和管道
 
 客户端能使用同样条件为了发出多个命令。管道用于支持多命令能够被客户端用单写操作来发送，它不需要为了发送下一条命令而读取服务器的回复。所有回复都能在最后被读出。
 
 通常 Redis 服务器和客户端拥有非常快速的连接，所以在客户端的实现中支持这个特性不是那么重要，如果一个应用需要在短时间内发出大量的命令，管道仍然会非常快。
 
-#### 旧协议发送命令
+### 1.5.8 旧协议发送命令
 
 在统一请求协议出现前，Redis 用不同的协议发送命令，现在仍然支持，它简单通过手动 telnet。在这种协议中，有两种类型的命令：
 
@@ -717,14 +742,348 @@ S: +PONG
 ```
 Redis 有一个内部列表，用于表示哪些命令是内联，哪些命令是批量，所以你不得不发送相应的命令。强烈建议使用新的统一请求协议来代替老的协议。
 
-## 2 Redis twemproxy 集群
+## 1.6 Redis RDB 文件格式
+
+翻译自：
+<https://github.com/sripathikrishnan/redis-rdb-tools/wiki/Redis-RDB-Dump-File-Format>
+
+
+
+`Redis *.rdb` 文件是一个内存内存储的二进制表示法。这个二进制文件足以完全恢复 Redis 的状态。
+
+rdb 文件格式为快速读和写优化。LZF 压缩可以用来减少文件大小。通常，对象前面有它们的长度，这样，在读取对象之前，你可以准确地分配内存大小。
+
+
+为快速读 / 写优化意味着磁盘上的格式应该尽可能接近于在内存里的表示法。这种方式正是 rdb 文件采用的。
+导致的结果是，在不了解 Redis 在内存里表示数据的数据结构的情况下，你没法解析 rdb 文件。
+
+
+### 1.6.1 解析 RDB 的高层算法
+在高层层面看，RDB 文件有下面的格式：
+```
+----------------------------# RDB 是一个二进制文件。文件里没有新行或空格。
+52 45 44 49 53              # 魔术字符串 "REDIS"
+30 30 30 33                 # RDB 版本号，高位优先。在这种情况下，版本是 0003 = 3
+----------------------------
+FE 00                       # FE = code 指出数据库选择器。数据库号 = 00
+----------------------------# 键值对开始
+FD $unsigned int            # FD 指出 "有效期限时间是秒为单位". 在这之后，读取 4 字节无符号整数作为有效期限时间。
+$value-type                 # 1 字节标记指出值的类型 － set，map，sorted set 等。
+$string-encoded-key         # 键，编码为一个 redis 字符串。
+$encoded-value              # 值，编码取决于 $value-type.
+----------------------------
+FC $unsigned long           # FC 指出 "有效期限时间是豪秒为单位". 在这之后，读取 8 字节无符号长整数作为有效期限时间。
+$value-type                 # 1 字节标记指出值的类型 － set，map，sorted set 等。
+$string-encoded-key         # 键，编码为一个 redis 字符串。
+$encoded-value              # 值，编码取决于 $value-type.
+----------------------------
+$value-type                 # 这个键值对没有有效期限。$value_type 保证 != to FD, FC, FE and FF
+$string-encoded-key
+$encoded-value
+----------------------------
+FE $length-encoding         # 前一个数据库结束，下一个数据库开始。数据库号用长度编码读取。
+----------------------------
+...                         # 这个数据库的键值对，另外的数据库。
+FF                          ## RDB 文件结束指示器
+8 byte checksum             ## 整个文件的 CRC32 校验和。
+```
+
+#### 魔术数
+文件开始于魔术字符串 `REDIS`。这是一个快速明智的检查是否正在处理一个 redis rdb 文件。
+`52 45 44 49 53 # "REDIS" `
+
+
+#### RDB 版本号
+接下来 `4` 个字节存储了 rdb 格式的版本号。这 `4` 个字节解释为 ascii 字符，然后使用字符串到整数的转换法转换为一个整数。
+`00 00 00 03 # Version = 3`
+
+
+#### 数据库选择器
+一个 Redis 实例可以有多个数据库。
+单一字节 `0xFE` 标记数据库选择器的开始。在这个字节之后，一个可变长度的字段指出数据库序号。
+见“长度编码”章节来了解如何读取数据库序号。
+
+
+#### 键值对
+在数据库选择器之后，文件包含了一序列的键值对。
+
+每个键值对有 4 部分：
+>  1.  键保存期限时间戳。这是可选的。
+>  2.  一个字节标记值的类型。
+>  3.  键编码为 Redis 字符串。见“Redis 字符串编码”。
+>  4.  值根据值类型进行编码。见“Redis 值编码”。
+
+
+##### 键保存期限时间戳
+这个区块开始于一字节标记。值 `FD` 指出保存期限是以秒为单位指定。值 `FC` 指出有效期限是以毫秒为单位指定。
+
+如果时间指定为毫秒，接下来 `8` 个字节表示 unix 时间。这个数字是 unix 时间戳，精确到秒或毫秒，表示这个键的有效期限。
+
+数字如何编码见“Redis 长度编码”章节。
+
+在导入过程中，已经过期的键将必须丢弃。
+
+
+##### 值类型
+一个字节标记指示用于保存值的编码。
+
+>  1.  `0` ＝ “String 编码”
+>  2.  `1` ＝ “ List 编码”
+>  3.  `2` ＝ “Set 编码”
+>  4.  `3` ＝ “Sorted Set 编码”
+>  5.  `4` ＝ “Hash 编码”
+>  6.  `9` ＝ “Zipmap 编码”
+>  7.  `10` ＝ “Ziplist 编码”
+>  8.  `11` ＝ “IntSet 编码”
+>  9.  `12` ＝ “以 Ziplist 编码的 Sorted Set”
+>  10.  `13` ＝ “以 Ziplist 编码的 Hashmap” （在 rdb 版本 4 中引入）
+
+
+##### 键
+键简单地编码为 Redis 字符串。见“字符串编码”章节了解键如何被编码。
+
+
+##### 值
+值的编码取决于值类型标记。
+
+* 当值类型等于 `0`，值是简单字符串。
+* 当值类型是 `9`， `10`， `11` 或 `12` 中的一个，值被包装为字符串。读取字符串后，它必须进一步解析。
+* 当值类型是 `1`，`2`，`3` 或 `4` 中的一个，值是一序列字符串。这个序列字符串用于构造 list，set，sorted set 或 hashmap。
+
+
+### 1.6.2 长度编码
+长度编码用于存储流中接下来对象的长度。长度编码是一个可变字节编码，为尽可能少用字节而设计。
+
+这是长度编码如何工作：
+> 1.  从流中读取一个字节，最高 `2` bit 被读取。
+> 2.  如果开始 bit 是 `00` ，接下来 `6` bit 表示长度。
+> 3.  如果开始 bit 是 `01`，从流再读取额外一个字节。这组合的的 `14` bit 表示长度。
+> 4.  如果开始 bit 是 `10`，那么剩余的 `6`bit 丢弃，从流中读取额外的 `4` 字节，这 `4` 个字节表示长度。
+> 5.  如果开始 bit 是 `11`，那么接下来的对象是以特殊格式编码的。剩余 `6` bit 指示格式。这种编码通常用于把数字作为字符串存储或存储编码后的字符串。见字符串编码。
+
+作为这种编码的结果：
+>  1.  数字 `[0 - 63]` 可以在 `1` 个字节里存储
+>  2.  数字 `[0 - 16383]` 可以在 `2` 个字节里存储
+>  3.  数字 `[0 - (2^32 - 1)]` 可以在 `4` 个字节里存储
+
+
+### 1.6.3 字符串编码
+Redis 字符串是二进制安全的－－这意味着你可以在这里存储任何东西。它们没有任何特殊的字符串结束记号。
+最好认为 Redis 字符串是一个字节数组。
+
+Redis 里有三种类型的字符串：
+> 1.  长度前缀字符串。
+> 2.  一个 `8`，`16` 或 `32` bit 整数。
+> 3.  LZF 压缩的字符串。
+
+
+#### 长度前缀字符串
+长度前置字符串是很简单的。字符串字节的长度首先编码为“长度编码”，在这之后存储字符串的原始字节。
+
+
+#### 整数作为字符串
+首先读取“长度编码”块，特别是第一个 `2` bit 是 `11`。在这种情况下，读取剩余的 `6` bit。如果这 `6` bit 的值是：
+> 1.  `0` 表示接下来是 `8` bit 整数
+> 2.  `1` 表示接下来是 `16` bit 整数
+> 3.  `2` 表示接下来是 `32` bit 整数
+
+这些整数都是以 little endian 格式编码的。
+
+#### 压缩字符串
+首先读取“长度编码”，特别是第一个 `2` bit 是 `11`. 在这种情况下，读取剩余 `6` bit。如果这 `6` bit 值是 `3`，它表示接下来是一个压缩字符串。
+
+压缩字符串按如下读取：
+> 1.  从流中读取压缩后的长度 `clen`，按“长度编码”。
+> 2.  从流中读取未压缩长度，按“长度编码”。
+> 3.  接下来从流中读取 `clen` 个字节。
+> 4.  最后，这些字节按 LZF 算法解压。
+
+
+### 1.6.4 List 编码
+一个 Redis list 表示为一序列字符串。
+
+> 1.  首先，从流中读取 list 的大小： `size`，按“长度编码”。
+> 2.  然后，`size` 个字符串从流中读取，按“字符串编码”。
+> 3.  使用这些字符串重新构建 list。
+
+
+### 1.6.5 Set 编码
+Set 编码与 list 完全类似。
+
+
+### 1.6.6 Sorted Set 编码
+> 1.  首先，从流中读取 sorted set 大小 `size`，按“长度编码”
+> 2.  先后读取两个字符串作为 set 的元素和它的分值，作为一个元组。
+> 3.  一共读取 `size` 个上面的元组作为 sorted set 集合。
+
+
+### 1.6.7 Hash 编码
+> 1.  首先，从流中读取 hash 大小 `size`，按“长度编码”。
+> 2.  下一步，从流中读取 `2 * size` 个字符串，按“字符串编码”。
+> 3.  交替的字符串是键和值。
+> 4.  例如，`2 us washington india delhi` 表示 map `{"us" => "washington", "india" => "dlhi"}`。
+
+
+### 1.6.8 Zipmap 编码
+*注意：Zipmap 编码从 Redis 2.6 开始已弃用。小的的 hashmap 编码为 ziplist。*
+
+Zipmap 是一个被序列化为一个字符串的 hashmap。本质上，键值对按顺序存储。在这种结构里查找一个键的复杂度是 `O(N)`。
+当键值对数量很少时，这个结构用于替代 dictionary。
+
+为解析 zipmap，首先用“字符串编码”从流读取一个字符串。这个字符串包装了 zipmap。字符串的内容表示了 zipmap。
+
+字符串里的 zipmap 结构如下： `<zmlen><len>"foo"<len><free>"bar"<len>"hello"<len><free>"world"<zmend>`
+
+1.  `zmlen` : `1` 字节长，保存 zipmap 的大小。如果大于等于 `254`，值不使用。将需要迭代整个 zipmap 来找出长度。
+2.  `len` : 后续字符串的长度，可以是键或值的。这个长度存储为 `1` 个或 `5` 个字节（与上面描述的“长度编码”不同）。
+            如果第一个字节位于 `0` 到 `252`，那么它是 zipmap 的长度。如果第一个字节是 `253`，读取下 `4` 个字节作为无符号整数来表示 zipmap 的长度。
+            `254` 和 `255` 对这个字段是非法的。
+3.  `free` : 总是 `1` 字节，指出值后面的空闲字节数。例如，如果键的值是 `America`，更新为 `USA` 后，将有 `4` 个空闲的字节。
+4.  `zmend` : 总是 `255`. 指出 `zipmap` 结束。
+
+*有效的例子*：
+`18 02 06 4d 4b 44 31 47 36 01 00 32 05 59 4e 4e 58 4b 04 00 46 37 54 49 ff ..`
+
+1.  从使用“字符串编码”开始解码。你会注意到 18 是字符串的长度。因此，我们将读取下 24 个字节，直到 ff。
+2.  现在，我们开始解析从  @02 06… @ 开始的字符串，使用 “Zipmap 编码”
+3.  02 是 hashmap 里条目的数量。
+4.  06 是下一个字符串的长度。因为长度小于 254, 我们不需要读取任何额外的字节
+5.  我们读取下 6 个字节  4d 4b 44 31 47 36 来得到键 “MKD1G6”
+6.  01 是下一个字符串的长度，这个字符串应当是值
+7.  00 是空闲字节的数量
+8.  读取下一个字节 0x32，得到值“2”
+9.   在这种情况下，空闲字节是 0，所以不需要跳过任何东西
+10.  05 是下一个字符串的长度，在这种情况下是键。
+11.  读取下 5 个字节 59 4e 4e 58 4b, 得到键 “YNNXK”
+12.  04 是下一个字符串的长度，这是一个值
+13.  00 是值后面的空闲字节数
+14.  读取下 4 个字节 46 37 54 49 来得到值 “F7TI”
+15.  最终，遇到 FF, 这表示这个 zipmap 的结束
+16. 因此，这个 zipmap 表示 hash {"MKD1G6" => "2", "YNNXK" => "F7TI"}
+
+
+### 1.6.9 Ziplist 编码
+一个 Ziplist 是一个序列化为一个字符串的 list。本质上，list 的元素按顺序地存储，借助于标记（`flag`）和偏移（`offset`）来达到高校地双向遍历 list。
+
+为解析一个 ziplist，首先从流中读取一个字符串，按“字符串编码”。这个字符串是 ziplist 的封装。这个字符串的内容表示了 ziplist。
+
+字符串里的 ziplist 的结构如下：<zlbytes><zltail><zllen><entry><entry><zlend>
+
+> 1.  `zlbytes` ：这是一个 `4` 字节无符号整数，表示 ziplist 的总字节数。这 `4` 字节是 little endian 格式－－最先出现的是最低有效位组。
+> 2.  `zltail`：这是一个 `4` 字节无符号整数，little endian 格式。它表示到 ziplist 的尾条目（tail entry）的偏移。
+> 3.  `zllen`：这是一个 `2` 字节无符号整数，little endian 格式。它表示 ziplist 的条目的数量
+> 4.  `entry`：一个条目表示 ziplist 的元素。细节在下面
+> 5.  `zlend`：总是等于 `255`。它表示 ziplist 的结束
+
+ziplist 的每个条目有下面的格式：
+`<length-prev-entry><special-flag><raw-bytes-of-entry>`
+
+>  `length-prev-enty`： 这个字段存储上一个条目的长度，如果是第一个条目则是 0。这允许容易地进行反向遍历 list。这个长度存储为 1 或 5 个字节。
+     如果第一个字节小于等于 253，它被认为是长度，如果第一个字节是 254，接下来 4 个字节用于存储长度。4 字节按无符号整数读取。
+>
+>  `special-flag`：这个标记指出条目是字符串还是整数。它也指示字符串长度或整数的大小。这个标记的可变编码如下：
+>  >  1.  |00pppppp|  － 1 字节：字符串值长度小于等于 63 字节（6 bit）
+>  >  2.  |01pppppp|qqqqqqqq|  － 2 字节：字符串值长度小于等于 16383 字节（14 bit）
+>  >  3.  |10______|qqqqqqqq|rrrrrrrr|ssssssss|tttttttt|  － 5 字节：字符串值长度大于等于 16384 字节
+>  >  4.  |1100____|  － 读取后面 2 个字节作为 16 bit 有符号整数
+>  >  5.  |1101____|  － 读取后面 4 个字节作为 32 bit 有符号整数
+>  >  6.  |1110____|  － 读取后面 8 个字节作为 64 bit 有符号整数
+>  >  7.  |11110000|  － 读取后面 3 个字节作为 2 4bit 有符号整数
+>  >  8.  |11111110|  － 读取后面 1 个字节作为 8 bit 有符号整数
+>  >  9.  |1111xxxx|  － （当 xxxx 位于 0000 到 1101）直接 4 bit 整数。0 到 12 的无符号整数。被编码的实际值是从 1 到
+               13，因为 0000 和 1111 不能使用，所以应当从编码的 4bit 值里减去 1 来获得正确的值。
+>
+>  `Raw Bytes`：在 `special flag` 后，是原始字节。字节的数字由前面的 `special flag` 部分决定。
+>
+>  *举例*
+`23 23 00 00 00 1e 00 00 00 04 00 00 e0 ff ff ff ff ff ff ff 7f 0a d0 ff ff 00 00 06 c0 fc 3f 04 c0 3f 00 ff ... `
+  |           |           |     |                             |                 |           |           |
+
+>  >  1.  从使用“字符串编码”开始解码。23 是字符串的长度，然后读取 35 个字节直到 ff
+>  >  2.  使用“Ziplist 编码”解析开始于 23 00 00  ... 的字符串
+>  >  3.  前 4 个字节 23 00 00 00 表示 Ziplis 长度的字节总数。注意，这是 little endian 格式
+>  >  4.  接下来 4 个字节 1e 00 00 00 表示到尾条目的偏移。 0x1e = 30，这是一个基于 0 的偏移。
+>  >       0th position = 23, 1st position = 00 and so on. It follows that the last entry starts at 04 c0 3f 00 .. 。
+>  >  5.  接下来 2 个字节 04 00 表示 list 里条目的数量。
+>  >  6.  从现在开始，读取条目。
+>  >  7.  00 表示前一个条目的长度。0 表示这是第一个条目。
+>  >  8.  e0 是特殊标记，因为它开始于位模式 1110____，读取下 8 个字节作为整数。这是 list 的第一个条目。
+>  >  9.  现在开始读取第二个条目。
+>  >  10.  0a 是前一个条目的长度。10 字节 ＝ 1 字节 prev 长度 ＋ 1 字节特殊标记长度 ＋ 8 字节整数
+>  >  11.  d0 是特殊标记，因为它开始于位模式 1101____，读取下 4 个字节作为整数。这是 list 的第二个条目。
+>  >  12.  现在开始第二个条目。
+>  >  13.  06 是前一个条目的长度。 6 字节 ＝ 1 字节 prev 长度 ＋ 1 字节特殊标记 ＋ 4 字节整数。
+>  >  14.  c0 是特殊标记，因为它开始于位模式 1100____，读取下 2 个字节作为整数。这是 list 的第三个条目。
+>  >  15.  现在开始读取第四个条目。
+>  >  16.  04 是前一个题目的长度。
+>  >  17.  c0 指出是 2 字节整数。
+>  >  18.  读取下 2 个字节，作为第四个条目。
+>  >  19.  最终遇到 ff，这表明已经读取完 list 里的所有元素。
+>  >  20.  因此，ziplist 存储了值  [0×7fffffffffffffff, 65535, 16380, 63]。
+
+
+### 1.6.10 Intset 编码
+一个 Inset 是一个整数的二叉搜索树。这个二叉树在一个整数数组里实现。intset 用于当 set 的所有元素都是整数时。Inset 支持达 `64` 位的整数。
+作为一个优化，如果整数能用更少的字节表示，整数数组将由 `16` 位或 `32` 位整数构建。当一个新元素插入时，intset 实现在需要时将进行一次升级。
+
+因为 Intset 是二叉搜索树，set 里的数字总是有序的。
+
+一个 Intset 有一个 Set 的外部接口。
+
+为了解析 Inset，首先使用“字符串编码”从流中读取一个字符串。这个字符串包含了 Intset。这个字符串的内容表示了 Intset。
+
+在字符串里，Intset 有一个非常简单的布局： `<encoding><length-of-contents><contents>`
+
+>  1.  `encoding`：是一个 `32` 位无符号整数。它有 3 个可能的值 － `2`, `4` 或 `8`。它指出内容里存储的每个整数的字节大小。嗯，是的，这是浪费的－可以在 `2` bit 里存储这些信息。
+>
+>  2.  `length-of-contet`：是一个 `32` 位无符号整数，指出内容数组的长度。
+>
+>  3.  `contents`：是一个 `$length-of-content` 个字节的数组。它包含了二叉搜索树。
+
+*举例*
+`14 04 00 00 00 03 00 00 00 fc ff 00 00 fd ff 00 00 fe ff 00 00 ...`
+
+1.  使用“字符串编码”来开始。14 是字符串的长度，读取下 20 个字节直到 00.
+2.  现在，开始解析开始于 04 00 00 .... 的字符串。
+3.  前 4 个字节 04 00 00 00 是编码，因为它的值是 4，我们知道我们正在处理 32 位整数。
+4.  下 4 个字节 03 00 00 00 是内容的长度。这样，我们知道我们正在处理 3 个整数，每个 4 字节长。
+5.  从现在开始，我们以 4 个字节为一组读取，再把它转换为一个无符号整数。
+6.  这样，我们的 intset 看起来是这样的 － 0x0000FFFC, 0x0000FFFD, 0x0000FFFE。注意，这些整数是 little endian 格式的。首先出现的是最低有效位。
+
+
+### 1.6.11 以 Ziplist 编码的 Sorted Set
+以 ziplist 编码存储的 sorted list 跟上面描述的 Ziplist 很像。在 ziplist 里，sorted set 的每个元素后跟它的 score。
+
+*举例*
+ `[‘Manchester City’, 1, ‘Manchester United’, 2, ‘Totenham’, 3] `
+
+如你所见 score 跟在每个元素后面。
+
+
+### 1.6.12 Ziplist 编码的 Hashmap
+在这里，hashmap 的键值对是作为连续的条目存储在 ziplist 里。
+
+注意：这是在 rdb 版本 4 引入，它废弃了在先前版本里使用的 zipmap。
+
+*举例*
+` {"us" => “washington”, “india” => "delhi"} `
+存储在 ziplist 里是： ` [“us”, “washington”, “india”, “delhi”]`
+
+
+#### CRC32 校验和
+从 RDB 版本 5 开始，一个 `8` 字节的 `CRC32` 校验和被加到文件结尾。可以通过  redis.conf 文件的一个参数来作废这个校验和。
+
+当校验和被作废时，这个字段将是 `0`。
+
+
+# 2 Redis twemproxy 集群
 
 > * Nutcracker，又称 Twemproxy（读音："two-em-proxy"）是支持 memcached 和 redis 协议的快速、轻量级代理；
 > * 它的建立旨在减少后端缓存服务器上的连接数量；
 > * 再结合管道技术（`pipelining*`）、及分片技术可以横向扩展分布式缓存架构；
 >   * Redis pipelining（流式批处理、管道技术）：将一系列请求连续发送到 Server 端，不必每次等待 Server 端的返回，而 Server 端会将请求放进一个有序的管道中，在执行完成后，会一次性将结果返回（解决 Client 端和 Server 端的网络延迟造成的请求延迟）
 
-### 2.1 Twemproxy 特性
+## 2.1 Twemproxy 特性
 
 twemproxy 的特性：
 
@@ -752,7 +1111,7 @@ twemproxy 的特性：
 >   * 不支持 redis 的事务操作
 >   * 使用 SIDFF, SDIFFSTORE, SINTER, SINTERSTORE, SMOVE, SUNION and SUNIONSTORE 命令需要保证 key 都在同一个分片上。
 
-### 2.2 环境说明
+## 2.2 环境说明
 
 ```
 4 台 redis 服务器
@@ -761,7 +1120,7 @@ twemproxy 的特性：
 ```
 
 
-### 2.2 安装依赖
+## 2.2 安装依赖
 
 安装 autoconf
 centos 7 yum 安装既可， autoconf 版本必须 2.64 以上版本
@@ -770,7 +1129,7 @@ centos 7 yum 安装既可， autoconf 版本必须 2.64 以上版本
 yum -y install autoconf
 ```
 
-### 2.3 安装 Twemproxy
+## 2.3 安装 Twemproxy
 
 ```
 git clone https://github.com/twitter/twemproxy.git
@@ -781,7 +1140,7 @@ mkdir -p /opt/local/twemproxy/{run,conf,logs}
 ln -s /opt/local/twemproxy/sbin/nutcracker /usr/bin/
 ```
 
-### 2.4 配置 Twemproxy
+## 2.4 配置 Twemproxy
 
 cd /opt/local/twemproxy/conf/
 
@@ -810,9 +1169,9 @@ meetbill:
 nutcracker -t -c /opt/local/twemproxy/conf/nutcracker.yml
 ```
 
-### 2.5 启动 Twemproxy
+## 2.5 启动 Twemproxy
 
-#### 2.5.1 启动命令详解
+### 2.5.1 启动命令详解
 ```
 Usage: nutcracker [-?hVdDt] [-v verbosity level] [-o output file]
 [-c conf file] [-s stats port] [-a stats addr]
@@ -832,14 +1191,14 @@ Usage: nutcracker [-?hVdDt] [-v verbosity level] [-o output file]
 -p, –pid-file=S 指定进程 pid 文件路径，默认关闭 (default: off)
 -m, –mbuf-size=N    设置 mbuf 块大小，以 bytes 单位 (default: 16384 bytes)
 ```
-#### 2.5.2 启动
+### 2.5.2 启动
 
 ```
 nutcracker -d -c /opt/local/twemproxy/conf/nutcracker.yml -p /opt/local/twemproxy/run/redisproxy.pid -o /opt/local/twemproxy/logs/redisproxy.log
 ```
-### 2.6 查看状态
+## 2.6 查看状态
 
-#### 2.6.1 状态参数
+### 2.6.1 状态参数
 
 ```
 nutcracker --describe-stats
@@ -868,7 +1227,7 @@ server stats:
   out_queue_bytes     "current request bytes in outgoing queue"
 ```
 
-#### 2.6.2 状态实例
+### 2.6.2 状态实例
 
 ```
 #curl  -s http://127.0.0.1:22222|python -mjson.tool
@@ -916,7 +1275,7 @@ server stats:
     "version": "0.2.4"
 }
 ```
-#### 2.6.3 获取 Twemproxy 状态
+### 2.6.3 获取 Twemproxy 状态
 
 使用 curl 获取 Twemproxy 状态时，如果后端的 redis 或者 memcache 过多，将会导致获取状态内容失败，这个是因为 proxy 的状态端口返回的不是 HTTP 数据包，可以进行如下解决方法
 
@@ -940,9 +1299,9 @@ def fetch_stats(ip, port):
 ```
 nc ip stat_port
 ```
-### 2.7 其他
+## 2.7 其他
 
-#### 2.7.1 发送信号修改日志级别以及重新打开日志文件
+### 2.7.1 发送信号修改日志级别以及重新打开日志文件
 
 日志只有在编译安装的时候启用（ --enable-debug=log)，默认情况下日志写到 stderr. 可以使用 -o 或者 --output 命令指定输出文件，使用 -v 标记日志级别
 
@@ -957,9 +1316,9 @@ kill -SIGTTOU <pid>
 kill -SIGHUP <pid>
 ```
 
-## 3 redis cluster
+# 3 redis cluster
 
-### 3.1 cluster 命令
+## 3.1 cluster 命令
 
 > * 集群 (cluster)
 >   * cluster info                           打印集群的信息
@@ -988,7 +1347,7 @@ kill -SIGHUP <pid>
 >   * cluster slots                          返回节点负责的 slot
 >   * cluster reset                          重置集群，慎用
 
-### 3.2 redis cluster 配置
+## 3.2 redis cluster 配置
 ```
 cluster-enabled yes
 ```
@@ -1015,7 +1374,7 @@ cluster-require-full-coverage yes
 ```
 在部分 key 所在的节点不可用时，如果此参数设置为"yes"（默认值）, 则整个集群停止接受操作；如果此参数设置为”no”，则集群依然为可达节点上的 key 提供读操作。
 
-### 3.3 redis cluster 状态
+## 3.3 redis cluster 状态
 
 127.0.0.1:8001> cluster info
 > * cluster_state:ok
@@ -1052,13 +1411,13 @@ eb8adb8c0c5715525997bdb3c2d5345e688d943f 192.168.64.101:8002 slave 25e8c9379c3db
 > * 节点目前包含的槽，例如 192.168.64.102:8002 目前包含的槽为 5461-10922
 
 
-### 3.4 redis cluster 的 failover 机制
+## 3.4 redis cluster 的 failover 机制
 
 failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之一。failover 支持两种模式：
 > * 故障 failover：自动恢复集群的可用性
 > * 人为 failover：支持集群的可运维操作
 
-#### 故障 failover
+### 3.4.1 故障 failover
 
 故障 failover 表现在一个 master 分片故障后，slave 接管 master 的过程。
 
@@ -1067,13 +1426,13 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 > * 准备阶段
 > * 执行阶段
 
-##### 探测阶段
+#### 探测阶段
 集群中的所有分片通过 gossip 协议传递。探测步骤为：
 > * （1）在 cron 中非遍历 cluster nodes 做 ping 发送，随机从 5 个节点中选出最老 pong_recv 的节点发送 ping，再遍历节点中 pong_recv > timeout/2 的节点发送 ping。
 > * （2）再遍历每个节点从发出 ping 包后超时没有收到 pong 包的时间，超时将对应的分片设置为 pfail 状态，在跟其他节点的 gossip 包过程中，每个节点会带上被标记为 pfail 状态的包。
 > * （3）每个正常分片收到 ping 包后，统计集群中 maste 分片将故障节点设置为 pfail， 超过一半以上的节点设置为 pfail， 则将节点设置为 fail 状态。如果这个分片属于故障节点的 slave 节点，则主动广播故障节点为 fail 状态。
 
-##### 准备阶段
+#### 准备阶段
 
 在 cron 函数中，slave 节点获取到 master 节点状态为 fail，主动发起一次 failover 操作，该操作并不是立即执行，而是设计了多个限制：
 > * （1）过期的超时不执行。如何判断是够过期？
@@ -1081,7 +1440,7 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 >   * 如果 data_age > `master 到 slave 的 ping 间隔时间 + 超时时间*cluster_slave_validity_factor`， 则认为过期。cluster_slave_validity_factor 是一个配置项，cluster_slave_validity_factor 设置的越小越不容易触发 failover。
 > * （2）计算出一个延迟执行的时间 failover_auth_time， failover_auth_time = 当前时间 + 500ms + 0-500ms 的随机值 + 当前 slave 的 rank * 1s,  rank 按已同步的 offset 计算，offset 同步的越延迟，rank 值越大，该 slave 就越推迟触发 failover 的时间，以此来避免多个 slave 同时 failover。只有当前时间到 failover_auth_time 的时间点才会执行 failover。
 
-##### 执行阶段
+#### 执行阶段
 > * （1）将 currentEpoch 自增，再赋值给 failover_auth_epoch
 > * （2）向其他 master 分片发起 failover 投票，等待投票结果
 > * （3）其他 master 分片收到 CLUSTERMSG_TYPE_FAILOVER_AUTH_REQUEST 请求后，会判断是否符合以下情况：
@@ -1097,10 +1456,10 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 > * （8）重置集群拓扑结构信息
 > * （9）向集群内所有节点广播
 
-#### 人为 failover
+### 3.4.2 人为 failover
 人为 failover 支持三种模式的 failover：缺省、force、takeover。
 
-##### 缺省
+#### 缺省
 ```
 （1）由 salve 给 master 发送 CLUSTERMSG_TYPE_MFSTART
 （2）master 收到后设置 clients_pause_end_time = 当前时间 + 5s*2，clients_paused =1 , 客户端暂停所有请求，新建请求会被加到 block client list。
@@ -1118,16 +1477,17 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 5484:M 01 Apr 18:32:08.509 # Disconnecting timedout slave: 【slave3_ip:slave3_port】
 5484:M 01 Apr 18:32:08.509 # Connection with slave 【slave3_ip:slave3_port】 lost.
 ```
-##### force
+#### force
 忽略主备同步的状态，设置 mf_can_start = 1，标记 failover 开始。
-##### takeover
+
+#### takeover
 直接执行故障 failover 的第 6-9 步，忽略主备同步，忽略集群其他 master 的投票。
 
-## 4 原理说明
+# 4 原理说明
 
-### 4.1 一致性 hash
+## 4.1 一致性 hash
 
-#### 4.1.1 传统的取模方式
+### 4.1.1 传统的取模方式
 例如 10 条数据，3 个节点，如果按照取模的方式，那就是
 > * node a: 0,3,6,9
 > * node b: 1,4,7
@@ -1142,7 +1502,7 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 
 总结：数据 3,4,5,6,7,8,9 在增加节点的时候，都需要做搬迁，成本太高
 
-#### 4.1.2 一致性哈希方式
+### 4.1.2 一致性哈希方式
 
 最关键的区别就是，对节点和数据，都做一次哈希运算，然后比较节点和数据的哈希值，数据取和节点最相近的节点做为存放节点。这样就保证当节点增加或者减少的时候，影响的数据最少。还是拿刚刚的例子，（用简单的字符串的 ascii 码做哈希 key）：
 
@@ -1184,17 +1544,17 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 
 这个时候只有 5 和 6 需要做迁移
 
-#### 4.1.3 虚拟节点
+### 4.1.3 虚拟节点
 
 另外，这个时候如果只算出三个哈希值，那再跟数据的哈希值比较的时候，很容易分得不均衡，因此就引入了虚拟节点的概念，通过把三个节点加上 ID 后缀等方式，每个节点算出 n 个哈希值，均匀的放在哈希环上，这样对于数据算出的哈希值，能够比较散列的分布（详见下面代码中的 replica）
 
 通过这种算法做数据分布，在增减节点的时候，可以大大减少数据的迁移规模。
 
-### 4.2 redis 过期数据存储方式以及删除方式
+## 4.2 redis 过期数据存储方式以及删除方式
 
 当你通过 expire 或者 pexpire 命令，给某个键设置了过期时间，那么它在服务器是怎么存储的呢？到达过期时间后，又是怎么删除的呢？
 
-#### 4.2.1 存储方式
+### 4.2.1 存储方式
 比如：
 ```
 redis> EXPIRE book 5
@@ -1210,11 +1570,11 @@ redis> EXPIRE book 5
 
 从上图可以看出来，比如你给 book 设置过期事件，那么 expires 字典的 key 也为 book，值是当前的时间 +5s 后的 unix time。
 
-#### 4.2.2 删除方式
+### 4.2.2 删除方式
 
 如果一个键已经过期了，那么 redis 的如果删除它呢？redis 采用了 2 种删除方式；
 
-##### 惰性删除
+#### 惰性删除
 
 惰性删除的原理是：放任键过期不管，但是每次从键空间获取键的时候，如果该键存在，再去 expires 字典判断这个键是不是过期。如果过期则返回空，并删除该键。过程如下：
 
@@ -1223,7 +1583,7 @@ redis> EXPIRE book 5
 - 优点：惰性删除对 cpu 是友好的。保证在键必须删除的时候才会消耗 cpu
 - 缺点：惰性删除对内存特别不友好。虽然键过期，但是没有使用则一直存在内存中。
 
-##### 定期删除
+#### 定期删除
 redis 架构中的时间事件，每隔一段时间后，在规定的时间内，会主动去检测 expires 字典中包含的 key 进行检测，发现过期的则删除。在 redis 的源码 redis.c/activeExpireCycle 函数中。
 下面分别是这个函数的源码与伪代码：
 
@@ -1422,7 +1782,7 @@ def activeExpireCycle():
 - 如果一个数据库，使用率低于 1%，则不去进行定期删除操作。
 - 如果对一个数据库，这次删除操作，已经删除了 25% 的过期 key，那么就跳过这个库。
 
-#### 4.2.3 redis 主从删除过期 key 方式
+### 4.2.3 redis 主从删除过期 key 方式
 当 redis 主从模型下，从服务器的删除过期 key 的动作是由主服务器控制的。
 - 1、主服务器在惰性删除、客户端主动删除、定期删除一个 key 的时候，会向从服务器发送一个 del 的命令，告诉从服务器需要删除这个 key。
 
@@ -1434,12 +1794,12 @@ def activeExpireCycle():
 
 - 3、从服务器只有在接收到主服务器的 del 命令才会将一个 key 进行删除。
 
-#### 4.2.4 总结
+### 4.2.4 总结
 - 1、expires 字典的 key 指向数据库中的某个 key，而值记录了数据库中该 key 的过期时间，过期时间是一个以毫秒为单位的 unix 时间戳；
 - 2、redis 使用惰性删除和定期删除两种策略来删除过期的 key；惰性删除只会在碰到过期 key 才会删除；定期删除则每隔一段时间主动查找并删除过期键；
 - 3、当主服务器删除一个过期 key 后，会向所有的从服务器发送一条 del 命令，显式的删除过期 key；
 - 4、从服务器即使发现过期 key 也不会自作主张删除它，而是等待主服务器发送 del 命令，这种统一、中心化的过期 key 删除策略可以保证主从服务器的数据一致性。
-### 4.3 cluster 选举算法 Raft
+## 4.3 cluster 选举算法 Raft
 
 3 种状态：
 
@@ -1452,15 +1812,15 @@ def activeExpireCycle():
 选举过程：考虑最简单情况，abc 三个节点，每个节点只有一张票，当 N 个节点发出投票请求，其他节点必须投出自己的一票，不能弃票，最差的情况是每个人都有一票，那么随机设置一个 timeout 时间，就像加时赛一样，这时同时的概率大大降低，谁最先恢复过来，就向其他两个节点发出投票请求，获得大多数选票，成为领导人。选出 Leader 后，Leader 通过定期向所有 Follower 发送心跳信息维持其统治。若 Follower 一段时间未收到 Leader 的心跳则认为 Leader 可能已经挂了再次发起选主过程。
 
 
-## 5 其他相关
+# 5 其他相关
 
-### 5.1 内核参数 overcommit
+## 5.1 内核参数 overcommit
 它是 内存分配策略，可选值：0、1、2。
 > * 0， 表示内核将检查是否有足够的可用内存供应用进程使用；如果有足够的可用内存，内存申请允许；否则，内存申请失败，并把错误返回给应用进程。
 > * 1， 表示内核允许分配所有的物理内存，而不管当前的内存状态如何。
 > * 2， 表示内核允许分配超过所有物理内存和交换空间总和的内存
 
-#### 什么是 Overcommit 和 OOM
+### 什么是 Overcommit 和 OOM
 
 Linux 对大部分申请内存的请求都回复"yes"，以便能跑更多更大的程序。因为申请内存后，并不会马上使用内存。这种技术叫做 Overcommit。当 linux 发现内存不足时，会发生 OOM killer(OOM=out-of-memory)。它会选择杀死一些进程（用户态进程，不是内核线程），以便释放内存。
 当 oom-killer 发生时，linux 会选择杀死哪些进程？选择进程的函数是 oom_badness 函数（在 mm/oom_kill.c 中），该函数会计算每个进程的点数 (0~1000)。点数越高，这个进程越有可能被杀死。每个进程的点数跟 oom_score_adj 有关，而且 oom_score_adj 可以被设置 (-1000 最低，1000 最高）。
@@ -1472,13 +1832,13 @@ Linux 对大部分申请内存的请求都回复"yes"，以便能跑更多更大
 > * （2）sysctl vm.overcommit_memory=1
 > * （3）echo 1 > /proc/sys/vm/overcommit_memory
 
-## 6 数据迁移
+# 6 数据迁移
 
-### 6.1 目标
+## 6.1 目标
 
 从 A 集群热迁移到 B 集群
 
-### 6.2 怎么实现
+## 6.2 怎么实现
 
 mysql 的主从同步是基于 binlog, redis 主从是一个 op buf, mongo 主从同步是 oplog.
 
@@ -1492,8 +1852,8 @@ redis 里的 aof 就是类似 binlog, 记录每个操作的 log
 
 redis 的 aof 包含了基准数据和增量，所以我们只需要把旧集群中 redis 实例上的 aof 重放到新集群，重放追上时修改上层，把入口换为新集群即可。
 
-### 6.3 问题
-#### 6.3.1 aof 不是幂等的
+## 6.3 问题
+### 6.3.1 aof 不是幂等的
 
 aof 不像 binlog 那样可以重做 redolog, binlog 记录的操作是幂等 (idempotent) 的，意味着如果失败了，可以重做一次。
 
@@ -1521,7 +1881,7 @@ incr x              incr x
 
 不过，好在 redis 单实例的 afo 数据都不大，一般 10G 左右，重放大约 20min 就能完成，出错的概率也很小。（这也是 redis 可以这样做，而其他持久存储比如 mysql, mongo 必须支持断点同步的原因）
 
-#### 6.3.2 切流量时的不一致
+### 6.3.2 切流量时的不一致
 前面说的步骤是：
 
 > * 追 aof
@@ -1546,7 +1906,7 @@ a 操作还没同步到 new_cluster, 流量就已经切到了 new_cluster, 这�
 这个短暂的不一致，对多数业务，是能容忍的（很少有业务会高速更新同一个 key)
 如果非要达到一致，当追 aof 追上后，app-server 停写，等待彻底追上（此时老集群的 aof 不会有更新了）, 然后再切流量。
 
-### 6.4 实现
+## 6.4 实现
 
 [redis-replay-aof](https://github.com/meetbill/redis-replay-aof)
 
