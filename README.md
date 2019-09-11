@@ -50,3 +50,6 @@ $ git push -f origin master
 
 ![Screenshot](images/5.jpg)
 
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/meetbill/op_practice_book.svg)](https://starchart.cc/meetbill/op_practice_book)
