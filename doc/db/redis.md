@@ -7,6 +7,7 @@
         * [1.2.1 repl-timeout](#121-repl-timeout)
         * [1.2.2 写入量太大超出 output-buffer](#122-写入量太大超出-output-buffer)
         * [1.2.3 repl-backlog-size 太小导致失败](#123-repl-backlog-size-太小导致失败)
+        * [1.2.4 主库磁盘故障](#124-主库磁盘故障)
     * [1.3 Redis bug](#13-redis-bug)
         * [1.3.1 AOF 句柄泄露 bug](#131-aof-句柄泄露-bug)
             * [表现](#表现)
@@ -217,6 +218,21 @@ Unable to partial resync with slave $slaveip:6379 for lack of backlog (Slave req
 ```
 调整 repl-backlog-size 大小
 
+### 1.2.4 主库磁盘故障
+
+触发全量同步时，主库磁盘故障，主库 RDB 无法落盘，导致全量同步失败
+
+```
+* replication.c: 1646 Full resync from master: 1a0b22011aff6ea5d53710acff4ee32adde636ec:399255497708
+# replication.c: 1262 I/O error reading bulk count from MASTER: Operation now in progress
+```
+
+> repl-diskless-sync no #是否使用无盘复制 Diskless replication，默认是no
+
+```
+对 master 进行操作
+config set repl-diskless-sync yes
+```
 
 ## 1.3 Redis bug
 
