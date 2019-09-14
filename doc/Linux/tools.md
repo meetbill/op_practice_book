@@ -29,6 +29,7 @@
     * [3.1 screen](#31-screen)
         * [3.1.1 screen 使用](#311-screen-使用)
         * [3.1.2 开启 screen 状态栏](#312-开启-screen-状态栏)
+    * [4.2 dmesg](#42-dmesg)
 * [4 网络相关](#4-网络相关)
     * [4.1 curl](#41-curl)
         * [4.1.1 HTTP 请求](#411-http-请求)
@@ -536,6 +537,162 @@ $ Ctrl + a ESC
 ```
 #curl -o screen.sh https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/tools/screen.sh
 #sh screen.sh
+```
+## 4.2 dmesg
+
+内核缓冲信息，在系统启动时，显示屏幕上的与硬件有关的信息
+
+> dmesg | grep -E 'error|fail'
+```
+dmesg - print or control the kernel ring buffer
+dmesg is used to examine or control the kernel ring buffer.
+
+The default action is to read all messages from kernel ring buffer.
+```
+
+> eth1: Too much work at interrupt, IntrStatus=0x0001
+```
+一般类的提示
+
+某网卡的中断请求过多。如果只是偶尔出现一次可忽略
+但这条提示如果经常出现或是集中出现，那涉及到的可能性就比较多有可能需要进行处理了。可能性比较多，如网卡性能；服务器性能；网络攻击.. 等等。
+```
+
+> IPVS: incoming ICMP: failed checksum from 61.172.0.X!
+```
+一般类的提示
+
+服务器收到了一个校验和错误的 ICMP 数据包。这类的数据包有可能是非法产生的垃圾数据. 但从目前来看服务器收到这样的数据非常多. 一般都忽略。
+一般代理服务器在工作时会每秒钟转发几千个数据包. 收到几个错误数据包不会影响正常的工作。
+```
+
+> NET: N messages suppressed.
+```
+一般类的提示
+
+服务器忽略了 N 个数据包. 和上一条提示类似. 服务器收到的数据包被认为是无用的垃圾数据数据。这类数据多是由攻击类的程序产生的。
+这条提示如果 N 比较小的时候可以忽略. 但如果经常或是长时间出现 3 位数据以上的这类提示. 就很有可能是服务器受到了垃圾数据类的带宽攻击了。
+与这条信息类似的还有。
+__ratelimit: N messages suppressed
+__ratelimit: N callbacks suppressed
+```
+
+> UDP: bad checksum. From 221.200.X.X:50279 to 218.62.X.X:1155 ulen 24
+> UDP: short packet: 218.2.X.X:3072 3640/217 to 222.168.X.X:57596
+> 218.26.131.X sent an invalid ICMP type 3, code 13 error to a broadcast: 0.1.0.4 on eth0
+```
+一般类的提示
+
+服务器收到了一个错误的数据包. 分别为 UDP 校验和错误；过短的 UDP 数据包；一个错误的 ICMP 类型数据。这类信息一般情况下也是非法产生的。
+但一般问题不大可直接忽略。
+```
+
+> kernel: conntrack_ftp: partial 227 2205426703+13
+> FTP_NAT: partial packet 2635716056/20 in 2635716048/2635716075
+```
+一般类的提示
+
+服务器在维持一条 FTP 协议的连接时出错。这样的提示一般都可以直接忽略。
+```
+
+> NETDEV WATCHDOG: eth1: transmit timed out
+```
+eth1: link down
+eth1: link up, 10Mbps, half-duplex, lpa 0x0000
+eth2: link up, 100Mbps, full-duplex, lpa 0x41E1
+setting full-duplex based on MII #24 link partner capability of 45e1
+
+网络通信严重问题！
+
+这些提示是网络通信中出现严重问题时才会出现。故障基本和网络断线有关系。这几条提示分别代表的含意是 某块网卡传送数据超时；网卡连接 down; 网卡连接 up, 连接速率为 10/100Mbps, 全 / 半双功。
+这里写到的最后三行的提示比较类似。出现这类提示时必须注意网络连接状况进行处理！!!
+```
+
+> NIC Link is Up 100 Mbps Full Duplex
+```
+网络通信严重问题！
+
+情况和 kernel: eth1: link up,... 相同. 指某块网卡适应的连接速率。一般认为没有说明哪个网卡 down, 只是连续出现网卡适应速率也是通信有问题。
+如果是网线正常的断接可以忽略这类的信息。
+```
+
+> eth0: Transmit timed out, status 0000, PHY status 786d, resetting...
+> eth0: Reset not complete yet. Trying harder.
+```
+网络通信严重问题！
+
+第一条提示 网卡关送数据失败。复位网卡。第二条提示 网卡复位不成功.... 这些提示都属于严重的通信问题。
+
+报警程序的提示
+0001 ##WMPCheckV001## 2005-04-13_10:10:01 Found .(ARP Spoofing sniffer)! IP:183 MAC:5
+0002 ##WMPCheckV001## 2005-04-07_01:53:32 Found .(MAC_incomplete)! IP:173 mac_incomplete:186
+0003 ##WMPCheckV001## 2005-04-17_16:25:11 Found .(HIGH_synsent)! totl:4271 SynSent:3490
+0004 ##WMPCheckV001## 20......
+这是由报警程序所引起的提示。详细的信息需要用报警程序的客户端进行实时接收. 详细情况请查看"告警模块和日志".
+```
+
+> eth1: Promiscuous mode enabled.
+> device eth1 entered promiscuous mode
+> device eth1 left promiscuous mode
+```
+一般类的提示
+
+这几行提示指。某块网卡进入（离开）了混杂模式。一般来说混杂模式是当需要对通信进行抓包时才用到的。当使用维护或故障分析时会使用到（比如 consoletools 中的 countflow 命令）. 正常产生的这类提示可以忽略。
+如果在前台和远端都没有进行维护时出现这个提示倒是应该引起注意，但这种可能性不大。
+```
+
+> keyboard: unknown scancode e0 5e
+```
+基本无关
+
+键盘上接收到未定义的键值。如果经常出现. 有可能是键盘有问题。linux 对于比较特殊的键或是组合键，有时也会出这样的提示。
+要看一下服务器的键盘是不是被压住了。其它情况一般忽略。
+```
+> uses obsolete (PF_INET,SOCK_PACKET)
+```
+基本无关
+
+系统内核调用了一部分功能模块，在第一次调入时会出现。一般情况与使用调试工具有关。可直接忽略。
+```
+
+> Neighbour table overflow.
+```
+网络通信故障
+
+出现这个提示. 一般都是因为局域网内有部分计算机被病毒感染。情况严重时会影响通信。必须处理内部网通信不正常的计算机。
+```
+
+> eth1: Transmit error, Tx status register 82.
+```
+Probably a duplex mismatch. See Documentation/networking/vortex.txt
+Flags; bus-master 1, dirty 9994190(14) current 9994190(14)
+Transmit list 00000000 vs. f7171580.
+0: @f7171200 length 800001e6 status 000101e6
+1: @f7171240 length 8000008c status 0001008c
+
+这个提示是 3com 网卡特有的。感觉如果出现量不大的话也不会影响很严重。目前看维一的解决办法是更换服务器上的网卡。实在感觉 3com 的网卡有些问题...
+```
+
+> 服务器 CPU 工作温度过高
+```
+CPU0: Temperature above threshold
+CPU0: Running in modulated clock mode
+
+服务器系统严重故障
+
+服务器 CPU 工作温度过高。必须排除硬件故障。
+```
+
+> 磁盘故障
+```
+I/O error, dev hda, sector N
+I/O error, dev sda, sector N
+hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=811562, sector=811560
+
+服务器系统严重故障
+
+服务器系统磁盘存储卡操作失败。这样的问题一般不会使服务器直接停止工作，但会引起很多严重问题
 ```
 # 4 网络相关
 ## 4.1 curl
