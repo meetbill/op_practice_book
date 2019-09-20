@@ -643,3 +643,23 @@ linux 默认值 open files 和 max user processes 为 1024
 备注：ulimit 命令本身就有分软硬设置，加 -H 就是硬，加 -S 就是软默认显示的是软限制
 
 soft 限制指的是当前系统生效的设置值。 hard 限制值可以被普通用户降低。但是不能增加。 soft 限制不能设置的比 hard 限制更高。 只有 root 用户才能够增加 hard 限制值。
+
+```bash
+#!/bin/bash
+
+file=/etc/security/limits.conf
+
+if grep '^* soft nofile' $file > /dev/null ;then
+    sed -i 's/^* soft nofile.*/* soft nofile 1024000/' $file
+else
+    echo '* soft nofile 1024000' >> $file
+fi
+
+if grep '^* hard nofile' $file > /dev/null ;then
+    sed -i 's/^* hard nofile.*/* hard nofile 1024000/' $file
+else
+    echo '* hard nofile 1024000' >> $file
+fi
+
+ulimit -SHn 1024000
+```
