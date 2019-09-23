@@ -269,16 +269,27 @@ $ git commit --amend -m 'new commit'
 
 ### 1.2.4 Git tips
 
-(1) 命令简化
+> 命令简化
 ```
 cd git_repo（替换为项目名字）
 git remote add ${PWD##*/} git@github.com:meetbill/${PWD##*/}.git
 git push -u ${PWD##*/} master
 ```
-(2) 提升 git 使用体验
+> 提升 git 使用体验
 
 > * [git 命令自动补全](https://github.com/meetbill/op_practice_code/tree/master/Linux/tools/git/git-completion)
 > * [命令行显示 git 信息](https://github.com/meetbill/op_practice_code/tree/master/Linux/tools/git/git-ps1)
+
+> 忽略特殊文件
+```
+.gitignore 写得有问题，需要找出来到底哪个规则写错了，可以用 git check-ignore 命令检查：
+
+$ git check-ignore -v App.class
+.gitignore:3:*.class	App.class
+
+.gitignore 的第 3 行规则忽略了该文件，于是我们就可以知道应该修订哪个规则。
+```
+
 
 # 2 运维相关
 ## 2.1 sed
@@ -562,16 +573,16 @@ The default action is to read all messages from kernel ring buffer.
 ```
 一般类的提示
 
-服务器收到了一个校验和错误的 ICMP 数据包。这类的数据包有可能是非法产生的垃圾数据. 但从目前来看服务器收到这样的数据非常多. 一般都忽略。
-一般代理服务器在工作时会每秒钟转发几千个数据包. 收到几个错误数据包不会影响正常的工作。
+服务器收到了一个校验和错误的 ICMP 数据包。这类的数据包有可能是非法产生的垃圾数据。但从目前来看服务器收到这样的数据非常多。一般都忽略。
+一般代理服务器在工作时会每秒钟转发几千个数据包。收到几个错误数据包不会影响正常的工作。
 ```
 
 > NET: N messages suppressed.
 ```
 一般类的提示
 
-服务器忽略了 N 个数据包. 和上一条提示类似. 服务器收到的数据包被认为是无用的垃圾数据数据。这类数据多是由攻击类的程序产生的。
-这条提示如果 N 比较小的时候可以忽略. 但如果经常或是长时间出现 3 位数据以上的这类提示. 就很有可能是服务器受到了垃圾数据类的带宽攻击了。
+服务器忽略了 N 个数据包。和上一条提示类似。服务器收到的数据包被认为是无用的垃圾数据数据。这类数据多是由攻击类的程序产生的。
+这条提示如果 N 比较小的时候可以忽略。但如果经常或是长时间出现 3 位数据以上的这类提示。就很有可能是服务器受到了垃圾数据类的带宽攻击了。
 与这条信息类似的还有。
 __ratelimit: N messages suppressed
 __ratelimit: N callbacks suppressed
@@ -583,7 +594,7 @@ __ratelimit: N callbacks suppressed
 ```
 一般类的提示
 
-服务器收到了一个错误的数据包. 分别为 UDP 校验和错误；过短的 UDP 数据包；一个错误的 ICMP 类型数据。这类信息一般情况下也是非法产生的。
+服务器收到了一个错误的数据包。分别为 UDP 校验和错误；过短的 UDP 数据包；一个错误的 ICMP 类型数据。这类信息一般情况下也是非法产生的。
 但一般问题不大可直接忽略。
 ```
 
@@ -612,7 +623,7 @@ setting full-duplex based on MII #24 link partner capability of 45e1
 ```
 网络通信严重问题！
 
-情况和 kernel: eth1: link up,... 相同. 指某块网卡适应的连接速率。一般认为没有说明哪个网卡 down, 只是连续出现网卡适应速率也是通信有问题。
+情况和 kernel: eth1: link up,... 相同。指某块网卡适应的连接速率。一般认为没有说明哪个网卡 down, 只是连续出现网卡适应速率也是通信有问题。
 如果是网线正常的断接可以忽略这类的信息。
 ```
 
@@ -628,7 +639,7 @@ setting full-duplex based on MII #24 link partner capability of 45e1
 0002 ##WMPCheckV001## 2005-04-07_01:53:32 Found .(MAC_incomplete)! IP:173 mac_incomplete:186
 0003 ##WMPCheckV001## 2005-04-17_16:25:11 Found .(HIGH_synsent)! totl:4271 SynSent:3490
 0004 ##WMPCheckV001## 20......
-这是由报警程序所引起的提示。详细的信息需要用报警程序的客户端进行实时接收. 详细情况请查看"告警模块和日志".
+这是由报警程序所引起的提示。详细的信息需要用报警程序的客户端进行实时接收。详细情况请查看"告警模块和日志".
 ```
 
 > eth1: Promiscuous mode enabled.
@@ -645,7 +656,7 @@ setting full-duplex based on MII #24 link partner capability of 45e1
 ```
 基本无关
 
-键盘上接收到未定义的键值。如果经常出现. 有可能是键盘有问题。linux 对于比较特殊的键或是组合键，有时也会出这样的提示。
+键盘上接收到未定义的键值。如果经常出现。有可能是键盘有问题。linux 对于比较特殊的键或是组合键，有时也会出这样的提示。
 要看一下服务器的键盘是不是被压住了。其它情况一般忽略。
 ```
 > uses obsolete (PF_INET,SOCK_PACKET)
@@ -659,7 +670,7 @@ setting full-duplex based on MII #24 link partner capability of 45e1
 ```
 网络通信故障
 
-出现这个提示. 一般都是因为局域网内有部分计算机被病毒感染。情况严重时会影响通信。必须处理内部网通信不正常的计算机。
+出现这个提示。一般都是因为局域网内有部分计算机被病毒感染。情况严重时会影响通信。必须处理内部网通信不正常的计算机。
 ```
 
 > eth1: Transmit error, Tx status register 82.
