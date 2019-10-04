@@ -5,6 +5,7 @@
 * [说明](#说明)
     * [应用类型](#应用类型)
     * [监测工具](#监测工具)
+        * [综合工具之 sar](#综合工具之-sar)
 * [Linux 性能监测 CPU 篇](#linux-性能监测-cpu-篇)
     * [底线](#底线)
     * [vmstat 命令](#vmstat-命令)
@@ -46,6 +47,8 @@
 
 这些子系统互相依赖，了解这些子系统的特性，监测这些子系统的系能参数以及及时发现可能会出现的瓶颈对系统优化很有帮助
 
+本系列将按照 CPU、内存、磁盘 IO、网络这几个方面分别介绍
+
 ### 应用类型
 
 不同的系统用途也不同，要找到性能瓶颈需要知道系统跑的是什么应用、有些什么特点，比如 web server 对系统的要求肯定和 file server 不一样，所以分清不同系统的应用类型很重要。
@@ -68,18 +71,74 @@
 |  top        |  查看进程活动状态以及一些系统状况 | |
 |  vmstat     |  查看系统状态、硬件和系统信息等   | |
 |  iostat     |  查看 CPU 负载、硬盘状况          | |
-|  sar        |  综合工具，查看系统状况           | |
+|  sar        |  综合工具，查看系统状况           |（厂内默认安装）|
 |  mpstat     |  查看多处理器状况                 | |
 |  netstat    |  查看网络状况|日常工作中推荐使用 ss 命令以替代 netstat     |
 |  iptraf     |  实时网络状态监测|【推荐】 比如网卡打满时，查看哪个 port 流量比较高  |
 |  tcpdump    |  抓取网络数据包，详细分析         | |
 |  tcptrace   |  网络包分析工具                   | |
 |  netperf    |  网络带宽工具                     | |
-|  dstat      |  综合了 vmstat、iostat、ifstat、netstat 等多个信息  | |
+|  dstat      |  综合了 vmstat、iostat、ifstat、netstat 等多个信息  |(python)|
 
-本系列将按照 CPU、内存、磁盘 IO、网络这几个方面分别介绍
+#### 综合工具之 sar
+
+> 安装及简介
+```
+yum instal -y sysstat
+
+sysstat 工具包中包含两类工具：
+即时查看工具：iostat、mpstat、sar
+累计统计工具：sar
+
+也就是说，sar 具有这两种功能。因此，sar 是 sysstat 中的核心工具。
+
+为了实现 sar 的累计统计，系统必须周期地记录当时的信息，这是通过调用 /usr/lib64/sa/ 中的三个工具实现的：
+
+(1) sa1 ：收集并存储每天系统动态信息到一个二进制的文件中，用作 sadc 的前端程序
+(2) sa2 ：收集每天的系统活跃信息写入总结性的报告，用作 sar 的前端程序
+(3) sadc ：系统动态数据收集工具，收集的数据被写入一个二进制的文件中，它被用作 sar 工具的后端
+
+在 CentOS 系统的默认设置中，以如下的方式使用这三个工具：
+
+在守护进程 /etc/rc.d/init.d/sysstat 中使用 /usr/lib/sa/sadc -F -L - 命令创建当日记录文件，文件为 /var/log/sa/saDD，其中 DD 为当天的日期。当系统重新启动后，会向文件 /var/log/sa/saDD 输出类似 11:37:16 AM LINUX RESTART 这样的行信息。
+在 cron 任务 /etc/cron.d/sysstat 中每隔 10 分钟执行一次 /usr/lib/sa/sa1 1 1 命令，将信息写入文件 /var/log/sa/saDD
+在 cron 任务 /etc/cron.d/sysstat 中每天 23:53 执行一次 /usr/lib/sa/sa2 -A 命令，将当天的汇总信息写入文件 /var/log/sa/saDD
+您可以修改 /etc/cron.d/sysstat 以适合您的需要。
+
+另外，文件 /var/log/sa/saDD 为二进制文件，不能使用 more、less 等文本工具查看，必须用 sar 或 sadf 命令查看。
+ 
+```
+> 使用
+```
+sar -n DEV 网卡流量
+sar -q 系统负载
+sar -b 磁盘读写
+sar -f /var/log/sa/saxx 历史文件
+
+sar 每十分钟把系统的状态过滤一遍，并生产日志在 ls /var/log/sa
+
+sar -n DEV 1 10 查看网卡流量（没 1s 输出一次，总共输出 10 次，最后会将这十次的采集信息进行统计）
+rxpck/s   接收到的数据包  如果你要接收很多数据包，证明有人给你发送数据包 就是被攻击 几千是正常的，上万就不正常了
+txpck/s   发送的数据包
+
+rxkB/s  数据量
+rxcmp/S 数据量
+
+sar -n DEV -f /var/log/sa/sa17  查看网卡流量并指定一个文件
+sar -q 1 10 查看系统负载
+sar -q -f /var/log/sa/sa17  查看当月 16 号的数据
+```
+
+> 过期日志自动清理
+```
+保留天数配置：/etc/sysconfig/sysstat
+执行文件    ：/usr/lib64/sa/sa2
+定时任务配置：/etc/cron.d/sysstat
+```
+如果没有定时过期清理，可以检查下定时任务中 "53 23 * * * root /usr/lib64/sa/sa2 -A" 是否为注释状态
 
 ## Linux 性能监测 CPU 篇
+
 
 CPU 的占用主要取决于什么样的资源在 CPU 上面运行，比如拷贝一个文件通常占用较少的 CPU，因为大部分工作是由 DMA（Direct Memory Access）完成，只是在完成拷贝以后给一个中断让 CPU 知道拷贝已经完成；科学计算通常占用较多的 CPU，大部分计算工作都需要在 CPU 上完成，内存、硬盘等子系统只是做暂时的数据存储工作。
 
