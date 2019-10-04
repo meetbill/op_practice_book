@@ -733,7 +733,7 @@ Centos 中 rsyslog 负责写入日志，logrotate 负责备份和删除旧日志
 ```
 error: /etc/logrotate.conf:xx duplicate log entry for /var/log/xxx
 
-/etc/logrotate.conf:xx 行有重复配置项
+/etc/logrotate.conf:xx 行有重复配置项，将重复项清理下即可
 ```
 ### 3.3.1 通用服务日志清理工具
 
