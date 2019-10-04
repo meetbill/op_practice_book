@@ -1649,7 +1649,7 @@ xxxx
 
 **主机名**
 
-    [CentOS6] /etc/sysconfig/network
+    [CentOS6] /etc/sysconfig/network  # 修改主机名时，修改此文件，同时在命令行执行 "hostname 新主机名"
     [CentOS7] /etc/hostname
 
 **时间同步**
