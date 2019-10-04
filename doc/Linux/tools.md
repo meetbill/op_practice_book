@@ -729,6 +729,12 @@ Centos 中 rsyslog 负责写入日志，logrotate 负责备份和删除旧日志
 
 当配置文件中有异常的配置时，logrotate 无法正常工作（一个异常配置会影响所有使用 logrotate 进行管理日志的服务）
 ```
+> 常见 logrotate 异常
+```
+error: /etc/logrotate.conf:xx duplicate log entry for /var/log/xxx
+
+/etc/logrotate.conf:xx 行有重复配置项
+```
 ### 3.3.1 通用服务日志清理工具
 
 如果是业务日志，也可以通过如下工具进行清理
