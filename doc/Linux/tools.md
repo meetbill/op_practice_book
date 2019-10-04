@@ -29,7 +29,9 @@
     * [3.1 screen](#31-screen)
         * [3.1.1 screen 使用](#311-screen-使用)
         * [3.1.2 开启 screen 状态栏](#312-开启-screen-状态栏)
-    * [4.2 dmesg](#42-dmesg)
+    * [3.2 dmesg](#32-dmesg)
+    * [3.3 日志切割之 Logrotate](#33-日志切割之-logrotate)
+        * [3.3.1 通用服务日志清理工具](#331-通用服务日志清理工具)
 * [4 网络相关](#4-网络相关)
     * [4.1 curl](#41-curl)
         * [4.1.1 HTTP 请求](#411-http-请求)
@@ -549,7 +551,7 @@ $ Ctrl + a ESC
 #curl -o screen.sh https://raw.githubusercontent.com/meetbill/op_practice_code/master/Linux/tools/screen.sh
 #sh screen.sh
 ```
-## 4.2 dmesg
+## 3.2 dmesg
 
 内核缓冲信息，在系统启动时，显示屏幕上的与硬件有关的信息
 
@@ -705,6 +707,36 @@ hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=811562, sector=811560
 
 服务器系统磁盘存储卡操作失败。这样的问题一般不会使服务器直接停止工作，但会引起很多严重问题
 ```
+
+## 3.3 日志切割之 Logrotate
+
+Centos 中 rsyslog 负责写入日志，logrotate 负责备份和删除旧日志
+
+> 定时任务
+```
+定时任务：/etc/cron.daily/logrotate
+定时任务执行的程序：/usr/sbin/logrotate /etc/logrotate.conf
+```
+> 配置
+```
+/etc/logrotate.conf  # 主配置文件
+/etc/logrotate.d     # 配置目录
+```
+
+备注：
+```
+当发现系统日志等没有轮转时，可以手动执行 "/usr/sbin/logrotate /etc/logrotate.conf" 查看下是否运行正常
+
+当配置文件中有异常的配置时，logrotate 无法正常工作（一个异常配置会影响所有使用 logrotate 进行管理日志的服务）
+```
+### 3.3.1 通用服务日志清理工具
+
+如果是业务日志，也可以通过如下工具进行清理
+
+如下工具会启动单独进程进行管理日志
+
+[shell_logrotate](https://github.com/meetbill/linux_tools/tree/master/17_logrotate)
+
 # 4 网络相关
 ## 4.1 curl
 ### 4.1.1 HTTP 请求
