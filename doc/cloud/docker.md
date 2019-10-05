@@ -31,6 +31,8 @@
     * [6.1 Docker 容器故障致无法启动解决实例](#61-docker-容器故障致无法启动解决实例)
     * [6.2 启动容器失败](#62-启动容器失败)
     * [6.3 CentOS7 上运行容器挂载卷没有写入权限](#63-centos7-上运行容器挂载卷没有写入权限)
+* [7 原理](#7-原理)
+    * [7.1 Docker 背后的内核知识](#71-docker-背后的内核知识)
 
 <!-- vim-markdown-toc -->
 
@@ -375,7 +377,7 @@ meetbill@Linux:~/mysql$ docker run -d \
 > * -v $PWD/data:/var/lib/mysql：将主机当前目录下的 data 目录挂载到容器的 /mysql_data
 > * -e MYSQL_ROOT_PASSWORD=123456：初始化 root 用户的密码
 
-**(3)进入 mysql 容器**
+**(3) 进入 mysql 容器**
 
 ```
 $docker ps
@@ -462,3 +464,15 @@ Error: failed to start containers: zabbix
 示例：chcon -Rt svirt_sandbox_file_t /home/docs
 
 之后执行：docker run -i -t -v /home/docs:/src waterchestnut/nodejs:0.12.0
+
+# 7 原理
+
+## 7.1 Docker 背后的内核知识
+
+docker 容器的本质是宿主机上的一个进程。
+
+Docker 通过 namespace 实现了资源隔离，通过 cgroups 实现了资源限制，通过*写时复制机制（copy-on-write）*实现了高效的文件操作。
+
+> * Namespace：隔离技术的第一层，确保 Docker 容器内的进程看不到也影响不到 Docker 外部的进程。
+> * Control Groups：LXC 技术的关键组件，用于进行运行时的资源限制。
+> * UnionFS（文件系统）：容器的构件块，创建抽象层，从而实现 Docker 的轻量级和运行快速的特性
