@@ -75,11 +75,12 @@
 
 * gcc 可以通过光盘直接选择安装
 * openssl-devel、zlib-devel 可以通过光盘直接选择安装，https 时使用
-* pcre-devel 安装 pcre 库是为了使 nginx 支持 HTTP Rewrite 模块
+* pcre-devel 安装 pcre 库是为了使 nginx 支持 HTTP Rewrite 模块(动静分离涉及此模块)
 
 ## 下载
 
-[nginx 下载](http://nginx.org/en/download.html)
+> * [nginx 下载](http://nginx.org/en/download.html)
+> * [pcre](http://www.pcre.org/)
 
 ## 编译安装
 
