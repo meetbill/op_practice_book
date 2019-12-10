@@ -20,6 +20,8 @@
     * [2.4 私有仓库](#24-私有仓库)
         * [2.4.1 环境准备](#241-环境准备)
         * [2.4.2 搭建](#242-搭建)
+            * [搭建步骤](#搭建步骤)
+            * [常见问题](#常见问题)
         * [2.4.3 在 docker 客户机验证](#243-在-docker-客户机验证)
 * [3 Dockerfile 最佳实践](#3-dockerfile-最佳实践)
 * [4 Docker 应用](#4-docker-应用)
@@ -249,6 +251,8 @@ docker 客户机	192.168.1.136
 
 ### 2.4.2 搭建
 
+#### 搭建步骤
+
 **(1) 搭建仓库 registry**
 ```
 docker pull regsity
@@ -273,6 +277,11 @@ docker tag xxxxxxx 192.168.1.52:5000/zabbix
 > echo '{ "insecure-registries":["192.168.1.52:5000"] }' > /etc/docker/daemon.json
 > systemctl restart docker
 
+ps:
+```
+此步因系统而异，有些是修改 /etc/sysconfig/docker 文件
+```
+
 **(5) 提交镜像到本地私有仓库中**
 
 docker push 192.168.1.52:5000/zabbix
@@ -280,10 +289,28 @@ docker push 192.168.1.52:5000/zabbix
 **(6) 查看私有仓库是否存在对应的镜像**
 
 root@localhost ~
-> curl -X GET http://192.168.1.52:5000/v2/_catalog
+> `curl -X GET http://192.168.1.52:5000/v2/_catalog`
+```
 {"repositories":["zabbix"]}
+```
 > curl -X GET http://192.168.1.52:5000/v2/zabbix/tags/list
+```
 {"name":"zabbix","tags":["latest"]}
+```
+#### 常见问题
+
+提交镜像到本地仓库时异常: 
+
+> 提示非 https
+```
+启动项增加
+--insecure-registry  192.168.1.52:5000
+```
+
+> [received unexpected HTTP status: 500 Internal Server](https://github.com/docker/distribution-library-image/issues/89)
+```
+使用 registry:2.6.2 image
+```
 
 ### 2.4.3 在 docker 客户机验证
 
