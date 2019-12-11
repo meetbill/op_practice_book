@@ -11,6 +11,7 @@
         * [1.3.1 列出安装的 Docker](#131-列出安装的-docker)
         * [1.3.2 删除安装包](#132-删除安装包)
         * [1.3.3 删除数据文件](#133-删除数据文件)
+    * [1.4 日志](#14-日志)
 * [2 Docker 基础](#2-docker-基础)
     * [2.1 Docker 三大核心概念](#21-docker-三大核心概念)
     * [2.2 Docker 镜像使用](#22-docker-镜像使用)
@@ -24,6 +25,8 @@
             * [常见问题](#常见问题)
         * [2.4.3 在 docker 客户机验证](#243-在-docker-客户机验证)
 * [3 Dockerfile 最佳实践](#3-dockerfile-最佳实践)
+    * [3.1 Dockerfile 建议](#31-dockerfile-建议)
+    * [3.2 编写 Dockerfile](#32-编写-dockerfile)
 * [4 Docker 应用](#4-docker-应用)
     * [4.1 MySQL](#41-mysql)
 * [5 其他](#5-其他)
@@ -164,6 +167,14 @@ sudo yum -y remove docker-engine.x86_64
 rm -rf /var/lib/docker
 ```
 
+## 1.4 日志
+
+Docker daemon 日志的位置，根据系统不同各不相同。
+
+* Ubuntu - /var/log/upstart/docker.log
+* CentOS - /var/log/daemon.log | grep docker
+* Red Hat Enterprise Linux Server - /var/log/messages | grep docker
+
 # 2 Docker 基础
 ## 2.1 Docker 三大核心概念
 - 镜像 Image
@@ -299,7 +310,7 @@ root@localhost ~
 ```
 #### 常见问题
 
-提交镜像到本地仓库时异常: 
+提交镜像到本地仓库时异常：
 
 > 提示非 https
 ```
@@ -329,6 +340,7 @@ docker pull 192.168.1.52:5000/centos
 
 # 3 Dockerfile 最佳实践
 
+## 3.1 Dockerfile 建议
 
 **1、挑选合适的基础镜像**
 
@@ -372,11 +384,21 @@ docker pull 192.168.1.52:5000/centos
 
 总之，优先使用 COPY
 
+## 3.2 编写 Dockerfile
 
-Docker daemon 日志的位置，根据系统不同各不相同。
-* Ubuntu - /var/log/upstart/docker.log
-* CentOS - /var/log/daemon.log | grep docker
-* Red Hat Enterprise Linux Server - /var/log/messages | grep docker
+> COPY
+```
+(1) 如果源路径是个文件，且目标路径是以 / 结尾， 则 docker 会把目标路径当作一个目录，会把源文件拷贝到该目录下。
+如果目标路径不存在，则会自动创建目标路径。
+
+(2) 如果源路径是个文件，且目标路径是不是以 / 结尾，则 docker 会把目标路径当作一个文件。
+如果目标路径不存在，会以目标路径为名创建一个文件，内容同源文件；
+如果目标文件是个存在的文件，会用源文件覆盖它，当然只是内容覆盖，文件名还是目标文件名。
+如果目标文件实际是个存在的目录，则会源文件拷贝到该目录下。 注意，这种情况下，最好显示的以 / 结尾，以避免混淆。
+
+(3) 如果源路径是个目录，且目标路径不存在，则 docker 会自动以目标路径创建一个目录，把源路径目录下的文件拷贝进来。
+如果目标路径是个已经存在的目录，则 docker 会把源路径目录下的文件拷贝到该目录下。
+```
 
 # 4 Docker 应用
 ## 4.1 MySQL
