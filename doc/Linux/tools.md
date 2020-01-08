@@ -32,6 +32,9 @@
     * [3.2 dmesg](#32-dmesg)
     * [3.3 日志切割之 Logrotate](#33-日志切割之-logrotate)
         * [3.3.1 通用服务日志清理工具](#331-通用服务日志清理工具)
+    * [3.4 lsof](#34-lsof)
+        * [3.4.1 如何使用 lsof?](#341-如何使用-lsof)
+    * [3.4.2 lsof -p](#342-lsof--p)
 * [4 网络相关](#4-网络相关)
     * [4.1 curl](#41-curl)
         * [4.1.1 HTTP 请求](#411-http-请求)
@@ -744,6 +747,118 @@ error: /etc/logrotate.conf:xx duplicate log entry for /var/log/xxx
 如下工具会启动单独进程进行管理日志
 
 [shell_logrotate](https://github.com/meetbill/linux_tools/tree/master/17_logrotate)
+
+## 3.4 lsof
+
+Lsof 是遵从 Unix 哲学的典范，它只做一件事情，并且做的相当完美——它可以列出某个进程打开的所有文件信息。打开的文件可能是普通的文件，目录，NFS 文件，块文件，字符文件，共享库，常规管道，明明管道，符号链接，Socket 流，网络 Socket，UNIX 域 Socket，以及其它更多。因为 Unix 系统中几乎所有东西都是文件，你可以想象 lsof 该有多有用。
+
+### 3.4.1 如何使用 lsof?
+> 列出所有打开的文件  不带任何参数运行 lsof 会列出所有进程打开的所有文件。
+```
+lsof
+```
+
+> 找出谁在使用某个文件
+```
+lsof /path/to/file
+```
+
+> 列出某个用户打开的所有文件
+```
+lsof -u meetbill
+```
+
+> 查找某个程序打开的所有文件  -c 选项限定只列出以 apache 开头的进程打开的文件：
+```
+lsof -c apache
+```
+
+> 列出所有由某个 PID 对应的进程打开的文件  -p 选项让你可以使用进程 id 来过滤输出。
+```
+lsof -p 1
+```
+
+> 列出所有网络连接  lsof 的 -i 选项可以列出所有打开了网络套接字（TCP 和 UDP）的进程。
+```
+lsof -i
+```
+
+> 列出所有 TCP 网络连接  也可以为 -i 选项加上参数，比如 tcp，tcp 选项会强制 lsof 只列出打开 TCP sockets 的进程。
+```
+lsof -i tcp
+```
+
+> 找到使用某个端口的进程
+```
+lsof -i :25
+```
+
+> 找到某个用户的所有网络连接  使用 -a 将 -u 和 -i 选项组合可以让 lsof 列出某个用户的所有网络行为。
+```
+lsof -a -u hacker -i
+```
+
+> 列出所有 NFS（网络文件系统）文件  这个参数很好记，-N 就对应 NFS。
+```
+lsof -N
+```
+
+> 列出所有 UNIX 域 Socket 文件  这个选项也很好记，-U 就对应 UNIX。
+```
+lsof -U
+```
+
+> 列出所有对应某个组 id 的进程
+```
+lsof -g 1234
+```
+
+> 列出所有与某个描述符关联的文件
+```
+lsof -d 2
+```
+## 3.4.2 lsof -p
+
+> lsof -p 24406
+```
+COMMAND     PID      USER   FD   TYPE     DEVICE     SIZE     NODE NAME
+python2.7 24406 wangbin34  cwd    DIR        8,8     4096 53002355 /home/users/meetbill/dev/butterfly
+python2.7 24406 wangbin34  rtd    DIR        8,2     4096        2 /
+python2.7 24406 wangbin34  txt    REG        8,8    10265 52711469 /bin/python2.7
+python2.7 24406 wangbin34  mem    REG        0,0                 0 [heap] (stat: No such file or directory)
+python2.7 24406 wangbin34  mem    REG        8,2    17624   246236 /lib64/libuuid.so.1.2
+python2.7 24406 wangbin34  mem    REG        8,2   105080   246045 /lib64/ld-2.3.4.so
+python2.7 24406 wangbin34  mem    REG        8,2  1493186   246040 /lib64/tls/libc-2.3.4.so
+python2.7 24406 wangbin34  mem    REG        8,2    17943   246057 /lib64/libdl-2.3.4.so
+python2.7 24406 wangbin34  mem    REG        8,2   613297   246035 /lib64/tls/libm-2.3.4.so
+python2.7 24406 wangbin34  mem    REG        8,2   106203   246042 /lib64/tls/libpthread-2.3.4.so
+python2.7 24406 wangbin34  mem    REG        8,2    17367   246060 /lib64/libutil-2.3.4.so
+...
+python2.7 24406 wangbin34    0r   CHR        1,3              4869 /dev/null
+python2.7 24406 wangbin34    1w   REG        8,8      319 52982340 /home/users/meetbill/dev/butterfly/__stdout
+python2.7 24406 wangbin34    2w   REG        8,8      319 52982340 /home/users/meetbill/dev/butterfly/__stdout
+python2.7 24406 wangbin34    3u  IPv4 3659770919               TCP :8021 (LISTEN)
+python2.7 24406 wangbin34    4w   REG        8,8    48845 53739748 /home/users/meetbill/dev/butterfly/logs/info.log
+python2.7 24406 wangbin34    5w   REG        8,8   205892 53739816 /home/users/meetbill/dev/butterfly/logs/common.log
+python2.7 24406 wangbin34    6w   REG        8,8      240 53739811 /home/users/meetbill/dev/butterfly/logs/common.log.wf
+python2.7 24406 wangbin34    7r   CHR        1,9              4439 /dev/urandom
+python2.7 24406 wangbin34    9w   REG        8,8    10005 53739790 /home/users/meetbill/dev/butterfly/logs/acc.log
+```
+
+> * COMMAND：进程的名称 
+> * PID：进程标识符
+> * USER：进程所有者
+> * FD：文件描述符，应用程序通过文件描述符识别该文件。如 cwd、txt 等
+>   * cwd 值表示应用程序的当前工作目录
+> * TYPE：文件类型，如 DIR、REG 等
+>   * 文件和目录分别称为 REG 和 DIR
+>   * CHR 表示字符；(fopen，打开文件）
+>   * BLK 表示块设备；
+>   * UNIX、FIFO 和 IPv4，分别表示 UNIX 域套接字、先进先出 (FIFO) 队列和网际协议 (IP) 套接字。
+> * DEVICE：指定磁盘的名称
+> * SIZE：文件的大小
+> * NODE：索引节点（文件在磁盘上的标识）
+> * NAME：打开文件的确切名称
 
 # 4 网络相关
 ## 4.1 curl
