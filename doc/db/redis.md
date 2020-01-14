@@ -93,9 +93,10 @@
         * [4.2.3 redis 主从删除过期 key 方式](#423-redis-主从删除过期-key-方式)
         * [4.2.4 总结](#424-总结)
     * [4.3 cluster 选举算法 Raft](#43-cluster-选举算法-raft)
-* [5 其他相关](#5-其他相关)
+* [5 常见问题处理](#5-常见问题处理)
     * [5.1 内核参数 overcommit](#51-内核参数-overcommit)
         * [什么是 Overcommit 和 OOM](#什么是-overcommit-和-oom)
+    * [5.2 Redis CPU 100% 时分析](#52-redis-cpu-100-时分析)
 * [6 数据迁移](#6-数据迁移)
     * [6.1 目标](#61-目标)
     * [6.2 怎么实现](#62-怎么实现)
@@ -1842,7 +1843,7 @@ def activeExpireCycle():
 选举过程：考虑最简单情况，abc 三个节点，每个节点只有一张票，当 N 个节点发出投票请求，其他节点必须投出自己的一票，不能弃票，最差的情况是每个人都有一票，那么随机设置一个 timeout 时间，就像加时赛一样，这时同时的概率大大降低，谁最先恢复过来，就向其他两个节点发出投票请求，获得大多数选票，成为领导人。选出 Leader 后，Leader 通过定期向所有 Follower 发送心跳信息维持其统治。若 Follower 一段时间未收到 Leader 的心跳则认为 Leader 可能已经挂了再次发起选主过程。
 
 
-# 5 其他相关
+# 5 常见问题处理
 
 ## 5.1 内核参数 overcommit
 它是 内存分配策略，可选值：0、1、2。
@@ -1861,6 +1862,12 @@ Linux 对大部分申请内存的请求都回复"yes"，以便能跑更多更大
 > * （1）编辑 /etc/sysctl.conf ，改 vm.overcommit_memory=1，然后 sysctl -p 使配置文件生效
 > * （2）sysctl vm.overcommit_memory=1
 > * （3）echo 1 > /proc/sys/vm/overcommit_memory
+
+## 5.2 Redis CPU 100% 时分析
+
+```
+$perf top -p 28764
+```
 
 # 6 数据迁移
 
