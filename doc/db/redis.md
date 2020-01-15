@@ -80,6 +80,9 @@
             * [缺省](#缺省)
             * [force](#force)
             * [takeover](#takeover)
+    * [3.5 弃用 redis cluster 的原因](#35-弃用-redis-cluster-的原因)
+        * [3.5.1 集群规模比较大时，容易出现 handshake 节点](#351-集群规模比较大时容易出现-handshake-节点)
+        * [3.5.2 网络问题导致某个 node 隔离后，在很长时间后， node 网络恢复，可能发生集群融合](#352-网络问题导致某个-node-隔离后在很长时间后-node-网络恢复可能发生集群融合)
 * [4 原理说明](#4-原理说明)
     * [4.1 一致性 hash](#41-一致性-hash)
         * [4.1.1 传统的取模方式](#411-传统的取模方式)
@@ -1514,6 +1517,39 @@ failover 是 redis cluster 提供的容错机制，cluster 最核心的功能之
 #### takeover
 直接执行故障 failover 的第 6-9 步，忽略主备同步，忽略集群其他 master 的投票。
 
+## 3.5 弃用 redis cluster 的原因
+
+
+### 3.5.1 集群规模比较大时，容易出现 handshake 节点
+
+> redis cluster 增加节点简单，但是去掉一个节点确比较复杂，尤其是当集群规模特别大的时候
+```
+增加节点只需要 meet 即可
+forget 节点的时候需要全员进行 forget，这里注意了，如果集群是 3 地域及以上，需要汇总所有 redis 实例的，有漏掉的 redis 则 forget 失败，比如漏掉了单个地域等等
+
+汇总了所有 redis 实例就万事大吉了吗？no
+
+下发的 forget 命令不一定是成功的，比如对应的 node redis 连接数满了， node 正在加载 rdb 等，没接成功
+
+
+这个时候下掉节点，这个节点就有可能成为 handshake 节点
+```
+
+详细请看 [Cluster: How to remove a node in handshake state](https://github.com/antirez/redis/issues/2965)
+
+即未对所有的 redis 节点都发送 forget 命令，则可能产生 handshake 节点
+
+
+> 发现 handshake 节点
+```
+grep -E 'noaddr|hand|fail'
+```
+### 3.5.2 网络问题导致某个 node 隔离后，在很长时间后， node 网络恢复，可能发生集群融合
+
+网络问题导致某个 node 隔离后，在很长时间后， node 网络恢复，但是 node 记录的节点（ip:port）已经因为实例迁移等，变成了其他集群，就会和两个集群握手，然后集群融合
+
+导致数据丢失
+
 # 4 原理说明
 
 ## 4.1 一致性 hash
@@ -1896,7 +1932,7 @@ redis 的 aof 包含了基准数据和增量，所以我们只需要把旧集群
 模拟从库进行全量同步和后续的增量同步，全量同步时需要将 RDB 解析为 Redis 协议并写到新集群
 
 不足：
-(1) 迁移基准数据时，需要将 RDB 解析为 Redis 协议格式 (官方 hiredis 库解析大 key 时有 BUG, 超级慢），此块导致同步失败的概率极大
+(1) 迁移基准数据时，需要将 RDB 解析为 Redis 协议格式 （官方 hiredis 库解析大 key 时有 BUG, 超级慢），此块导致同步失败的概率极大
 (2) 需要自己实现 Redis 主从同步协议
 (3) 全量同步的 RDB 解析完成前，后面的增量数据会先放到主库的 output-buffer 中，当全量同步耗时长，或者业务写入量过大时，会导致 output-buffer 满而失败
 ```
