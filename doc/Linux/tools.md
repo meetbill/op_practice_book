@@ -21,6 +21,7 @@
         * [2.2.3 运算与编程](#223-运算与编程)
         * [2.2.4 AWK 中输出外部变量](#224-awk-中输出外部变量)
         * [2.2.5 AWK if](#225-awk-if)
+        * [2.2.6 AWK 打印第 N 列后面的所有列](#226-awk-打印第-n-列后面的所有列)
     * [2.3 find](#23-find)
         * [2.3.1 linux 文件查找指定时间段的文件](#231-linux-文件查找指定时间段的文件)
     * [2.4 grep](#24-grep)
@@ -469,6 +470,11 @@ awk -F: '{if($1~/mail/) {print $1} else {print $2}}' /etc/passwd            //if
 ```
 # ps -eF，其中 PSR 就是 (processor that process is currently assigned to.) 或者 ps -eo pid,command,args,psr
 ps -eF |awk '{if($7==0) print $0}'
+```
+
+### 2.2.6 AWK 打印第 N 列后面的所有列
+```
+awk '{for(i=N+1;i<=NF;i++)printf $i "  ";printf"\n"}' file
 ```
 ## 2.3 find
 
