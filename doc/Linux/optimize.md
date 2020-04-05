@@ -6,6 +6,7 @@
     * [应用类型](#应用类型)
     * [监测工具](#监测工具)
         * [综合工具之 sar](#综合工具之-sar)
+        * [dstat](#dstat)
 * [Linux 性能监测 CPU 篇](#linux-性能监测-cpu-篇)
     * [底线](#底线)
     * [vmstat 命令](#vmstat-命令)
@@ -78,7 +79,7 @@
 |  tcpdump    |  抓取网络数据包，详细分析         | |
 |  tcptrace   |  网络包分析工具                   | |
 |  netperf    |  网络带宽工具                     | |
-|  dstat      |  综合了 vmstat、iostat、ifstat、netstat 等多个信息  |(python)|
+|  dstat      |  综合了 vmstat、iostat、ifstat、netstat 等多个信息  |(python) 厂内默认安装|
 
 #### 综合工具之 sar
 
@@ -136,6 +137,23 @@ sar -q -f /var/log/sa/sa17  查看当月 16 号的数据
 定时任务配置：/etc/cron.d/sysstat
 ```
 如果没有定时过期清理，可以检查下定时任务中 "53 23 * * * root /usr/lib64/sa/sa2 -A" 是否为注释状态
+
+#### dstat
+
+> 常用命令
+```
+监控 CPU\MEN\磁盘IO 使用最多的进程: dstat --top-mem --top-io --top-cpu
+
+dstat -c --top-cpu -d --top-bio --top-latency --disk-util
+```
+
+> * dstat --top-cpu：显示最消耗 CPU 的进程
+> * dstat --top-cuptime：最消耗 CPU 时间的进程，以毫秒为单位
+> * dstat --top-io：显示消耗 io 最多的进程
+> * dstat --top-latency：显示哪个进程有最大的延迟
+> * dstat --top-mem:显示用内存最多的线程
+> * dstat --top-mem  --top-cpu:俩个一起使用也是OK的
+
 
 ## Linux 性能监测 CPU 篇
 
