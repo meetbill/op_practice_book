@@ -41,6 +41,13 @@
 * [ftp](#ftp)
     * [ftp 简介](#ftp-简介)
     * [安装配置](#安装配置)
+    * [设置 FTP 虚拟账号密码](#设置-ftp-虚拟账号密码)
+        * [修改 proftpd 配置文件（早期系统镜像的默认 FTP 配置路径为 /etc/proftpd.conf）](#修改-proftpd-配置文件早期系统镜像的默认-ftp-配置路径为-etcproftpdconf)
+        * [获取 ftpasswd 用于设置虚拟账号](#获取-ftpasswd-用于设置虚拟账号)
+        * [设置账号密码](#设置账号密码)
+        * [删除 ftpasswd](#删除-ftpasswd)
+        * [重启 FTP 服务（如启动失败，proftpd -t -d5 检查配置文件出错点）](#重启-ftp-服务如启动失败proftpd--t--d5-检查配置文件出错点)
+        * [wget 使用](#wget-使用)
 
 <!-- vim-markdown-toc -->
 # NTP
@@ -92,7 +99,7 @@ keys /etc/ntp/keys
         * `kod`:        kod 技术科阻止 "Kiss of Death" 包（一种 DOS 攻击）对服务器的破坏
         * `nopeer`:     不与其它同一层的 NTP 服务器进行同步
         * `noquery`:    不提供时间查询，即用户端不能使用 ntpq，ntpc 等命令来查询 ntp 服务器
-        * `notrap`:     不提供trap远端事件登陆的功能
+        * `notrap`:     不提供 trap 远端事件登陆的功能
 * `server [IP|FQDN|prefer]`指该服务器上层 NTP Server，使用 prefer 的优先级最高，没有使用 prefer 则按照配置文件顺序由高到低，默认情况下至少 15min 和上层 NTP 服务器进行时间校对
 * `fudge`:          可以指定本地 NTP Server 层，如 `fudge 127.0.0.1 stratum 9`
 * `broadcast 网段 子网掩码`:    指定 NTP 进行时间广播的网段，如`broadcast 192.168.1.255`
@@ -157,7 +164,7 @@ synchronised to NTP server (192.168.0.18) at stratum 4
 
 ### chrony server
 
-配置文件: /etc/chrony.conf
+配置文件：/etc/chrony.conf
 
 对于 chrony server 来说，主要配置两项，上游的 ntp 服务器和对下游的权限
 
@@ -185,9 +192,9 @@ synchronised to NTP server (192.168.0.18) at stratum 4
 
 对于 client 来说，只需要配置上游的服务器
 
-配置文件: /etc/chrony.conf
+配置文件：/etc/chrony.conf
 
-添加 `server 上游服务器IP/主机名 iburst`即可
+添加 `server 上游服务器 IP/ 主机名 iburst`即可
 
 启动并设置开机自启
 ```
@@ -528,4 +535,62 @@ ftp 工作会启动两个通道：控制通道 ， 数据通道。在 ftp 协议
 [root@meetbill ~]#./ftptool.sh install_server
 [root@meetbill ~]#./ftptool.sh add_user
 [root@meetbill ~]#./ftptool.sh start
+```
+
+## 设置 FTP 虚拟账号密码
+
+### 修改 proftpd 配置文件（早期系统镜像的默认 FTP 配置路径为 /etc/proftpd.conf）
+
+```
+注释<Anonymous ~ftp> … </Anonymous>之间相关配置
+
+<Anonymous ~ftp> … </Anonymous>之外新增如下配置
+AuthOrder mod_auth_file.c
+
+AuthUserFile /etc/proftpd.passwd
+
+RequireValidShell off
+```
+
+
+### 获取 ftpasswd 用于设置虚拟账号
+
+拉取 proftpd 源码包中的 ftpasswd 文件
+```
+cd /usr/sbin;wget https://github.com/downloads/proftpd/proftpd.github.com/proftpd-1.3.4b.tar.gz -O proftpd-1.3.4b.tar.gz; tar -zxvf proftpd-1.3.4b.tar.gz; mv ./proftpd-1.3.4b/contrib/ftpasswd .;rm -rf proftpd-1.3.4b*
+```
+### 设置账号密码
+```
+ftpasswd --file=/etc/proftpd.passwd --home=xxx --shell=/bin/false --name=xxx --uid=99 --gid=99 --passwd
+```
+配置说明
+
+> * --home=xxx 指定 ftp 用户登录后的根目录（eg. --home=/home）
+> * --name=xxx 指定 ftp 用户名
+> * --uid=99 --gid=99 指定账号关联对应系统用户和组
+> * wget 获取文件路径以–home 指定路径为基础进行拼接（eg. --home=/home; wget ftp://…/home/work => wget ftp://…/work ）
+
+> demo
+```
+id meetbill
+uid=500(meetbill) gid=501(meetbill) groups=501(meetbill)
+
+ftpasswd --file=/etc/proftpd.passwd --home=/home/meetbill/ --shell=/bin/false --name=meetbill --uid=500 --gid=501 --passwd
+这里会输入两次密码
+```
+
+### 删除 ftpasswd
+```
+cd /usr/sbin; rm -f ftpasswd
+```
+### 重启 FTP 服务（如启动失败，proftpd -t -d5 检查配置文件出错点）
+```
+service proftpd restart
+```
+
+### wget 使用
+```
+wget --ftp-user=meetbill  --ftp-password=xxxxxxxxx  ftp://xxxx/test_dif/test_file -O test_file
+
+test_dif/test_file 在物理机上的绝对路径为 /home/meetbill/test_dif/test_file
 ```
