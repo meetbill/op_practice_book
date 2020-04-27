@@ -17,6 +17,9 @@
             * [根因](#根因)
         * [1.3.3 redis slots 迁移的时候，永不过期的 key 因为 ttl>0 而过期，导致迁移丢失数据](#133-redis-slots-迁移的时候永不过期的-key-因为-ttl0-而过期导致迁移丢失数据)
             * [根因](#根因-1)
+        * [1.3.4 3.x 执行 exists 可以获取到，但 get 时则无法获取到数据](#134-3x-执行-exists-可以获取到但-get-时则无法获取到数据)
+            * [3.x exists 逻辑](#3x-exists-逻辑)
+            * [4.x exists 逻辑](#4x-exists-逻辑)
     * [1.4 redis 日志](#14-redis-日志)
         * [1.4.1 日常日志](#141-日常日志)
     * [1.5 redis 协议说明](#15-redis-协议说明)
@@ -442,6 +445,93 @@ void migrateCommand(client *c) {
             serverAssertWithInfo(c,NULL,rioWriteBulkString(&cmd,"REPLACE",7));
     }
 ```
+### 1.3.4 3.x 执行 exists 可以获取到，但 get 时则无法获取到数据
+
+#### 3.x exists 逻辑
+> exists
+```
+redis.c:    {"exists",existsCommand,-2,"rF",0,NULL,1,-1,1,0,0}
+```
+
+> db.c:void existsCommand
+```
+// EXISTS key1 key2 ... key_N.  Return value is the number of keys existing. 
+void existsCommand(redisClient *c) {
+    long long count = 0;
+    int j;
+
+    for (j = 1; j < c->argc; j++) {
+        expireIfNeeded(c->db,c->argv[j]);
+        if (dbExists(c->db,c->argv[j])) count++;
+    }
+    addReplyLongLong(c,count);
+}
+```
+
+在从库上执行 exists 时，3.x 版本先执行的 expireIfNeeded ，在从库时不会进行主动淘汰，然后进行判断此 key 是否存在
+
+#### 4.x exists 逻辑
+
+> db.c:void existsCommand
+```
+/*/EXISTS key1 key2 ... key_N. Return value is the number of keys existing. 
+void existsCommand(client *c) {
+    long long count = 0;
+    int j;
+
+    for (j = 1; j < c->argc; j++) {
+        if (lookupKeyRead(c->db,c->argv[j])) count++;
+    }
+    addReplyLongLong(c,count);
+}
+```
+
+> db.c:lookupKeyRead
+```
+robj *lookupKeyReadWithFlags(redisDb *db, robj *key, int flags) {
+    robj *val;
+
+    if (expireIfNeeded(db,key) == 1) {
+        /* Key expired. If we are in the context of a master, expireIfNeeded()
+         * returns 0 only when the key does not exist at all, so it's safe
+         * to return NULL ASAP. */
+        if (server.masterhost == NULL) return NULL;
+
+        /* However if we are in the context of a slave, expireIfNeeded() will
+         * not really try to expire the key, it only returns information
+         * about the "logical" status of the key: key expiring is up to the
+         * master in order to have a consistent view of master's data set.
+         *
+         * However, if the command caller is not the master, and as additional
+         * safety measure, the command invoked is a read-only command, we can
+         * safely return NULL here, and provide a more consistent behavior
+         * to clients accessign expired values in a read-only fashion, that
+         * will say the key as non exisitng.
+         *
+         * Notably this covers GETs when slaves are used to scale reads. */
+        if (server.current_client &&
+            server.current_client != server.master &&
+            server.current_client->cmd &&
+            server.current_client->cmd->flags & CMD_READONLY)
+        {
+            return NULL;
+        }
+    }
+    val = lookupKey(db,key,flags);
+    if (val == NULL)
+        server.stat_keyspace_misses++;
+    else
+        server.stat_keyspace_hits++;
+    return val;
+}
+
+/* Like lookupKeyReadWithFlags(), but does not use any flag, which is the
+ * common case. */
+robj *lookupKeyRead(redisDb *db, robj *key) {
+    return lookupKeyReadWithFlags(db,key,LOOKUP_NONE);
+}
+```
+
 
 ## 1.4 redis 日志
 
