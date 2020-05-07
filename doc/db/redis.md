@@ -55,6 +55,9 @@
         * [1.6.11 以 Ziplist 编码的 Sorted Set](#1611-以-ziplist-编码的-sorted-set)
         * [1.6.12 Ziplist 编码的 Hashmap](#1612-ziplist-编码的-hashmap)
             * [CRC32 校验和](#crc32-校验和)
+    * [1.7 Redis 内存](#17-redis-内存)
+        * [1.7.1 used_memmory](#171-used_memmory)
+        * [1.7.2 used_memmory 会大于 maxmemory 吗？](#172-used_memmory-会大于-maxmemory-吗)
 * [2 Redis twemproxy 集群](#2-redis-twemproxy-集群)
     * [2.1 Twemproxy 特性](#21-twemproxy-特性)
     * [2.2 环境说明](#22-环境说明)
@@ -455,7 +458,7 @@ redis.c:    {"exists",existsCommand,-2,"rF",0,NULL,1,-1,1,0,0}
 
 > db.c:void existsCommand
 ```
-// EXISTS key1 key2 ... key_N.  Return value is the number of keys existing. 
+// EXISTS key1 key2 ... key_N.  Return value is the number of keys existing.
 void existsCommand(redisClient *c) {
     long long count = 0;
     int j;
@@ -474,7 +477,7 @@ void existsCommand(redisClient *c) {
 
 > db.c:void existsCommand
 ```
-/*/EXISTS key1 key2 ... key_N. Return value is the number of keys existing. 
+/*/EXISTS key1 key2 ... key_N. Return value is the number of keys existing.
 void existsCommand(client *c) {
     long long count = 0;
     int j;
@@ -1198,6 +1201,238 @@ ziplist 的每个条目有下面的格式：
 从 RDB 版本 5 开始，一个 `8` 字节的 `CRC32` 校验和被加到文件结尾。可以通过  redis.conf 文件的一个参数来作废这个校验和。
 
 当校验和被作废时，这个字段将是 `0`。
+
+## 1.7 Redis 内存
+
+### 1.7.1 used_memmory
+
+```
+               /-------> 自身内存
++------------+
+|used_memmory| --------> 对象内存
++------------+
+               \-------> 缓冲碎片（客户端缓冲，复制积压缓冲区，AOF 缓冲区）
+
+
+used_memmory_rss - used_memmory = 内存碎片
+```
+
+PS: 当集群容量满的时候，如果调整 repl-backlog-size , 会触发淘汰，导致业务请求阻塞 , :( 这个引发过 case
+
+### 1.7.2 used_memmory 会大于 maxmemory 吗？
+
+设置了 Maxmemory 的话，Redis 服务器每执行一个命令，都会检测内存，判断是否需要进行数据淘汰
+
+> 执行命令
+```
+/*src/redis.cprocessCommand*/
+int processCommand(redisClient *c) {
+        ......
+        // 内存超额
+        /* Handle the maxmemory directive.
+        **
+        First we try to free some memory if possible (if there are volatile
+        * keys in the dataset). If there are not the only thing we can do
+        * is returning an error. */
+        if (server.maxmemory) {
+                int retval = freeMemoryIfNeeded();
+        if ((c->cmd->flags & REDIS_CMD_DENYOOM) && retval == REDIS_ERR) {
+                flagTransaction(c);
+                addReply(c, shared.oomerr);
+                return REDIS_OK;
+        }
+    }
+    ......
+}
+```
+
+> freeMemoryIfNeeded 函数
+```
+int freeMemoryIfNeeded(void) {
+    size_t mem_used, mem_tofree, mem_freed;
+    int slaves = listLength(server.slaves);
+
+    /* Remove the size of slaves output buffers and AOF buffer from the
+     * count of used memory. */
+    // 计算出 Redis 目前占用的内存总数，但有两个方面的内存不会计算在内：
+    // 1）从服务器的输出缓冲区的内存
+    // 2）AOF 缓冲区的内存
+    mem_used = zmalloc_used_memory();
+    if (slaves) {
+        listIter li;
+        listNode *ln;
+
+        listRewind(server.slaves,&li);
+        while((ln = listNext(&li))) {
+            redisClient *slave = listNodeValue(ln);
+            unsigned long obuf_bytes = getClientOutputBufferMemoryUsage(slave);
+            if (obuf_bytes > mem_used)
+                mem_used = 0;
+            else
+                mem_used -= obuf_bytes;
+        }
+    }
+    if (server.aof_state != REDIS_AOF_OFF) {
+        mem_used -= sdslen(server.aof_buf);
+        mem_used -= aofRewriteBufferSize();
+    }
+
+    /* Check if we are over the memory limit. */
+    // 如果目前使用的内存大小比设置的 maxmemory 要小，那么无须执行进一步操作
+    if (mem_used <= server.maxmemory) return REDIS_OK;
+
+    // 如果占用内存比 maxmemory 要大，但是 maxmemory 策略为不淘汰，那么直接返回
+    if (server.maxmemory_policy == REDIS_MAXMEMORY_NO_EVICTION)
+        return REDIS_ERR; /* We need to free memory, but policy forbids. */
+
+    /* Compute how much memory we need to free. */
+    // 计算需要释放多少字节的内存
+    mem_tofree = mem_used - server.maxmemory;
+
+    // 初始化已释放内存的字节数为 0
+    mem_freed = 0;
+
+    // 根据 maxmemory 策略，
+    // 遍历字典，释放内存并记录被释放内存的字节数
+    while (mem_freed < mem_tofree) {
+        int j, k, keys_freed = 0;
+
+        // 遍历所有字典
+        for (j = 0; j < server.dbnum; j++) {
+            long bestval = 0; /* just to prevent warning */
+            sds bestkey = NULL;
+            dictEntry *de;
+            redisDb *db = server.db+j;
+            dict *dict;
+
+            if (server.maxmemory_policy == REDIS_MAXMEMORY_ALLKEYS_LRU ||
+                server.maxmemory_policy == REDIS_MAXMEMORY_ALLKEYS_RANDOM)
+            {
+                // 如果策略是 allkeys-lru 或者 allkeys-random
+                // 那么淘汰的目标为所有数据库键
+                dict = server.db[j].dict;
+            } else {
+                // 如果策略是 volatile-lru 、 volatile-random 或者 volatile-ttl
+                // 那么淘汰的目标为带过期时间的数据库键
+                dict = server.db[j].expires;
+            }
+
+            // 跳过空字典
+            if (dictSize(dict) == 0) continue;
+
+            /* volatile-random and allkeys-random policy */
+            // 如果使用的是随机策略，那么从目标字典中随机选出键
+            if (server.maxmemory_policy == REDIS_MAXMEMORY_ALLKEYS_RANDOM ||
+                server.maxmemory_policy == REDIS_MAXMEMORY_VOLATILE_RANDOM)
+            {
+                de = dictGetRandomKey(dict);
+                bestkey = dictGetKey(de);
+            }
+
+            /* volatile-lru and allkeys-lru policy */
+            // 如果使用的是 LRU 策略，
+            // 那么从一集 sample 键中选出 IDLE 时间最长的那个键
+            else if (server.maxmemory_policy == REDIS_MAXMEMORY_ALLKEYS_LRU ||
+                server.maxmemory_policy == REDIS_MAXMEMORY_VOLATILE_LRU)
+            {
+                struct evictionPoolEntry *pool = db->eviction_pool;
+
+                while(bestkey == NULL) {
+                    // 随机取一集键值对
+                    evictionPoolPopulate(dict, db->dict, db->eviction_pool);
+                    /* Go backward from best to worst element to evict. */
+                    for (k = REDIS_EVICTION_POOL_SIZE-1; k >= 0; k--) {
+                        if (pool[k].key == NULL) continue;
+                        de = dictFind(dict,pool[k].key);
+
+                        /* Remove the entry from the pool. */
+                        sdsfree(pool[k].key);
+                        /* Shift all elements on its right to left. */
+                        memmove(pool+k,pool+k+1,
+                            sizeof(pool[0])*(REDIS_EVICTION_POOL_SIZE-k-1));
+                        /* Clear the element on the right which is empty
+                         * since we shifted one position to the left.  */
+                        pool[REDIS_EVICTION_POOL_SIZE-1].key = NULL;
+                        pool[REDIS_EVICTION_POOL_SIZE-1].idle = 0;
+
+                        /* If the key exists, is our pick. Otherwise it is
+                         * a ghost and we need to try the next element. */
+                        if (de) {
+                            bestkey = dictGetKey(de);
+                            break;
+                        } else {
+                            /* Ghost... */
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            /* volatile-ttl */
+            // 策略为 volatile-ttl ，从一集 sample 键中选出过期时间距离当前时间最接近的键
+            else if (server.maxmemory_policy == REDIS_MAXMEMORY_VOLATILE_TTL) {
+                for (k = 0; k < server.maxmemory_samples; k++) {
+                    sds thiskey;
+                    long thisval;
+
+                    de = dictGetRandomKey(dict);
+                    thiskey = dictGetKey(de);
+                    thisval = (long) dictGetVal(de);
+
+                    /* Expire sooner (minor expire unix timestamp) is better
+                     * candidate for deletion */
+                    if (bestkey == NULL || thisval < bestval) {
+                        bestkey = thiskey;
+                        bestval = thisval;
+                    }
+                }
+            }
+
+            /* Finally remove the selected key. */
+            // 删除被选中的键
+            if (bestkey) {
+                long long delta;
+
+                robj *keyobj = createStringObject(bestkey,sdslen(bestkey));
+                propagateExpire(db,keyobj);
+                /* We compute the amount of memory freed by dbDelete() alone.
+                 * It is possible that actually the memory needed to propagate
+                 * the DEL in AOF and replication link is greater than the one
+                 * we are freeing removing the key, but we can't account for
+                 * that otherwise we would never exit the loop.
+                 *
+                 * AOF and Output buffer memory will be freed eventually so
+                 * we only care about memory used by the key space. */
+                // 计算删除键所释放的内存数量
+                delta = (long long) zmalloc_used_memory();
+                dbDelete(db,keyobj);
+                delta -= (long long) zmalloc_used_memory();
+                mem_freed += delta;
+
+                // 对淘汰键的计数器增一
+                server.stat_evictedkeys++;
+
+                notifyKeyspaceEvent(REDIS_NOTIFY_EVICTED, "evicted",
+                    keyobj, db->id);
+                decrRefCount(keyobj);
+                keys_freed++;
+
+                /* When the memory to free starts to be big enough, we may
+                 * start spending so much time here that is impossible to
+                 * deliver data to the slaves fast enough, so we force the
+                 * transmission here inside the loop. */
+                if (slaves) flushSlavesOutputBuffers();
+            }
+        }
+
+        if (!keys_freed) return REDIS_ERR; /* nothing to free... */
+    }
+
+    return REDIS_OK;
+}
+```
+
+
 
 
 # 2 Redis twemproxy 集群
