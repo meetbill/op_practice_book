@@ -8,6 +8,7 @@
         * [1.2.2 写入量太大超出 output-buffer](#122-写入量太大超出-output-buffer)
         * [1.2.3 repl-backlog-size 太小导致失败](#123-repl-backlog-size-太小导致失败)
         * [1.2.4 主库磁盘故障](#124-主库磁盘故障)
+            * [主库磁盘异常示例记录](#主库磁盘异常示例记录)
     * [1.3 Redis bug](#13-redis-bug)
         * [1.3.1 AOF 句柄泄露 bug](#131-aof-句柄泄露-bug)
             * [表现](#表现)
@@ -257,6 +258,46 @@ Unable to partial resync with slave $slaveip:6379 for lack of backlog (Slave req
 对 master 进行操作
 config set repl-diskless-sync yes
 ```
+#### 主库磁盘异常示例记录
+> 新增从库(4.0.10 版本), 从库日志
+```
+13475:S 13 May 05:51:08.134 * Connecting to MASTER {Master IP}:{Master port}
+13475:S 13 May 05:51:08.135 * MASTER <-> SLAVE sync started
+13475:S 13 May 05:51:08.135 * Non blocking connect for SYNC fired the event.
+13475:S 13 May 05:51:08.135 * start send sync cmd :PING
+
+13475:S 13 May 05:51:08.135 * Master replied to PING, replication can continue...
+13475:S 13 May 05:51:08.135 * start send sync cmd :REPLCONF listening-port 2019
+
+13475:S 13 May 05:51:08.135 * start send sync cmd :REPLCONF capa eof capa psync2
+
+13475:S 13 May 05:51:08.135 * Partial resynchronization(mem) not possible (no cached master)
+13475:S 13 May 05:51:08.135 * start send sync cmd :PSYNC ? -1
+
+13475:S 13 May 05:51:08.196 * Full resync from master: 7f0c1af873f9704ef0a55357ea8dc2a9bf89b7a9:0
+13475:S 13 May 05:51:08.399 # I/O error reading bulk count from MASTER: Resource temporarily unavailable
+```
+> 修改为无盘复制后从库日志
+```
+13475:S 13 May 06:37:56.103 * Connecting to MASTER {Master IP}:{Master port}
+13475:S 13 May 06:37:56.103 * MASTER <-> SLAVE sync started
+13475:S 13 May 06:37:56.103 * Non blocking connect for SYNC fired the event.
+13475:S 13 May 06:37:56.103 * start send sync cmd :PING
+
+13475:S 13 May 06:37:56.103 * Master replied to PING, replication can continue...
+13475:S 13 May 06:37:56.103 * start send sync cmd :REPLCONF listening-port 2019
+
+13475:S 13 May 06:37:56.103 * start send sync cmd :REPLCONF capa eof capa psync2
+
+13475:S 13 May 06:37:56.104 * Partial resynchronization(mem) not possible (no cached master)
+13475:S 13 May 06:37:56.104 * start send sync cmd :PSYNC ? -1
+
+13475:S 13 May 06:38:02.777 * Full resync from master: 7f0c1af873f9704ef0a55357ea8dc2a9bf89b7a9:659176439
+13475:S 13 May 06:38:02.846 * MASTER <-> SLAVE sync: receiving streamed RDB from master        // 从这里看已经是无盘复制模式
+13475:S 13 May 06:38:03.256 # I/O error trying to sync with MASTER: connection lost
+```
+
+//todo
 
 ## 1.3 Redis bug
 
