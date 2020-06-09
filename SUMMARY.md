@@ -18,6 +18,7 @@
     * [Web 基础](doc/web/web_base.md)
     * [Nginx](doc/web/nginx.md)
     * [Django](doc/web/django.md)
+    * [Butterfly](doc/web/butterfly.md)
 * [监控篇](doc/monitor/README.md)
     * [Zabbix](doc/monitor/zabbix.md)
     * [Monit](doc/monitor/monit.md)

@@ -207,6 +207,30 @@ slave 出现如下类似日志，则同步已完成：
 [4611] 24 Aug 19:16:57.509 * MASTER <-> SLAVE sync: Loading DB in memory
 [4611] 24 Aug 19:19:44.191 * MASTER <-> SLAVE sync: Finished with success
 ```
+> 4.x 后的 redis 从库日志
+```
+13382:S 20 May 20:33:45.487 * SLAVE OF {master_ip}:{master_port} enabled (user request from 'id=3 addr={client_ip}:54054 fd=8 name= age=1 idle=0 flags=N db=0 sub=0 psub=0 multi=-1 qbuf=0 qbuf-free=32768 obl=0 oll=0 omem=0 events=r cmd=slaveof')
+13382:S 20 May 20:33:45.802 * Connecting to MASTER {master_ip}:{master_port}
+13382:S 20 May 20:33:45.802 * MASTER <-> SLAVE sync started
+13382:S 20 May 20:33:45.802 * Non blocking connect for SYNC fired the event.
+13382:S 20 May 20:33:45.802 * start send sync cmd :PING        # 如果 master 没有返回异常，而是返回 pong，则说明 master 可用
+                                                               # 如果 Redis 设置了密码，slave 会发送 auth $masterauth 指令，进行鉴权。
+
+13382:S 20 May 20:33:45.802 * Master replied to PING, replication can continue...
+13382:S 20 May 20:33:45.802 * start send sync cmd :REPLCONF listening-port 2051    # 从库通过 replconf 发送自己的端口及 IP 给 master。
+
+13382:S 20 May 20:33:45.802 * start send sync cmd :REPLCONF capa eof capa psync2   # slave 通过 replconf 发送 capa eof capa psync2 进行复制版本校验
+
+13382:S 20 May 20:33:45.802 * Partial resynchronization(mem) not possible (no cached master)
+13382:S 20 May 20:33:45.802 * start send sync cmd :PSYNC ? -1                      # 从库接下来就通过 psync 将自己的复制 id、复制偏移发送给 master，正式开始准备数据同步
+
+13382:S 20 May 20:33:45.882 * Full resync from master: 3abf1447d61679bf3b83c1e3b8f6402446ab0d6b:0
+13382:S 20 May 20:34:02.574 * MASTER <-> SLAVE sync: receiving 736712380 bytes from master
+13382:S 20 May 20:34:04.306 * MASTER <-> SLAVE sync: Flushing old data
+13382:S 20 May 20:34:04.306 * MASTER <-> SLAVE sync: Loading DB in memory
+13382:S 20 May 20:34:11.706 * MASTER <-> SLAVE sync: Finished with success
+13382:S 20 May 20:34:13.118 * SLAVE OF would result into synchronization with the master we are already connected with. No operation performed.
+```
 ### 1.2.1 repl-timeout
 若 slave 日志出现如下行：
 ```
