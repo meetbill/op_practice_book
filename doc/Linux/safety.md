@@ -40,7 +40,8 @@
         * [6.4.3 保存 iptables 规则](#643-保存-iptables-规则)
     * [6.5 常用操作](#65-常用操作)
         * [6.5.1 使用 ip6tables 禁用 ipv6](#651-使用-ip6tables-禁用-ipv6)
-        * [6.5.2 配置 iptables 允许部分端口同行，其他全部阻止](#652-配置-iptables-允许部分端口同行其他全部阻止)
+        * [6.5.2 配置 iptables 允许部分端口通行，其他全部阻止](#652-配置-iptables-允许部分端口通行其他全部阻止)
+        * [6.5.3 关闭某个端口外部访问](#653-关闭某个端口外部访问)
 
 <!-- vim-markdown-toc -->
 
@@ -463,7 +464,7 @@ COMMIT
 [root@meetbill ~]# ping6 -I eth0 fe80::20c:29ff:febc:8aab
 
 ```
-#### 6.5.2 配置 iptables 允许部分端口同行，其他全部阻止
+#### 6.5.2 配置 iptables 允许部分端口通行，其他全部阻止
 
 将下列内容放到脚本中，然后执行脚本即可，此脚本可以重复执行
 ```
@@ -492,4 +493,26 @@ iptables -P OUTPUT ACCEPT
 iptables -F
 #iptables-save > /etc/sysconfig/iptables
 iptables -L
+```
+#### 6.5.3 关闭某个端口外部访问
+
+场景: 设置 butterfly 服务外部机器无法访问，本机可正常访问
+
+> 封禁命令
+```
+#iptables -A INPUT -s 127.0.0.1 -d 127.0.0.1 -j ACCEPT
+#iptables -A INPUT -p tcp --dport 8585 -j DROP
+```
+> iptables -L INPUT --line-numbers
+```
+Chain INPUT (policy ACCEPT)
+num  target     prot opt source               destination
+1    ACCEPT     all  --  localhost            localhost
+2    DROP       tcp  --  anywhere             anywhere            tcp dpt:8585
+```
+
+> 解封命令
+```
+iptables -D INPUT 2 （注意，这个 2 是行号，是iptables -L INPUT --line-numbers 所打印出来的行号）
+iptables -D INPUT 1
 ```
