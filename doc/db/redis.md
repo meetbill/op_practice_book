@@ -262,11 +262,26 @@ client-output-buffer-limit slave 256mb 64mb 60
 
 当 master-slave 复制连接断开，server 端会释放连接相关的数据结构。replication buffer 中的数据也就丢失，当断开的 slave 重新连接上 master 的时候，slave 将会发送 psync 命令（包含复制的偏移量 offset），请求 partial resync。如果请求的 offset 不存在，那么执行全量的 sync 操作，相当于重新建立主从复制。
 
+> 主库日志
 ```
+[16250] 26 Jul 22:59:13.921 # replication.c: 519 psync_offset:11198236363343 repl_backlog_off:11199960061969 repl_backlog_histlen:104857600
+[16250] 26 Jul 22:59:13.921 * replication.c: 526 Unable to partial resync with the slave for lack of backlog (Slave request was: 11198236363343).
+
+or 
+
 Unable to partial resync with slave $slaveip:6379 for lack of backlog (Slave request was: 5974421660).
 ```
 调整 repl-backlog-size 大小
 
+> 个人觉得
+```
+repl-backlog-size[配置] > client-output-buffer-limit[slave 配置 2G]
+
+
+比如主从同步时，从库在加载 rdb 时，有大 key，或者增量数据大于 client-output-buffer-limit 时，主库主动与从库主动断开连接时
+
+从库在加载完 rdb 时，再请求增量数据时，可以从 repl-backlog 中找到数据
+```
 ### 1.2.4 主库磁盘故障
 
 触发全量同步时，主库磁盘故障，主库 RDB 无法落盘，导致全量同步失败
