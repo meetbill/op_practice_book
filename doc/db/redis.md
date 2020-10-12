@@ -21,8 +21,10 @@
         * [1.3.4 3.x 执行 exists 可以获取到，但 get 时则无法获取到数据](#134-3x-执行-exists-可以获取到但-get-时则无法获取到数据)
             * [3.x exists 逻辑](#3x-exists-逻辑)
             * [4.x exists 逻辑](#4x-exists-逻辑)
-    * [1.4 redis 日志](#14-redis-日志)
+        * [1.3.5 5.0 以前 redis 主从同步时因从库的 buffer 计算不准确导致主库大量的 key 被淘汰](#135-50-以前-redis-主从同步时因从库的-buffer-计算不准确导致主库大量的-key-被淘汰)
+    * [1.4 redis 日志及状态信息](#14-redis-日志及状态信息)
         * [1.4.1 日常日志](#141-日常日志)
+        * [1.4.2 info](#142-info)
     * [1.5 redis 协议说明](#15-redis-协议说明)
         * [1.5.1 网络层](#151-网络层)
         * [1.5.2 请求](#152-请求)
@@ -267,7 +269,7 @@ client-output-buffer-limit slave 256mb 64mb 60
 [16250] 26 Jul 22:59:13.921 # replication.c: 519 psync_offset:11198236363343 repl_backlog_off:11199960061969 repl_backlog_histlen:104857600
 [16250] 26 Jul 22:59:13.921 * replication.c: 526 Unable to partial resync with the slave for lack of backlog (Slave request was: 11198236363343).
 
-or 
+or
 
 Unable to partial resync with slave $slaveip:6379 for lack of backlog (Slave request was: 5974421660).
 ```
@@ -615,8 +617,21 @@ robj *lookupKeyRead(redisDb *db, robj *key) {
 }
 ```
 
+### 1.3.5 5.0 以前 redis 主从同步时因从库的 buffer 计算不准确导致主库大量的 key 被淘汰
 
-## 1.4 redis 日志
+https://github.com/redis/redis/commit/bf680b6f8cdaee2c5588c5c8932a7f3b7fa70b15
+
+```
+当写入新数据时，会判断是否 used_memmory > maxmemory，这里会刨除从库的 client-output-buffer
+
+而 5.0 以前在计算从库 buffer 有误
+
+```
+比如需要刨除 1GB 空间，结果只是刨除了 500MB, 这个时候主库需要额外淘汰 500MB 数据，这 500MB 又会放到从库的 client-output-buffer ，形成了个恶性循环
+```
+
+```
+## 1.4 redis 日志及状态信息
 
 ### 1.4.1 日常日志
 ```
@@ -627,6 +642,16 @@ DB 0: 1 keys (0 volatile) in 4 slots HT
 > * 0 volatile: 目前 0 号 DB 中没有 volatile key，volatile key 的意思是 过特定的时间就被 REDIS 自动删除，在做缓存时有用。
 > * 4 slots HT: 目前 0 号 DB 的 hash table 只有 4 个 slots(buckets)
 >   * //todo
+
+### 1.4.2 info
+
+redis键空间的状态监控
+
+> * 键个数 (keys): redis 实例包含的键个数
+> * 设置有生存时间的键个数 (keys_expires): 是纯缓存或业务的过期长，都建议对键设置 TTL; 避免业务的死键问题. （expires 字段）
+> * 估算设置生存时间键的平均寿命 (avg_ttl): redis 会抽样估算实例中设置TTL键的平均时长，单位毫秒。如果无 TTL 键或在 Slave 则 avg_ttl 一直为 0
+> * LRU淘汰的键个数 (evicted_keys): 因 used_memory 达到 maxmemory 限制，并设置有淘汰策略的实例；（对排查问题重要，可不设置告警）
+> * 过期淘汰的键个数 (expired_keys): 删除生存时间为 0 的键个数；包含主动删除和定期删除的个数。
 
 ## 1.5 redis 协议说明
 
