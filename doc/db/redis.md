@@ -109,6 +109,7 @@
     * [5.1 内核参数 overcommit](#51-内核参数-overcommit)
         * [什么是 Overcommit 和 OOM](#什么是-overcommit-和-oom)
     * [5.2 Redis CPU 100% 时分析](#52-redis-cpu-100-时分析)
+    * [5.3 Redis Cluster 集群出现 handshake 节点](#53-redis-cluster-集群出现-handshake-节点)
 * [6 数据迁移](#6-数据迁移)
     * [6.1 目标](#61-目标)
     * [6.2 怎么实现](#62-怎么实现)
@@ -2333,6 +2334,46 @@ Linux 对大部分申请内存的请求都回复"yes"，以便能跑更多更大
 
 ```
 $perf top -p 28764
+```
+## 5.3 Redis Cluster 集群出现 handshake 节点
+
+> 获取整个集群的 ip:port
+```
+不能有遗漏，否则如果对应的 node 还保存在 handshake 节点信息的话，会一直进行广播
+```
+> 对所有的 node 进行 ping 探测
+```
+检查集群中的 node 是否因为连接数满等情况导致无法连接
+```
+> 对说有 node 进行下发 forget 命令(可执行多次)
+```
+# Function
+function print_info() {
+    echo "$(date +%Y%m%d-%H%M%S) $@"
+}
+
+function redis_cluster_forget_fail() {
+    local ip_port=$1
+    local ip_=`echo ${ip_port} | awk -F':' '{print $1}'`
+    local port_=`echo ${ip_port} | awk -F':' '{print $2}'`
+
+    redis-cli -h ${ip_} -p ${port_} cluster nodes | sed 's/\\n/\n/g' \
+    | egrep -i 'hands|fail' | awk '{print $1}' \
+    | while read line;do
+        print_info "forget fail_or_hand redis-cli -h ${ip_} -p ${port_} cluster forget $line"
+        redis-cli -h ${ip_} -p ${port_} cluster forget $line &
+    done
+}
+
+for _ip_port in `cat ${list_ipport}`;do
+    redis_cluster_forget_fail ${_ip_port} &
+done
+```
+> 关闭未关闭的 redis-cli
+```
+问题解决完后，可能还有很多 redis-cli 卡住
+
+ps -ef | grep redis-cli | awk '{print $2}' | xargs kill -15
 ```
 
 # 6 数据迁移
