@@ -36,6 +36,7 @@
     * [6.1 Docker 容器故障致无法启动解决实例](#61-docker-容器故障致无法启动解决实例)
     * [6.2 启动容器失败](#62-启动容器失败)
     * [6.3 CentOS7 上运行容器挂载卷没有写入权限](#63-centos7-上运行容器挂载卷没有写入权限)
+    * [6.4 docker 修改 image 存储目录](#64-docker-修改-image-存储目录)
 * [7 原理](#7-原理)
     * [7.1 Docker 背后的内核知识](#71-docker-背后的内核知识)
 
@@ -513,6 +514,69 @@ Error: failed to start containers: zabbix
 示例：chcon -Rt svirt_sandbox_file_t /home/docs
 
 之后执行：docker run -i -t -v /home/docs:/src waterchestnut/nodejs:0.12.0
+
+## 6.4 docker 修改 image 存储目录
+
+docker 安装好后默认 image 存储目录在 /var/lib/docker 目录下，但是通常这个目录挂载的空间很小，所以我们在安装好 docker 后要注意修改 image 存储目录
+
+> 查看当前目录
+```
+$ docker info
+Containers: 3
+Images: 33
+Storage Driver: devicemapper
+ Pool Name: docker-8:33-60817411-pool
+ Pool Blocksize: 65.54 kB
+ Backing Filesystem: extfs
+ Data file: /dev/loop2
+ Metadata file: /dev/loop3
+ Data Space Used: 984.4 MB
+ Data Space Total: 107.4 GB
+ Data Space Available: 106.4 GB
+ Metadata Space Used: 1.987 MB
+ Metadata Space Total: 2.147 GB
+ Metadata Space Available: 2.145 GB
+ Udev Sync Supported: true
+ Deferred Removal Enabled: false
+ Data loop file: /home/disk2/docker/devicemapper/devicemapper/data
+ Metadata loop file: /home/disk2/docker/devicemapper/devicemapper/metadata
+ Library Version: XXXXXX
+Execution Driver: native-0.2
+Logging Driver: json-file
+Kernel Version: 3.10.0_3-0-0-26
+Operating System: <unknown>
+CPUs: 48
+Total Memory: 125.5 GiB
+Name: HOSTNAME
+ID: XXXXX
+```
+当然我这个是修改后的，修改后为、/home/disk2/docker 目录下
+
+> 修改目录（配置文件 /etc/sysconfig/docker)
+```
+# /etc/sysconfig/docker
+#
+# Other arguments to pass to the docker daemon process
+# These will be parsed by the sysv initscript and appended
+# to the arguments list passed to docker -d
+
+other_args="--graph=/home/docker"
+DOCKER_CERT_PATH=/etc/docker
+
+# Resolves: rhbz#1176302 (docker issue #407)
+DOCKER_NOWARN_KERNEL_VERSION=1
+
+# Location used for temporary files, such as those created by
+# # docker load and build operations. Default is /var/lib/docker/tmp
+# # Can be overriden by setting the following environment variable.
+# # DOCKER_TMPDIR=/var/tmp
+```
+在配置文件中将 other_args 赋值为你想存储的目录，注意一定要带引号
+
+> 重启 docker
+```
+service docker restart
+```
 
 # 7 原理
 
