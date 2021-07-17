@@ -61,6 +61,8 @@
     * [1.7 Redis 内存](#17-redis-内存)
         * [1.7.1 used_memmory](#171-used_memmory)
         * [1.7.2 used_memmory 会大于 maxmemory 吗？](#172-used_memmory-会大于-maxmemory-吗)
+    * [1.8 骚操作](#18-骚操作)
+        * [1.8.1 Redis 关闭过期自动删除策略](#181-redis-关闭过期自动删除策略)
 * [2 Redis twemproxy 集群](#2-redis-twemproxy-集群)
     * [2.1 Twemproxy 特性](#21-twemproxy-特性)
     * [2.2 环境说明](#22-环境说明)
@@ -1538,8 +1540,15 @@ int freeMemoryIfNeeded(void) {
 }
 ```
 
+## 1.8 骚操作
 
+### 1.8.1 Redis 关闭过期自动删除策略
 
+```
+debug set-active-expire 0
+
+设置为 1 时恢复自动删除策略
+```
 
 # 2 Redis twemproxy 集群
 
