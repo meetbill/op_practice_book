@@ -26,6 +26,7 @@
         * [2.3.1 linux 文件查找指定时间段的文件](#231-linux-文件查找指定时间段的文件)
     * [2.4 grep](#24-grep)
         * [2.4.1 grep 时出现错误 Binary file (standard input) matches](#241-grep-时出现错误-binary-file-standard-input-matches)
+    * [2.5 sshpass 命令行使用密码来进行远程操作](#25-sshpass-命令行使用密码来进行远程操作)
 * [3 系统相关](#3-系统相关)
     * [3.1 screen](#31-screen)
         * [3.1.1 screen 使用](#311-screen-使用)
@@ -501,6 +502,18 @@ find ./ -type f -name "*.aof" -newer ./t1 ! -newer ./t2  |xargs ls -lrt  > /sd
 例如原本为 grep hello
 
 改为 grep -a hello
+
+## 2.5 sshpass 命令行使用密码来进行远程操作
+
+https://github.com/kevinburke/sshpass
+
+```
+例子：本地执行远程机器的命令：
+命令： sshpass -p xxx ssh root@192.168.11.11 "ethtool eth0"
+
+例子：从远程主机上拉取文件到本地
+命令： sshpass -p xxx scp root@host_ip:/home/test/t ./tmp/
+```
 
 # 3 系统相关
 ## 3.1 screen
