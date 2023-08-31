@@ -45,6 +45,9 @@
         * [8.2.1 imasge 列表](#821-imasge-列表)
         * [8.2.2 容器列表](#822-容器列表)
         * [8.2.3 容器创建](#823-容器创建)
+            * [8.2.3.1 端口映射](#8231-端口映射)
+            * [8.2.3.2 磁盘映射](#8232-磁盘映射)
+            * [8.2.3.3 指定 Entrypoint](#8233-指定-entrypoint)
         * [8.2.4 容器操作](#824-容器操作)
 
 <!-- vim-markdown-toc -->
@@ -760,6 +763,7 @@ $ curl -s -X GET http://127.0.0.1:4243/containers/json | python2 -m json.tool
 ```
 
 ### 8.2.3 容器创建
+#### 8.2.3.1 端口映射
 
 ```
 $ curl -X POST -H "Content-Type: application/json" -d '{
@@ -792,9 +796,29 @@ container 状态为 Created 状态，Docker 中的 created 状态表示该容器
 此时通过 docker inspect <container_id> 可以看到 {"NetworkSettings": {"Ports": {}}} 为 空 的状态
 ```
 
+#### 8.2.3.2 磁盘映射
+
+```
+"HostConfig": {
+    "Binds": [
+        "/mnt/container/docker_bind/xxx:/mnt/data"
+    ]
+}
+```
+
+#### 8.2.3.3 指定 Entrypoint
+
+```
+// 启动 docker 内的 sshd
+"Entrypoint": ["/bin/bash", "-c", "/usr/sbin/sshd && while true;do sleep 10;done"]
+
+// Butterfly 启动
+"Entrypoint": ["sh", "/opt/butterfly/run.sh", "docker_start"]
+```
+
 ### 8.2.4 容器操作
 ```
-$ curl -X POST http://127.0.0.1:4243/containers/{id}/start   (注意这里是POST方法）
-$ curl -X POST http://127.0.0.1:4243/containers/{id}/stop   (注意这里是POST方法）
-$ curl -X POST http://127.0.0.1:4243/containers/{id}/restart   (注意这里是POST方法）
+$ curl -X POST http://127.0.0.1:4243/containers/{id}/start      （注意这里是 POST 方法）
+$ curl -X POST http://127.0.0.1:4243/containers/{id}/stop       （注意这里是 POST 方法）
+$ curl -X POST http://127.0.0.1:4243/containers/{id}/restart    （注意这里是 POST 方法）
 ```
