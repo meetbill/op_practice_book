@@ -24,6 +24,7 @@
             * [搭建步骤](#搭建步骤)
             * [常见问题](#常见问题)
         * [2.4.3 在 docker 客户机验证](#243-在-docker-客户机验证)
+        * [2.4.4 客户机 config.json](#244-客户机-configjson)
 * [3 Dockerfile 最佳实践](#3-dockerfile-最佳实践)
     * [3.1 Dockerfile 建议](#31-dockerfile-建议)
     * [3.2 编写 Dockerfile](#32-编写-dockerfile)
@@ -348,6 +349,43 @@ systemctl restart docker
 docker pull 192.168.1.52:5000/centos
 ```
 至此，私有仓库已 OK
+
+### 2.4.4 客户机 config.json
+
+路径：~/.docker/config.json
+
+config.json 是用于存储 docker registry 的认证信息
+```
+
+{
+	"auths": {
+		"harbor.xxx.com": {
+			"auth": "xxx"
+		}
+	}
+}
+
+```
+auth 后面的内容其实用户名密码的加密后的输出
+
+```
+// 加密
+echo -n "user:password" | base64
+
+// 解密
+echo -n "xxx" | base64 -d
+```
+
+> python
+```
+>>> import base64
+>>> base64.b64encode("user:password")
+'dXNlcjpwYXNzd29yZA=='
+>>> base64.b64decode("dXNlcjpwYXNzd29yZA==")
+'user:password'
+```
+
+
 
 # 3 Dockerfile 最佳实践
 
